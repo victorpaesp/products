@@ -6,8 +6,7 @@ import { useRef } from "react";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Search" },
-    { name: "description", content: "Search anything" },
+    { title: "Santo Mimo" },
   ];
 };
 

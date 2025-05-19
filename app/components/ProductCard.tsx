@@ -5,15 +5,16 @@ import { ProductModal } from "./product-modal/ProductModal";
 
 interface ProductCardProps {
   product: Product;
+  onSelect?: (product: Product) => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onSelect }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>
       <div
-        className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+        className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow relative"
         onClick={() => setIsModalOpen(true)}
         role="button"
         tabIndex={0}
@@ -23,6 +24,16 @@ export function ProductCard({ product }: ProductCardProps) {
           }
         }}
       >
+        <input
+          type="checkbox"
+          className="absolute top-2 right-2 w-5 h-5 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents triggering the modal
+            if (onSelect) {
+              onSelect(product);
+            }
+          }} // Prevents triggering the modal
+        />
         <div className="aspect-square">
           <img
             src={product.Image}
