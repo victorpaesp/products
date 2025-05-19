@@ -12,6 +12,7 @@ export default function Products() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const observer = useRef<IntersectionObserver | null>(null);
+  
   const lastProductRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();

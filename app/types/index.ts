@@ -19,7 +19,7 @@ export type Product = {
   Provider: string;
   Name: string;
   Description: string;
-  Price: number;
+  Price: string;
   Image: string;
   Gallery: string[];
   Product_Mention: string | null;
@@ -32,7 +32,7 @@ export type Product = {
 export type Variation = {
   ProductCod: string;
   Name: string;
-  Price: number;
+  Price: string;
   Stock: number;
   Image: string;
 };

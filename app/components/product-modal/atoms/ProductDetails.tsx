@@ -51,7 +51,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   key={index}
                   className="px-3 py-1 bg-gray-100 rounded-full text-sm"
                 >
-                  {variation.Name} - {formatPrice(variation.Price)}
+                  {variation.Name} - Estoque: {variation.Stock} -{" "}
+                  {formatPrice(variation.Price)}
                 </span>
               ))}
             </div>
@@ -74,4 +75,4 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </div>
     </div>
   );
-} 
+}

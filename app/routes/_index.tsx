@@ -24,6 +24,7 @@ export default function Index() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-4">
+      <img src="/logo.jpeg" alt="logo" className="w-1/6" />
       <div className="text-center w-full">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">
           Busca de produtos
