@@ -6,9 +6,14 @@ import { ProductModal } from "./product-modal/ProductModal";
 interface ProductCardProps {
   product: Product;
   onSelect?: (product: Product) => void;
+  isSelected?: boolean;
 }
 
-export function ProductCard({ product, onSelect }: ProductCardProps) {
+export function ProductCard({
+  product,
+  isSelected,
+  onSelect,
+}: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -27,6 +32,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
         <input
           type="checkbox"
           className="absolute top-2 right-2 w-5 h-5 cursor-pointer"
+          checked={isSelected}
           onClick={(e) => {
             e.stopPropagation(); // Prevents triggering the modal
             if (onSelect) {

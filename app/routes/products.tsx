@@ -110,7 +110,13 @@ export default function Products() {
                   index === data.data.length - 1 ? lastProductRef : undefined
                 }
               >
-                <ProductCard product={product} onSelect={toogleSelectProduct} />
+                <ProductCard
+                  product={product}
+                  isSelected={selectedProducts.some(
+                    (p) => p.ProductCod === product.ProductCod
+                  )}
+                  onSelect={toogleSelectProduct}
+                />
               </div>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { Download, Search } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useSearchParams } from "@remix-run/react";
 import { Input } from "~/components/ui/input";
 import { api } from "~/lib/axios";
@@ -15,6 +15,7 @@ import {
 } from "docx"; // Biblioteca para gerar arquivos Word
 import { loadImageWithCORS } from "~/lib/document-utils";
 import { formatPrice } from "~/lib/utils";
+import { ExportToast } from "./ExportToast";
 
 interface SearchBarProps {
   onSearch: (data: ApiResponse) => void;
@@ -32,6 +33,16 @@ export function SearchBar({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const searchTerm = searchParams.get("q") || "";
+
+  // Estado do toast de exportação
+  const [exportToast, setExportToast] = useState<{
+    isVisible: boolean;
+    status: "processing" | "success" | "error";
+    message?: string;
+  }>({
+    isVisible: false,
+    status: "processing",
+  });
 
   // Função para gerar os parágrafos dos produtos
   const generateProductParagraphs = useCallback(async (products: Product[]) => {
@@ -136,120 +147,180 @@ export function SearchBar({
   const handleExport = async () => {
     if (!selectedProducts || selectedProducts.length === 0) return;
 
-    // Obtém a data atual formatada
-    const currentDate = new Date().toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    try {
+      // Mostra o toast de processamento
+      setExportToast({
+        isVisible: true,
+        status: "processing",
+      });
 
-    const response = await fetch("/logo.jpeg");
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
+      // Obtém a data atual formatada
+      const currentDate = new Date().toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
 
-    // Gera os parágrafos dos produtos (agora assíncrono)
-    const productParagraphs = await generateProductParagraphs(selectedProducts);
+      const response = await fetch("/logo.jpeg");
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
 
-    // Cria o conteúdo do documento Word com cabeçalho e rodapé
-    const doc = new Document({
-      sections: [
-        {
-          headers: {
-            default: new Header({
-              children: [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: "Santo Mimo",
-                      bold: true,
-                      size: 32, // Tamanho do texto
-                    }),
-                    new TextRun({
-                      text: " ",
-                    }),
-                    new ImageRun({
-                      data: arrayBuffer,
-                      transformation: {
-                        width: 100,
-                        height: 100,
-                      },
-                      type: "jpg",
-                    }),
-                  ],
-                  alignment: "center",
-                  spacing: { after: 400 },
-                }),
-              ],
-            }),
+      // Gera os parágrafos dos produtos (agora assíncrono)
+      const productParagraphs = await generateProductParagraphs(
+        selectedProducts
+      );
+
+      // Cria o conteúdo do documento Word com cabeçalho e rodapé
+      const doc = new Document({
+        sections: [
+          {
+            headers: {
+              default: new Header({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: "Santo Mimo",
+                        bold: true,
+                        size: 32, // Tamanho do texto
+                      }),
+                      new TextRun({
+                        text: " ",
+                      }),
+                      new ImageRun({
+                        data: arrayBuffer,
+                        transformation: {
+                          width: 100,
+                          height: 100,
+                        },
+                        type: "jpg",
+                      }),
+                    ],
+                    alignment: "center",
+                    spacing: { after: 400 },
+                  }),
+                ],
+              }),
+            },
+            footers: {
+              default: new Footer({
+                children: [
+                  new Paragraph({
+                    text: `Documento gerado em: ${currentDate}`,
+                    alignment: "center",
+                    spacing: { after: 200 },
+                  }),
+                ],
+              }),
+            },
+            children: [
+              // Título do documento
+              new Paragraph({
+                text: "Lista de Produtos Selecionados",
+                heading: "Title",
+                alignment: "center",
+                spacing: { after: 400 },
+              }),
+              // Adiciona os produtos com formatação
+              ...productParagraphs,
+            ],
           },
-          footers: {
-            default: new Footer({
-              children: [
-                new Paragraph({
-                  text: `Documento gerado em: ${currentDate}`,
-                  alignment: "center",
-                  spacing: { after: 200 },
-                }),
-              ],
-            }),
-          },
-          children: [
-            // Título do documento
-            new Paragraph({
-              text: "Lista de Produtos Selecionados",
-              heading: "Title",
-              alignment: "center",
-              spacing: { after: 400 },
-            }),
-            // Adiciona os produtos com formatação
-            ...productParagraphs,
-          ],
-        },
-      ],
-    });
+        ],
+      });
 
-    // Gera o arquivo Word e inicia o download
-    Packer.toBlob(doc).then((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "produtos_selecionados.docx";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      console.log("Arquivo Word gerado e download iniciado.");
-      // Limpa a seleção após exportar
-      if (setSelectedProducts) setSelectedProducts([]);
-    });
+      // Gera o arquivo Word e inicia o download
+      Packer.toBlob(doc)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "produtos_selecionados.docx";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          console.log("Arquivo Word gerado e download iniciado.");
+
+          // Mostra toast de sucesso
+          setExportToast({
+            isVisible: true,
+            status: "success",
+          });
+
+          // Limpa a seleção após exportar
+          if (setSelectedProducts) setSelectedProducts([]);
+
+          // Esconde o toast de sucesso após 3 segundos
+          setTimeout(() => {
+            setExportToast((prev) => ({ ...prev, isVisible: false }));
+          }, 3000);
+        })
+        .catch((error) => {
+          console.error("Erro ao gerar arquivo Word:", error);
+          setExportToast({
+            isVisible: true,
+            status: "error",
+            message: "Erro ao gerar o arquivo Word",
+          });
+
+          // Esconde o toast de erro após 5 segundos
+          setTimeout(() => {
+            setExportToast((prev) => ({ ...prev, isVisible: false }));
+          }, 5000);
+        });
+    } catch (error) {
+      console.error("Erro durante a exportação:", error);
+      setExportToast({
+        isVisible: true,
+        status: "error",
+        message: "Erro ao processar as imagens",
+      });
+
+      // Esconde o toast de erro após 5 segundos
+      setTimeout(() => {
+        setExportToast((prev) => ({ ...prev, isVisible: false }));
+      }, 5000);
+    }
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-2">
-        <img src="/logo.jpeg" alt="logo" className="w-[50px]" />
-        <form onSubmit={handleSubmit} className="max-w-2xl w-full mx-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              name="search"
-              type="search"
-              placeholder="Buscar produtos..."
-              defaultValue={searchTerm}
-              className="h-12 text-lg pl-10 w-full bg-black text-white placeholder:text-gray-400"
-            />
-          </div>
-        </form>
-        {selectedProducts && selectedProducts.length > 0 && (
-          <button
-            onClick={handleExport}
-            className="flex h-[48px] items-center gap-2 bg-black hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded shadow-md transition-all duration-200"
-          >
-            <Download className="h-5 w-5" />
-            Exportar
-          </button>
-        )}
+    <>
+      <div className="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-2">
+          <img src="/logo.jpeg" alt="logo" className="w-[50px]" />
+          <form onSubmit={handleSubmit} className="max-w-2xl w-full mx-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                name="search"
+                type="search"
+                placeholder="Buscar produtos..."
+                defaultValue={searchTerm}
+                className="h-12 text-lg pl-10 w-full bg-black text-white placeholder:text-gray-400"
+              />
+            </div>
+          </form>
+          {selectedProducts && selectedProducts.length > 0 && (
+            <button
+              onClick={handleExport}
+              className="flex h-[48px] items-center gap-2 bg-black hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded shadow-md transition-all duration-200"
+            >
+              <Download className="h-5 w-5" />
+              Exportar
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Toast de exportação */}
+      <ExportToast
+        isVisible={exportToast.isVisible}
+        status={exportToast.status}
+        message={exportToast.message}
+        onClose={() =>
+          setExportToast((prev) => ({ ...prev, isVisible: false }))
+        }
+      />
+    </>
   );
 }
