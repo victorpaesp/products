@@ -77,9 +77,14 @@ export default function Products() {
   return (
     <div>
       <SearchBar
-        onSearch={setData}
+        onSearch={(data) => {
+          setData(data);
+          setPage(1);
+          setSelectedProducts([]);
+        }}
         onLoading={setLoading}
         selectedProducts={selectedProducts}
+        setSelectedProducts={setSelectedProducts}
       />
       <div className="container mx-auto px-4 py-8 mt-20">
         <div className="flex items-center justify-between mb-8">
@@ -100,7 +105,7 @@ export default function Products() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {data.data.map((product, index) => (
               <div
-                key={product.ProductCod}
+                key={`product.ProductCod-${product.ProductCod}-${index}-${product.Name}`}
                 ref={
                   index === data.data.length - 1 ? lastProductRef : undefined
                 }

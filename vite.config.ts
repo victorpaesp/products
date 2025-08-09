@@ -9,6 +9,9 @@ declare module "@remix-run/node" {
 }
 
 export default defineConfig({
+  optimizeDeps: {
+    exclude: ["docx", "file-saver", "axios", "lucide-react"],
+  },
   plugins: [
     remix({
       future: {
