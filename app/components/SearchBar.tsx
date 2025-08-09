@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { useNavigate, useSearchParams } from "@remix-run/react";
 import { Input } from "~/components/ui/input";
 import { api } from "~/lib/axios";
-import { Product } from "~/types";
+import { ApiResponse, Product } from "~/types";
 import {
   Document,
   Footer,
@@ -17,7 +17,7 @@ import { loadImageWithCORS } from "~/lib/document-utils";
 import { formatPrice } from "~/lib/utils";
 
 interface SearchBarProps {
-  onSearch: (data: any) => void;
+  onSearch: (data: ApiResponse) => void;
   onLoading: (loading: boolean) => void;
   selectedProducts?: Product[];
   setSelectedProducts?: (products: Product[]) => void;
@@ -37,18 +37,23 @@ export function SearchBar({
   const generateProductParagraphs = useCallback(async (products: Product[]) => {
     const paragraphs = await Promise.all(
       products.map(async (product, index) => {
-        // Usa a função exportada para carregar a imagem com tratamento de CORS
-        const imageUrl = product.Image || "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
-        const imageArrayBuffer = await loadImageWithCORS(imageUrl);
+        // Usa a função exportada para carregar a imagem com tratamento de CORS via proxy
+        const imageUrl =
+          product.Image ||
+          "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
+        let imageArrayBuffer = await loadImageWithCORS(imageUrl);
 
-        const paragraphs = [
-          // Cabeçalho para cada produto
-          new Paragraph({
-            text: `Produto ${index + 1}: ${product.Name}`,
-            heading: "Heading1",
-            spacing: { after: 200 },
-          }),
-        ];
+        // Se falhou ao carregar a imagem, tenta carregar uma imagem placeholder
+        if (!imageArrayBuffer && product.Image) {
+          console.warn(
+            `Falha ao carregar imagem para ${product.Name}, usando placeholder`
+          );
+          imageArrayBuffer = await loadImageWithCORS(
+            "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem"
+          );
+        }
+
+        const paragraphs: Paragraph[] = [];
 
         // Adiciona a imagem apenas se conseguiu carregar
         if (imageArrayBuffer) {
@@ -69,6 +74,15 @@ export function SearchBar({
             })
           );
         }
+
+        paragraphs.push(
+          // Cabeçalho para cada produto
+          new Paragraph({
+            text: `Produto ${index + 1}: ${product.Name}`,
+            heading: "Heading1",
+            spacing: { after: 200 },
+          })
+        );
 
         // Adiciona os demais elementos
         paragraphs.push(
