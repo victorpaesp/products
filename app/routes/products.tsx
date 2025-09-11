@@ -4,6 +4,7 @@ import type { ApiResponse, Product } from "~/types";
 import { api } from "~/lib/axios";
 import { ProductCard } from "~/components/ProductCard";
 import { SearchBar } from "~/components/SearchBar";
+import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { MetaFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
@@ -20,6 +21,24 @@ export default function Products() {
   const [page, setPage] = useState(1);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [sortAsc, setSortAsc] = useState(true);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("selectedProducts");
+    if (saved) {
+      try {
+        setSelectedProducts(JSON.parse(saved));
+      } catch (error) {
+        console.error("Erro ao carregar produtos selecionados:", error);
+        sessionStorage.removeItem("selectedProducts");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const value = JSON.stringify(selectedProducts);
+    sessionStorage.setItem("selectedProducts", value);
+  }, [selectedProducts]);
 
   const lastProductRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -44,6 +63,17 @@ export default function Products() {
         return [...prev, product];
       }
     });
+  };
+
+  const removeProduct = (productCod: string) => {
+    setSelectedProducts((prev) =>
+      prev.filter((p) => p.ProductCod !== productCod)
+    );
+  };
+
+  const clearSelectedProducts = () => {
+    setSelectedProducts([]);
+    setIsDrawerOpen(false);
   };
 
   useEffect(() => {
@@ -80,11 +110,11 @@ export default function Products() {
         onSearch={(data) => {
           setData(data);
           setPage(1);
-          setSelectedProducts([]);
         }}
         onLoading={setLoading}
         selectedProducts={selectedProducts}
         setSelectedProducts={setSelectedProducts}
+        onOpenDrawer={() => setIsDrawerOpen(true)}
       />
       <div className="container mx-auto px-4 py-8 mt-20">
         <div className="flex items-center justify-between mb-8">
@@ -122,6 +152,14 @@ export default function Products() {
           </div>
         )}
       </div>
+
+      <SelectedProductsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        selectedProducts={selectedProducts}
+        onRemoveProduct={removeProduct}
+        onClearProducts={clearSelectedProducts}
+      />
     </div>
   );
 }
