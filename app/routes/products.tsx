@@ -116,7 +116,13 @@ export default function Products() {
         setSelectedProducts={setSelectedProducts}
         onOpenDrawer={() => setIsDrawerOpen(true)}
       />
-      <div className="container mx-auto px-4 py-8 mt-20">
+      <div
+        className={`container mx-auto px-4 py-8 ${
+          selectedProducts.length > 0
+            ? "mt-[202px] sm:mt-[82px]"
+            : "mt-[142px] sm:mt-[82px]"
+        }`}
+      >
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">Resultados para: {searchTerm}</h1>
           <button
