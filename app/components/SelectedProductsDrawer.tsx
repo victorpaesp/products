@@ -2,6 +2,7 @@ import { X, Download, Trash2 } from "lucide-react";
 import { Product } from "~/types";
 import { formatPrice } from "~/lib/utils";
 import { useProductExport } from "~/hooks/useProductExport";
+import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
 
 interface SelectedProductsDrawerProps {
@@ -20,6 +21,8 @@ export function SelectedProductsDrawer({
   onClearProducts,
 }: SelectedProductsDrawerProps) {
   const { exportToast, exportProducts, resetExportState } = useProductExport();
+
+  useBodyOverflow(isOpen);
 
   const handleExport = async () => {
     await exportProducts(
