@@ -30,11 +30,19 @@ export function SelectedProductsDrawer({
   useBodyOverflow(isOpen);
 
   const handleExport = async () => {
+    const productsToExport = selectedProducts.filter((product) => {
+      const stock =
+        product.variation && product.variation.length > 0
+          ? product.variation[0].Stock ?? 0
+          : 9999;
+      return stock > 0;
+    });
     await exportProducts(
-      selectedProducts,
+      productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
       productQuantities
     );
+    setproductQuantities({});
   };
   return (
     <>
@@ -77,57 +85,73 @@ export function SelectedProductsDrawer({
             </div>
           ) : (
             <div className="space-y-4">
-              {selectedProducts.map((product) => (
-                <div
-                  key={product.ProductCod}
-                  className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-shadow bg-white dark:bg-gray-950"
-                >
-                  <img
-                    src={`/api/image-proxy?url=${encodeURIComponent(
-                      product.Image
-                    )}`}
-                    alt={product.Name}
-                    className="w-16 h-16 object-cover rounded-md flex-shrink-0"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/logo.jpeg";
-                    }}
-                  />
-
-                  <div className="flex-1 min-w-0">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
-                        {product.Name}
-                      </h3>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        Cod: {product.ProductCod}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
-                      <QuantityInput
-                        value={productQuantities[product.ProductCod] ?? 1}
-                        onChange={(val) =>
-                          setproductQuantities((q) => ({
-                            ...q,
-                            [product.ProductCod]: val,
-                          }))
-                        }
-                      />
-                      <p className="text-gray-900 dark:text-white mt-1">
-                        {formatPrice(product.Price)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => onRemoveProduct(product.ProductCod)}
-                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-gray-900 rounded-full transition-colors flex-shrink-0"
-                    title="Remover produto"
+              {selectedProducts.map((product) => {
+                const stock =
+                  product.variation && product.variation.length > 0
+                    ? product.variation[0].Stock ?? 0
+                    : 9999;
+                const isOutOfStock = stock === 0;
+                return (
+                  <div
+                    key={product.ProductCod}
+                    className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-shadow bg-white dark:bg-gray-950"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+                    <img
+                      src={`/api/image-proxy?url=${encodeURIComponent(
+                        product.Image
+                      )}`}
+                      alt={product.Name}
+                      className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/logo.jpeg";
+                      }}
+                    />
+
+                    <div className="flex-1 min-w-0">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
+                          {product.Name}
+                        </h3>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          Cod: {product.ProductCod} - Estoque: {stock}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
+                        {isOutOfStock ? (
+                          <span className="text-red-500 font-semibold">
+                            Produto sem estoque
+                          </span>
+                        ) : (
+                          <>
+                            <QuantityInput
+                              value={productQuantities[product.ProductCod] ?? 1}
+                              onChange={(val) =>
+                                setproductQuantities((q) => ({
+                                  ...q,
+                                  [product.ProductCod]: val,
+                                }))
+                              }
+                              max={stock}
+                            />
+                            <p className="text-gray-900 dark:text-white mt-1">
+                              {formatPrice(product.Price)}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onRemoveProduct(product.ProductCod)}
+                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-gray-900 rounded-full transition-colors flex-shrink-0"
+                      title="Remover produto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
