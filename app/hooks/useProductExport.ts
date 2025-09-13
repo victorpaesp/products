@@ -10,7 +10,7 @@ import {
   TextRun,
 } from "docx";
 import { loadImageWithCORS } from "~/lib/document-utils";
-import { formatPrice } from "~/lib/utils";
+import { formatPrice, parsePrice, formatTotalPrice } from "~/lib/utils";
 
 interface ExportToastState {
   isVisible: boolean;
@@ -24,87 +24,96 @@ export function useProductExport() {
     status: "processing",
   });
 
-  // Função para gerar os parágrafos dos produtos
-  const generateProductParagraphs = useCallback(async (products: Product[]) => {
-    const paragraphs = await Promise.all(
-      products.map(async (product, index) => {
-        // Usa a função exportada para carregar a imagem com tratamento de CORS via proxy
-        const imageUrl =
-          product.Image ||
-          "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
-        let imageArrayBuffer = await loadImageWithCORS(imageUrl);
+  const generateProductParagraphs = useCallback(
+    async (products: Product[], productQuantities: Record<string, number>) => {
+      const paragraphs = await Promise.all(
+        products.map(async (product, index) => {
+          // Usa a função exportada para carregar a imagem com tratamento de CORS via proxy
+          const imageUrl =
+            product.Image ||
+            "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
+          let imageArrayBuffer = await loadImageWithCORS(imageUrl);
 
-        // Se falhou ao carregar a imagem, tenta carregar uma imagem placeholder
-        if (!imageArrayBuffer && product.Image) {
-          console.warn(
-            `Falha ao carregar imagem para ${product.Name}, usando placeholder`
-          );
-          imageArrayBuffer = await loadImageWithCORS(
-            "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem"
-          );
-        }
+          // Se falhou ao carregar a imagem, tenta carregar uma imagem placeholder
+          if (!imageArrayBuffer && product.Image) {
+            console.warn(
+              `Falha ao carregar imagem para ${product.Name}, usando placeholder`
+            );
+            imageArrayBuffer = await loadImageWithCORS(
+              "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem"
+            );
+          }
 
-        const paragraphs: Paragraph[] = [];
+          const paragraphs: Paragraph[] = [];
 
-        // Adiciona a imagem apenas se conseguiu carregar
-        if (imageArrayBuffer) {
+          // Adiciona a imagem apenas se conseguiu carregar
+          if (imageArrayBuffer) {
+            paragraphs.push(
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: imageArrayBuffer,
+                    transformation: {
+                      width: 200,
+                      height: 150,
+                    },
+                    type: "png",
+                  }),
+                ],
+                alignment: "center",
+                spacing: { after: 200 },
+              })
+            );
+          }
+
           paragraphs.push(
+            // Cabeçalho para cada produto
             new Paragraph({
-              children: [
-                new ImageRun({
-                  data: imageArrayBuffer,
-                  transformation: {
-                    width: 200,
-                    height: 150,
-                  },
-                  type: "png",
-                }),
-              ],
-              alignment: "center",
+              text: `Produto ${index + 1}: ${product.Name}`,
+              heading: "Heading1",
               spacing: { after: 200 },
             })
           );
-        }
 
-        paragraphs.push(
-          // Cabeçalho para cada produto
-          new Paragraph({
-            text: `Produto ${index + 1}: ${product.Name}`,
-            heading: "Heading1",
-            spacing: { after: 200 },
-          })
-        );
+          paragraphs.push(
+            // Descrição do produto
+            new Paragraph({
+              text: `Descrição: ${product.Description || "N/A"}`,
+              spacing: { after: 100 },
+            }),
+            // Linha de preços detalhada (unitário, quantidade, total)
+            new Paragraph({
+              text: `Preço Unitário: ${formatPrice(
+                product.Price
+              )} | Quantidade: ${
+                productQuantities?.[product.ProductCod] ?? 1
+              } | Total: ${formatTotalPrice(
+                product.Price,
+                productQuantities?.[product.ProductCod] ?? 1
+              )}`,
+              spacing: { after: 300 },
+            }),
+            // Linha separadora
+            new Paragraph({
+              text: "----------------------------------------",
+              alignment: "center",
+              spacing: { after: 300 },
+            })
+          );
 
-        // Adiciona os demais elementos
-        paragraphs.push(
-          // Descrição do produto
-          new Paragraph({
-            text: `Descrição: ${product.Description || "N/A"}`,
-            spacing: { after: 100 },
-          }),
-          // Preço do produto
-          new Paragraph({
-            text: `Preço: ${formatPrice(product.Price)}`,
-            spacing: { after: 300 },
-          }),
-          // Linha separadora
-          new Paragraph({
-            text: "----------------------------------------",
-            alignment: "center",
-            spacing: { after: 300 },
-          })
-        );
-
-        return paragraphs;
-      })
-    );
-    return paragraphs.flat();
-  }, []);
+          return paragraphs;
+        })
+      );
+      return paragraphs.flat();
+    },
+    []
+  );
 
   const exportProducts = useCallback(
     async (
       products: Product[],
-      setSelectedProducts?: (products: Product[]) => void
+      setSelectedProducts?: (products: Product[]) => void,
+      productQuantities?: Record<string, number>
     ) => {
       if (!products || products.length === 0) return;
 
@@ -127,7 +136,19 @@ export function useProductExport() {
         const arrayBuffer = await blob.arrayBuffer();
 
         // Gera os parágrafos dos produtos (agora assíncrono)
-        const productParagraphs = await generateProductParagraphs(products);
+        const productParagraphs = await generateProductParagraphs(
+          products,
+          productQuantities ?? {}
+        );
+
+        const totalBudgetAmount = products
+          .reduce((acc, p) => {
+            const key = p.ProductCod;
+            const quantity = (productQuantities ?? {})[key] ?? 1;
+            const unit = parsePrice(p.Price);
+            return acc + unit * quantity;
+          }, 0)
+          .toString();
 
         // Cria o conteúdo do documento Word com cabeçalho e rodapé
         const doc = new Document({
@@ -182,6 +203,15 @@ export function useProductExport() {
                 }),
                 // Adiciona os produtos com formatação
                 ...productParagraphs,
+                // Parágrafo final com o total geral do orçamento
+                new Paragraph({
+                  text: `Total Geral do Orçamento: ${formatPrice(
+                    totalBudgetAmount
+                  )}`,
+                  heading: "Heading2",
+                  alignment: "center",
+                  spacing: { before: 400 },
+                }),
               ],
             },
           ],

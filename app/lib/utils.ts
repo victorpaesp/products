@@ -9,5 +9,27 @@ export const formatPrice = (price: string) => {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(parseFloat(String(price)?.replace(/\./g, "").replace(",", ".")));
+  }).format(parsePrice(price));
+};
+
+export const formatTotalPrice = (
+  price: string | number,
+  quantity: number
+): string => {
+  const total = parsePrice(price) * quantity;
+  return formatPrice(total.toString());
+};
+
+export const parsePrice = (val: string | number): number => {
+  if (typeof val === "number") return val;
+
+  if (/^\d{1,3}(\.\d{3})*,\d{2}$/.test(val)) {
+    return Number(val.replace(/\./g, "").replace(",", "."));
+  }
+
+  if (/^\d{1,3}(,\d{3})*\.\d{2}$/.test(val)) {
+    return Number(val.replace(/,/g, ""));
+  }
+
+  return Number(val.replace(",", "."));
 };
