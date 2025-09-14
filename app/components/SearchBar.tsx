@@ -1,20 +1,15 @@
 import { Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "@remix-run/react";
 import { Input } from "~/components/ui/input";
-import { api } from "~/lib/axios";
-import { ApiResponse, Product } from "~/types";
+import { Product } from "~/types";
 
 interface SearchBarProps {
-  onSearch: (data: ApiResponse) => void;
-  onLoading: (loading: boolean) => void;
   selectedProducts?: Product[];
   setSelectedProducts?: (products: Product[]) => void;
   onOpenDrawer?: () => void;
 }
 
 export function SearchBar({
-  onSearch,
-  onLoading,
   selectedProducts = [],
   onOpenDrawer,
 }: SearchBarProps) {
@@ -26,23 +21,11 @@ export function SearchBar({
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const search = formData.get("search") as string;
-    const page = searchParams.get("page") || "1";
-    const perPage = searchParams.get("per_page") || "12";
 
-    onLoading(true);
-    api
-      .get("/dados", {
-        params: {
-          productName: search,
-          page,
-          per_page: perPage,
-        },
-      })
-      .then((response) => {
-        onSearch(response.data);
-        navigate(`/products?q=${encodeURIComponent(search)}`);
-      })
-      .finally(() => onLoading(false));
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("q", search);
+
+    navigate(`/products?${newSearchParams.toString()}`);
   };
 
   return (

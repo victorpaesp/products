@@ -20,16 +20,21 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Products() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const searchTerm = searchParams.get("q");
   const observer = useRef<IntersectionObserver | null>(null);
+  const prevSearchTerm = useRef<string | null>(null);
 
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
-  const [sortBy, setSortBy] = useState<"name" | "price">("name");
-  const [sortAsc, setSortAsc] = useState(true);
+
+  const [sortBy, setSortBy] = useState<"name" | "price">(
+    (searchParams.get("sort_by") as "name" | "price") || "name"
+  );
+  const [sortAsc, setSortAsc] = useState(searchParams.get("order") !== "desc");
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -48,6 +53,18 @@ export default function Products() {
     const value = JSON.stringify(selectedProducts);
     sessionStorage.setItem("selectedProducts", value);
   }, [selectedProducts]);
+
+  useEffect(() => {
+    const urlSortBy = searchParams.get("sort_by") as "name" | "price";
+    const urlOrder = searchParams.get("order");
+
+    if (urlSortBy && urlSortBy !== sortBy) {
+      setSortBy(urlSortBy);
+    }
+    if (urlOrder && (urlOrder === "asc") !== sortAsc) {
+      setSortAsc(urlOrder === "asc");
+    }
+  }, [searchParams]);
 
   const lastProductRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -87,6 +104,15 @@ export default function Products() {
 
   useEffect(() => {
     if (searchTerm) {
+      const isNewSearch = prevSearchTerm.current !== searchTerm;
+
+      if (isNewSearch) {
+        setData(null);
+        setPage(1);
+        prevSearchTerm.current = searchTerm;
+      }
+
+      const pageToUse = isNewSearch ? 1 : page;
       const perPage = searchParams.get("per_page") || "12";
 
       setLoading(true);
@@ -94,7 +120,7 @@ export default function Products() {
         .get<ApiResponse>("/dados", {
           params: {
             productName: searchTerm,
-            page,
+            page: pageToUse,
             per_page: perPage,
             sort_by: sortBy,
             order: sortAsc ? "asc" : "desc",
@@ -102,7 +128,7 @@ export default function Products() {
         })
         .then((response) => {
           setData((prev) => {
-            if (!prev) return response.data;
+            if (!prev || pageToUse === 1) return response.data;
             return {
               ...response.data,
               data: [...prev.data, ...response.data.data],
@@ -111,7 +137,14 @@ export default function Products() {
         })
         .finally(() => setLoading(false));
     }
-  }, [searchTerm, searchParams, page, sortAsc, sortBy]);
+  }, [searchTerm, page, sortAsc, sortBy]);
+
+  useEffect(() => {
+    if (prevSearchTerm.current === searchTerm && searchTerm) {
+      setData(null);
+      setPage(1);
+    }
+  }, [sortBy, sortAsc]);
 
   function getSelectLabelWithIcon(value: string) {
     if (value.startsWith("name")) {
@@ -144,11 +177,6 @@ export default function Products() {
   return (
     <div>
       <SearchBar
-        onSearch={(data) => {
-          setData(data);
-          setPage(1);
-        }}
-        onLoading={setLoading}
         selectedProducts={selectedProducts}
         setSelectedProducts={setSelectedProducts}
         onOpenDrawer={() => setIsDrawerOpen(true)}
@@ -170,10 +198,18 @@ export default function Products() {
               value={`${sortBy ? sortBy : "name"}-${sortAsc ? "asc" : "desc"}`}
               onValueChange={(value) => {
                 const [by, order] = value.split("-");
-                setSortBy(by as "name" | "price");
-                setSortAsc(order === "asc");
+                const newSortBy = by as "name" | "price";
+                const newSortAsc = order === "asc";
+
+                setSortBy(newSortBy);
+                setSortAsc(newSortAsc);
                 setPage(1);
                 setData(null);
+
+                const newSearchParams = new URLSearchParams(searchParams);
+                newSearchParams.set("sort_by", newSortBy);
+                newSearchParams.set("order", order);
+                setSearchParams(newSearchParams);
               }}
             >
               <SelectTrigger id="sort-select">
