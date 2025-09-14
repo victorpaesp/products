@@ -4,6 +4,14 @@ import type { ApiResponse, Product } from "~/types";
 import { api } from "~/lib/axios";
 import { ProductCard } from "~/components/ProductCard";
 import { SearchBar } from "~/components/SearchBar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
 import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { MetaFunction } from "@remix-run/node";
 
@@ -20,6 +28,7 @@ export default function Products() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [sortBy, setSortBy] = useState<"name" | "price">("name");
   const [sortAsc, setSortAsc] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -87,7 +96,7 @@ export default function Products() {
             productName: searchTerm,
             page,
             per_page: perPage,
-            sort_by: "name",
+            sort_by: sortBy,
             order: sortAsc ? "asc" : "desc",
           },
         })
@@ -102,7 +111,35 @@ export default function Products() {
         })
         .finally(() => setLoading(false));
     }
-  }, [searchTerm, searchParams, page, sortAsc]); // adiciona sortAsc como dependência
+  }, [searchTerm, searchParams, page, sortAsc, sortBy]);
+
+  function getSelectLabelWithIcon(value: string) {
+    if (value.startsWith("name")) {
+      return (
+        <>
+          {value.endsWith("asc") ? (
+            <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+          ) : (
+            <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+          )}
+          Nome
+        </>
+      );
+    }
+    if (value.startsWith("price")) {
+      return (
+        <>
+          {value.endsWith("asc") ? (
+            <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+          ) : (
+            <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+          )}
+          Preço
+        </>
+      );
+    }
+    return "Selecione...";
+  }
 
   return (
     <div>
@@ -125,16 +162,47 @@ export default function Products() {
       >
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">Resultados para: {searchTerm}</h1>
-          <button
-            onClick={() => {
-              setSortAsc((prev) => !prev);
-              setPage(1);
-              setData(null); // Reseta os dados para recarregar a lista
-            }}
-            className="ml-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-700 transition"
-          >
-            {sortAsc ? "Ordem A-Z" : "Ordem Z-A"}
-          </button>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort-select" className="text-sm whitespace-nowrap">
+              Ordenar por:
+            </label>
+            <Select
+              value={`${sortBy ? sortBy : "name"}-${sortAsc ? "asc" : "desc"}`}
+              onValueChange={(value) => {
+                const [by, order] = value.split("-");
+                setSortBy(by as "name" | "price");
+                setSortAsc(order === "asc");
+                setPage(1);
+                setData(null);
+              }}
+            >
+              <SelectTrigger id="sort-select">
+                <SelectValue>
+                  {getSelectLabelWithIcon(
+                    `${sortBy ? sortBy : "name"}-${sortAsc ? "asc" : "desc"}`
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">
+                  <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+                  Nome: A-Z
+                </SelectItem>
+                <SelectItem value="name-desc">
+                  <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+                  Nome: Z-A
+                </SelectItem>
+                <SelectItem value="price-asc">
+                  <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+                  Preço: Menor ao maior
+                </SelectItem>
+                <SelectItem value="price-desc">
+                  <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+                  Preço: Maior ao menor
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         {loading && <div className="text-center">Carregando...</div>}
         {data && (

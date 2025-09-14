@@ -67,7 +67,7 @@ export function SelectedProductsDrawer({
     } else {
       setIsTotalReady(allReady);
     }
-  }, [selectedProducts, productQuantities]);
+  }, [selectedProducts, productQuantities, total]);
 
   const handleExport = async () => {
     const productsToExport = selectedProducts.filter((product) => {
