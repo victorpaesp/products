@@ -124,7 +124,7 @@ export function SelectedProductsDrawer({
             <div className="space-y-4">
               {selectedProducts.map((product) => {
                 const stock = getProductStock(product);
-                const isOutOfStock = stock === 0;
+                const isOutOfStock = stock <= 0;
                 return (
                   <div
                     key={product.ProductCod}
