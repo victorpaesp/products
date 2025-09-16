@@ -108,27 +108,27 @@ export default function Products() {
 
       if (isNewSearch) {
         setData(null);
-        setPage(1);
         prevSearchTerm.current = searchTerm;
+        if (page !== 1) {
+          setPage(1);
+          return;
+        }
       }
-
-      const pageToUse = isNewSearch ? 1 : page;
-      const perPage = searchParams.get("per_page") || "12";
 
       setLoading(true);
       api
         .get<ApiResponse>("/dados", {
           params: {
             productName: searchTerm,
-            page: pageToUse,
-            per_page: perPage,
+            page: page,
+            per_page: searchParams.get("per_page") || "12",
             sort_by: sortBy,
             order: sortAsc ? "asc" : "desc",
           },
         })
         .then((response) => {
           setData((prev) => {
-            if (!prev || pageToUse === 1) return response.data;
+            if (!prev || page === 1) return response.data;
             return {
               ...response.data,
               data: [...prev.data, ...response.data.data],
@@ -138,13 +138,6 @@ export default function Products() {
         .finally(() => setLoading(false));
     }
   }, [searchTerm, page, sortAsc, sortBy]);
-
-  useEffect(() => {
-    if (prevSearchTerm.current === searchTerm && searchTerm) {
-      setData(null);
-      setPage(1);
-    }
-  }, [sortBy, sortAsc]);
 
   function getSelectLabelWithIcon(value: string) {
     if (value.startsWith("name")) {
