@@ -5,6 +5,7 @@ import { formatPrice, parsePrice } from "~/lib/utils";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
+import { ExportProposalModal } from "./product-modal/ExportProposalModal";
 import { QuantityInput } from "~/components/ui/quantity-input";
 
 interface SelectedProductsDrawerProps {
@@ -23,6 +24,7 @@ export function SelectedProductsDrawer({
   onClearProducts,
 }: SelectedProductsDrawerProps) {
   const { exportToast, exportProducts, resetExportState } = useProductExport();
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [productQuantities, setproductQuantities] = useState<
     Record<string, number>
   >({});
@@ -69,7 +71,15 @@ export function SelectedProductsDrawer({
     }
   }, [selectedProducts, productQuantities, total]);
 
-  const handleExport = async () => {
+  const handleExportClick = () => {
+    setExportModalOpen(true);
+  };
+
+  const handleExportSubmit = async (formData: {
+    proposalName: string;
+    seller: string;
+    extraField: string;
+  }) => {
     const productsToExport = selectedProducts.filter((product) => {
       const stock = getProductStock(product);
       return stock > 0;
@@ -77,9 +87,11 @@ export function SelectedProductsDrawer({
     await exportProducts(
       productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
-      productQuantities
+      productQuantities,
+      formData.seller
     );
     setproductQuantities({});
+    setExportModalOpen(false);
   };
   return (
     <>
@@ -205,7 +217,7 @@ export function SelectedProductsDrawer({
               </span>
             </div>
             <button
-              onClick={handleExport}
+              onClick={handleExportClick}
               className={`w-full flex items-center justify-center gap-2 font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 
                   bg-black hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-900 text-white ${
                     !isTotalReady || total === 0
@@ -214,9 +226,13 @@ export function SelectedProductsDrawer({
                   }`}
               disabled={!isTotalReady || total === 0}
             >
-              <Download className="h-5 w-5" />
-              Exportar
+              Continuar para exportação
             </button>
+            <ExportProposalModal
+              open={isExportModalOpen}
+              onOpenChange={setExportModalOpen}
+              onSubmit={handleExportSubmit}
+            />
           </div>
         )}
       </div>

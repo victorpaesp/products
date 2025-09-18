@@ -8,6 +8,10 @@ import {
   Packer,
   Paragraph,
   TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
 } from "docx";
 import { loadImageWithCORS } from "~/lib/document-utils";
 import { formatPrice, parsePrice, formatTotalPrice } from "~/lib/utils";
@@ -28,13 +32,11 @@ export function useProductExport() {
     async (products: Product[], productQuantities: Record<string, number>) => {
       const paragraphs = await Promise.all(
         products.map(async (product, index) => {
-          // Usa a função exportada para carregar a imagem com tratamento de CORS via proxy
           const imageUrl =
             product.Image ||
             "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
           let imageArrayBuffer = await loadImageWithCORS(imageUrl);
 
-          // Se falhou ao carregar a imagem, tenta carregar uma imagem placeholder
           if (!imageArrayBuffer && product.Image) {
             console.warn(
               `Falha ao carregar imagem para ${product.Name}, usando placeholder`
@@ -44,64 +46,128 @@ export function useProductExport() {
             );
           }
 
-          const paragraphs: Paragraph[] = [];
+          const descriptionBlock = [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${product.Name}`,
+                  bold: true,
+                  color: "000000",
+                  size: 23,
+                }),
+              ],
+              spacing: { after: 120 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${(product.Description || "N/A").replace(/\n/g, " ")}`,
+                  color: "000000",
+                  size: 22,
+                }),
+              ],
+              spacing: { after: 120 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "Preço Unitário: " + formatPrice(product.Price),
+                  size: 23,
+                  bold: true,
+                }),
+              ],
+              spacing: { after: 60 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text:
+                    "Quantidade: " +
+                    (productQuantities?.[product.ProductCod] ?? 1),
+                  size: 23,
+                  bold: true,
+                }),
+              ],
+              spacing: { after: 60 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text:
+                    "Total: " +
+                    formatTotalPrice(
+                      product.Price,
+                      productQuantities?.[product.ProductCod] ?? 1
+                    ),
+                  size: 23,
+                  bold: true,
+                }),
+              ],
+            }),
+          ];
 
-          // Adiciona a imagem apenas se conseguiu carregar
-          if (imageArrayBuffer) {
-            paragraphs.push(
-              new Paragraph({
-                children: [
-                  new ImageRun({
-                    data: imageArrayBuffer,
-                    transformation: {
-                      width: 200,
-                      height: 150,
-                    },
-                    type: "png",
+          const imageCell = new TableCell({
+            children: imageArrayBuffer
+              ? [
+                  new Paragraph({
+                    children: [
+                      new ImageRun({
+                        data: imageArrayBuffer,
+                        transformation: {
+                          width: 180,
+                          height: 180,
+                        },
+                        type: "png",
+                      }),
+                    ],
+                    alignment: "center",
+                    spacing: { after: 100 },
+                  }),
+                ]
+              : [
+                  new Paragraph({
+                    text: "Sem Imagem",
+                    alignment: "center",
+                    spacing: { after: 100 },
                   }),
                 ],
-                alignment: "center",
-                spacing: { after: 200 },
-              })
-            );
-          }
+            width: { size: 4250, type: WidthType.DXA },
+            margins: { top: 100, bottom: 100, left: 100, right: 100 },
+            verticalAlign: "center",
+          });
 
-          paragraphs.push(
-            // Cabeçalho para cada produto
-            new Paragraph({
-              text: `Produto ${index + 1}: ${product.Name}`,
-              heading: "Heading1",
-              spacing: { after: 200 },
-            })
-          );
+          const descCell = new TableCell({
+            children: descriptionBlock,
+            width: { size: 4250, type: WidthType.DXA },
+            margins: { top: 100, bottom: 100, left: 100, right: 100 },
+            verticalAlign: "center",
+          });
 
-          paragraphs.push(
-            // Descrição do produto
-            new Paragraph({
-              text: `Descrição: ${product.Description || "N/A"}`,
-              spacing: { after: 100 },
-            }),
-            // Linha de preços detalhada (unitário, quantidade, total)
-            new Paragraph({
-              text: `Preço Unitário: ${formatPrice(
-                product.Price
-              )} | Quantidade: ${
-                productQuantities?.[product.ProductCod] ?? 1
-              } | Total: ${formatTotalPrice(
-                product.Price,
-                productQuantities?.[product.ProductCod] ?? 1
-              )}`,
-              spacing: { after: 300 },
-            }),
-            // Linha separadora
-            new Paragraph({
-              text: "----------------------------------------",
-              alignment: "center",
-              spacing: { after: 300 },
-            })
-          );
+          const rowCells =
+            index % 2 === 0 ? [imageCell, descCell] : [descCell, imageCell];
 
-          return paragraphs;
+          const productTable = new Table({
+            rows: [
+              new TableRow({
+                children: rowCells,
+                cantSplit: true,
+              }),
+            ],
+            width: { size: 8500, type: WidthType.DXA },
+            alignment: "center",
+            margins: { top: 200, bottom: 200 },
+            columnWidths: [4250, 4250],
+            borders: {
+              top: { style: "none", size: 0, color: "FFFFFF" },
+              bottom: { style: "none", size: 0, color: "FFFFFF" },
+              left: { style: "none", size: 0, color: "FFFFFF" },
+              right: { style: "none", size: 0, color: "FFFFFF" },
+              insideHorizontal: { style: "none", size: 0, color: "FFFFFF" },
+              insideVertical: { style: "none", size: 0, color: "FFFFFF" },
+            },
+          });
+
+          return [productTable];
         })
       );
       return paragraphs.flat();
@@ -113,29 +179,27 @@ export function useProductExport() {
     async (
       products: Product[],
       setSelectedProducts?: (products: Product[]) => void,
-      productQuantities?: Record<string, number>
+      productQuantities?: Record<string, number>,
+      seller?: string
     ) => {
       if (!products || products.length === 0) return;
 
       try {
-        // Mostra o toast de processamento
         setExportToast({
           isVisible: true,
           status: "processing",
         });
 
-        // Obtém a data atual formatada
         const currentDate = new Date().toLocaleDateString("pt-BR", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
         });
 
-        const response = await fetch("/logo.jpeg");
+        const response = await fetch("/logo-document.jpg");
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
-        // Gera os parágrafos dos produtos (agora assíncrono)
         const productParagraphs = await generateProductParagraphs(
           products,
           productQuantities ?? {}
@@ -150,8 +214,16 @@ export function useProductExport() {
           }, 0)
           .toString();
 
-        // Cria o conteúdo do documento Word com cabeçalho e rodapé
         const doc = new Document({
+          styles: {
+            default: {
+              document: {
+                run: {
+                  font: "Poppins",
+                },
+              },
+            },
+          },
           sections: [
             {
               headers: {
@@ -159,19 +231,11 @@ export function useProductExport() {
                   children: [
                     new Paragraph({
                       children: [
-                        new TextRun({
-                          text: "Santo Mimo",
-                          bold: true,
-                          size: 32,
-                        }),
-                        new TextRun({
-                          text: " ",
-                        }),
                         new ImageRun({
                           data: arrayBuffer,
                           transformation: {
-                            width: 100,
-                            height: 100,
+                            width: 172,
+                            height: 106,
                           },
                           type: "jpg",
                         }),
@@ -182,35 +246,183 @@ export function useProductExport() {
                   ],
                 }),
               },
-              footers: {
-                default: new Footer({
+              children: [
+                new Paragraph({
                   children: [
-                    new Paragraph({
-                      text: `Documento gerado em: ${currentDate}`,
-                      alignment: "center",
-                      spacing: { after: 200 },
+                    new TextRun({
+                      text: "PROPOSTA",
+                      size: 32,
+                      underline: {},
+                      bold: true,
                     }),
                   ],
-                }),
-              },
-              children: [
-                // Título do documento
-                new Paragraph({
-                  text: "Lista de Produtos Selecionados",
-                  heading: "Title",
                   alignment: "center",
                   spacing: { after: 400 },
                 }),
-                // Adiciona os produtos com formatação
-                ...productParagraphs,
-                // Parágrafo final com o total geral do orçamento
                 new Paragraph({
-                  text: `Total Geral do Orçamento: ${formatPrice(
-                    totalBudgetAmount
-                  )}`,
+                  children: [new TextRun({ text: "", size: 24 })],
+                }),
+                ...(seller
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: seller,
+                            size: 24,
+                          }),
+                        ],
+                        spacing: { after: 400 },
+                      }),
+                    ]
+                  : []),
+                ...productParagraphs,
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Total Geral do Orçamento: ${formatPrice(
+                        totalBudgetAmount
+                      )}`,
+                      bold: true,
+                      size: 24,
+                      color: "000000",
+                    }),
+                  ],
                   heading: "Heading2",
                   alignment: "center",
-                  spacing: { before: 400 },
+                  spacing: { before: 400, after: 200 },
+                }),
+
+                new Table({
+                  rows: [
+                    new TableRow({
+                      children: [
+                        new TableCell({
+                          children: [
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text: "Frete não incluso",
+                                  size: 24,
+                                  color: "000000",
+                                }),
+                              ],
+                            }),
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text: "Prazo de entrega 15 dias após aprovação da arte",
+                                  size: 24,
+                                  color: "000000",
+                                }),
+                              ],
+                            }),
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text: "Forma de pagamento a combinar",
+                                  size: 24,
+                                  color: "000000",
+                                }),
+                              ],
+                            }),
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text: "Frete para SP: R$ 169,90",
+                                  size: 24,
+                                  color: "000000",
+                                }),
+                              ],
+                            }),
+                          ],
+                          width: { size: 8500, type: WidthType.DXA },
+                          columnSpan: 2,
+                          borders: {
+                            top: { style: "single", size: 2, color: "000000" },
+                            bottom: {
+                              style: "single",
+                              size: 2,
+                              color: "000000",
+                            },
+                            left: { style: "single", size: 2, color: "000000" },
+                            right: {
+                              style: "single",
+                              size: 2,
+                              color: "000000",
+                            },
+                          },
+                        }),
+                      ],
+                      cantSplit: false,
+                    }),
+                  ],
+                  width: { size: 8500, type: WidthType.DXA },
+                  alignment: "center",
+                  margins: { top: 200, bottom: 200, left: 200, right: 200 },
+                  columnWidths: [4250, 4250],
+                }),
+
+                new Paragraph({
+                  children: [new TextRun({ text: "", size: 24 })],
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Grata e à sua inteira disposição para quaisquer esclarecimentos.",
+                      size: 24,
+                      color: "000000",
+                    }),
+                  ],
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: "", size: 24 })],
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `São Paulo, ${new Date().toLocaleDateString(
+                        "pt-BR",
+                        {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}.`,
+                      size: 24,
+                      color: "000000",
+                    }),
+                  ],
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: "", size: 24 })],
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Mariana Szabloczky",
+                      size: 24,
+                      color: "000000",
+                    }),
+                  ],
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Santo Mimo",
+                      size: 24,
+                      color: "000000",
+                    }),
+                  ],
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Fone 11 96641-9950",
+                      size: 24,
+                      color: "000000",
+                    }),
+                  ],
                 }),
               ],
             },
