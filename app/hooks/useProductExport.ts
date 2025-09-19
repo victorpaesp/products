@@ -269,7 +269,7 @@ export function useProductExport() {
                             new Paragraph({
                               children: [
                                 new TextRun({
-                                  text: "Prazo de entrega 15 dias após aprovação da arte",
+                                  text: "Prazo de entrega 20 dias após aprovação da arte",
                                   size: 24,
                                   color: "000000",
                                 }),
