@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { X, Download, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { X, Trash2 } from "lucide-react";
 import { Product } from "~/types";
-import { formatPrice, parsePrice } from "~/lib/utils";
+import { formatPrice } from "~/lib/utils";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
@@ -28,10 +28,6 @@ export function SelectedProductsDrawer({
   const [productQuantities, setproductQuantities] = useState<
     Record<string, number>
   >({});
-  const [total, setTotal] = useState<number>(0);
-  const [pendingTotal, setPendingTotal] = useState<number>(0);
-  const [isTotalReady, setIsTotalReady] = useState<boolean>(false);
-  const [blurTotal, setBlurTotal] = useState<boolean>(false);
 
   useBodyOverflow(isOpen);
 
@@ -40,36 +36,6 @@ export function SelectedProductsDrawer({
       ? product.variation[0].Stock ?? 0
       : 9999;
   };
-
-  useEffect(() => {
-    if (selectedProducts.length === 0) {
-      setTotal(0);
-      setIsTotalReady(true);
-      return;
-    }
-    let sum = 0;
-    let allReady = true;
-    selectedProducts.forEach((product) => {
-      const stock = getProductStock(product);
-      if (stock === 0) return;
-      const quantity = productQuantities[product.ProductCod] ?? 1;
-      if (quantity < 1) allReady = false;
-      const price = parsePrice(product.Price);
-      sum += price * quantity;
-    });
-    if (sum !== total) {
-      setPendingTotal(sum);
-      setBlurTotal(true);
-      setIsTotalReady(allReady);
-      const timeout = setTimeout(() => {
-        setTotal(sum);
-        setBlurTotal(false);
-      }, 300);
-      return () => clearTimeout(timeout);
-    } else {
-      setIsTotalReady(allReady);
-    }
-  }, [selectedProducts, productQuantities, total]);
 
   const handleExportClick = () => {
     setExportModalOpen(true);
@@ -204,27 +170,10 @@ export function SelectedProductsDrawer({
 
         {selectedProducts.length > 0 && (
           <div className="flex-shrink-0 flex flex-col gap-3 p-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
-            <div className="flex items-center justify-between text-lg font-semibold">
-              <span>Total</span>
-              <span
-                className={
-                  blurTotal
-                    ? "transition-all duration-300 blur-sm"
-                    : "transition-all duration-300"
-                }
-              >
-                {formatPrice((blurTotal ? total : pendingTotal).toFixed(2))}
-              </span>
-            </div>
             <button
               onClick={handleExportClick}
               className={`w-full flex items-center justify-center gap-2 font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 
-                  bg-black hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-900 text-white ${
-                    !isTotalReady || total === 0
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-              disabled={!isTotalReady || total === 0}
+                  bg-black hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-900 text-white`}
             >
               Continuar para exportação
             </button>

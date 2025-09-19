@@ -12,14 +12,6 @@ export const formatPrice = (price: string) => {
   }).format(parsePrice(price));
 };
 
-export const formatTotalPrice = (
-  price: string | number,
-  quantity: number
-): string => {
-  const total = parsePrice(price) * quantity;
-  return formatPrice(total.toString());
-};
-
 export const parsePrice = (val: string | number): number => {
   if (typeof val === "number") return val;
 

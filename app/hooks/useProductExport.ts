@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { Product } from "~/types";
 import {
   Document,
-  Footer,
   Header,
   ImageRun,
   Packer,
@@ -14,7 +13,7 @@ import {
   WidthType,
 } from "docx";
 import { loadImageWithCORS } from "~/lib/document-utils";
-import { formatPrice, parsePrice, formatTotalPrice } from "~/lib/utils";
+import { formatPrice } from "~/lib/utils";
 
 interface ExportToastState {
   isVisible: boolean;
@@ -89,20 +88,6 @@ export function useProductExport() {
                 }),
               ],
               spacing: { after: 60 },
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text:
-                    "Total: " +
-                    formatTotalPrice(
-                      product.Price,
-                      productQuantities?.[product.ProductCod] ?? 1
-                    ),
-                  size: 23,
-                  bold: true,
-                }),
-              ],
             }),
           ];
 
@@ -190,12 +175,6 @@ export function useProductExport() {
           status: "processing",
         });
 
-        const currentDate = new Date().toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-
         const response = await fetch("/logo-document.jpg");
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
@@ -204,15 +183,6 @@ export function useProductExport() {
           products,
           productQuantities ?? {}
         );
-
-        const totalBudgetAmount = products
-          .reduce((acc, p) => {
-            const key = p.ProductCod;
-            const quantity = (productQuantities ?? {})[key] ?? 1;
-            const unit = parsePrice(p.Price);
-            return acc + unit * quantity;
-          }, 0)
-          .toString();
 
         const doc = new Document({
           styles: {
@@ -276,22 +246,11 @@ export function useProductExport() {
                     ]
                   : []),
                 ...productParagraphs,
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Total Geral do Orçamento: ${formatPrice(
-                        totalBudgetAmount
-                      )}`,
-                      bold: true,
-                      size: 24,
-                      color: "000000",
-                    }),
-                  ],
-                  heading: "Heading2",
-                  alignment: "center",
-                  spacing: { before: 400, after: 200 },
-                }),
 
+                new Paragraph({
+                  children: [new TextRun({ text: "", size: 24 })],
+                  spacing: { after: 100 },
+                }),
                 new Table({
                   rows: [
                     new TableRow({
@@ -361,7 +320,6 @@ export function useProductExport() {
                   margins: { top: 200, bottom: 200, left: 200, right: 200 },
                   columnWidths: [4250, 4250],
                 }),
-
                 new Paragraph({
                   children: [new TextRun({ text: "", size: 24 })],
                   spacing: { after: 100 },
