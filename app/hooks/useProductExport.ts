@@ -165,7 +165,9 @@ export function useProductExport() {
       products: Product[],
       setSelectedProducts?: (products: Product[]) => void,
       productQuantities?: Record<string, number>,
-      seller?: string
+      seller?: string,
+      company?: string,
+      contact?: string
     ) => {
       if (!products || products.length === 0) return;
 
@@ -238,6 +240,30 @@ export function useProductExport() {
                         children: [
                           new TextRun({
                             text: seller,
+                            size: 24,
+                          }),
+                        ],
+                      }),
+                    ]
+                  : []),
+                ...(company
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: company,
+                            size: 24,
+                          }),
+                        ],
+                      }),
+                    ]
+                  : []),
+                ...(contact
+                  ? [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: contact,
                             size: 24,
                           }),
                         ],
@@ -392,8 +418,11 @@ export function useProductExport() {
           .then((blob) => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
+            const dateStr = new Date()
+              .toLocaleDateString("pt-BR")
+              .replace(/\//g, "-");
             a.href = url;
-            a.download = "produtos_selecionados.docx";
+            a.download = `proposta_${dateStr}.docx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

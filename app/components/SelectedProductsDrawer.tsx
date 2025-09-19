@@ -5,7 +5,7 @@ import { formatPrice } from "~/lib/utils";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
-import { ExportProposalModal } from "./product-modal/ExportProposalModal";
+import { ExportProposalModal } from "./ExportProposalModal";
 import { QuantityInput } from "~/components/ui/quantity-input";
 
 interface SelectedProductsDrawerProps {
@@ -42,9 +42,9 @@ export function SelectedProductsDrawer({
   };
 
   const handleExportSubmit = async (formData: {
-    proposalName: string;
     seller: string;
-    extraField: string;
+    company: string;
+    contact: string;
   }) => {
     const productsToExport = selectedProducts.filter((product) => {
       const stock = getProductStock(product);
@@ -54,7 +54,9 @@ export function SelectedProductsDrawer({
       productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
       productQuantities,
-      formData.seller
+      formData.seller,
+      formData.company,
+      formData.contact
     );
     setproductQuantities({});
     setExportModalOpen(false);

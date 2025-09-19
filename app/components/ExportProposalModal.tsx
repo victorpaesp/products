@@ -1,22 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import { Download } from "lucide-react";
 
 interface ExportProposalModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: {
-    proposalName: string;
     seller: string;
-    extraField: string;
+    company: string;
+    contact: string;
   }) => void;
 }
 
@@ -25,16 +25,18 @@ export const ExportProposalModal: React.FC<ExportProposalModalProps> = ({
   onOpenChange,
   onSubmit,
 }) => {
-  const [seller, setSeller] = React.useState("");
+  const [seller, setSeller] = useState("");
+  const [company, setCompany] = useState("");
+  const [contact, setContact] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ proposalName: "", seller, extraField: "" });
+    onSubmit({ company, seller, contact });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="dark:bg-neutral-900 bg-white dark:border-none">
+      <DialogContent className="dark:bg-neutral-900 bg-white dark:border-none max-w-[90vw] sm:max-w-lg rounded-lg">
         <DialogHeader>
           <DialogTitle className="dark:text-white text-black">
             Exportar Proposta
@@ -56,6 +58,36 @@ export const ExportProposalModal: React.FC<ExportProposalModalProps> = ({
               placeholder="Digite o nome do vendedor"
               value={seller}
               onChange={(e) => setSeller(e.target.value)}
+              className="dark:bg-neutral-800 dark:text-white bg-white text-black"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="company"
+              className="block text-sm font-medium mb-1 dark:text-white text-black"
+            >
+              Empresa <span className="text-xs text-gray-400">(opcional)</span>
+            </label>
+            <Input
+              id="company"
+              placeholder="Digite o nome da empresa"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              className="dark:bg-neutral-800 dark:text-white bg-white text-black"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="contact"
+              className="block text-sm font-medium mb-1 dark:text-white text-black"
+            >
+              Contato <span className="text-xs text-gray-400">(opcional)</span>
+            </label>
+            <Input
+              id="contact"
+              placeholder="Digite o contato"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
               className="dark:bg-neutral-800 dark:text-white bg-white text-black"
             />
           </div>
