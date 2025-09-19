@@ -46,10 +46,7 @@ export function SelectedProductsDrawer({
     company: string;
     contact: string;
   }) => {
-    const productsToExport = selectedProducts.filter((product) => {
-      const stock = getProductStock(product);
-      return stock > 0;
-    });
+    const productsToExport = selectedProducts;
     await exportProducts(
       productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
@@ -104,7 +101,8 @@ export function SelectedProductsDrawer({
             <div className="space-y-4">
               {selectedProducts.map((product) => {
                 const stock = getProductStock(product);
-                const isOutOfStock = stock <= 0;
+                const quantity = productQuantities[product.ProductCod] ?? 1;
+                const isQuantityExceeded = quantity > stock;
                 return (
                   <div
                     key={product.ProductCod}
@@ -132,26 +130,25 @@ export function SelectedProductsDrawer({
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
-                        {isOutOfStock ? (
-                          <span className="text-red-500 font-semibold">
-                            Produto sem estoque
+                        <QuantityInput
+                          value={quantity}
+                          onChange={(val) =>
+                            setproductQuantities((q) => ({
+                              ...q,
+                              [product.ProductCod]: val,
+                            }))
+                          }
+                          min={1}
+                        />
+                        <p className="text-gray-900 dark:text-white mt-1">
+                          {formatPrice(product.Price)}
+                        </p>
+                      </div>
+                      <div className="mt-2">
+                        {isQuantityExceeded && (
+                          <span className="text-red-500 font-semibold text-sm block">
+                            Estoque do produto excedido
                           </span>
-                        ) : (
-                          <>
-                            <QuantityInput
-                              value={productQuantities[product.ProductCod] ?? 1}
-                              onChange={(val) =>
-                                setproductQuantities((q) => ({
-                                  ...q,
-                                  [product.ProductCod]: val,
-                                }))
-                              }
-                              max={stock}
-                            />
-                            <p className="text-gray-900 dark:text-white mt-1">
-                              {formatPrice(product.Price)}
-                            </p>
-                          </>
                         )}
                       </div>
                     </div>

@@ -45,6 +45,13 @@ export function useProductExport() {
             );
           }
 
+          const quantity = productQuantities?.[product.ProductCod] ?? 1;
+          const stock =
+            product.variation && product.variation.length > 0
+              ? product.variation[0].Stock ?? 0
+              : 9999;
+          const isQuantityExceeded = quantity > stock;
+
           const descriptionBlock = [
             new Paragraph({
               children: [
@@ -80,15 +87,28 @@ export function useProductExport() {
             new Paragraph({
               children: [
                 new TextRun({
-                  text:
-                    "Quantidade: " +
-                    (productQuantities?.[product.ProductCod] ?? 1),
+                  text: "Quantidade: " + quantity,
                   size: 23,
                   bold: true,
                 }),
               ],
               spacing: { after: 60 },
             }),
+            ...(isQuantityExceeded
+              ? [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: "Estoque do produto excedido",
+                        size: 23,
+                        bold: true,
+                        color: "FF0000",
+                      }),
+                    ],
+                    spacing: { after: 60 },
+                  }),
+                ]
+              : []),
           ];
 
           const imageCell = new TableCell({
@@ -151,8 +171,13 @@ export function useProductExport() {
               insideVertical: { style: "none", size: 0, color: "FFFFFF" },
             },
           });
-
-          return [productTable];
+          return [
+            productTable,
+            new Paragraph({
+              children: [new TextRun({ text: "", size: 23 })],
+              spacing: { after: 60 },
+            }),
+          ];
         })
       );
       return paragraphs.flat();

@@ -13,7 +13,7 @@ export interface QuantityInputProps {
 }
 
 const QuantityInput = React.forwardRef<HTMLDivElement, QuantityInputProps>(
-  ({ className, value, onChange, min = 1, max = 9999, ...props }, ref) => {
+  ({ className, value, onChange, min = 1, max = 99999, ...props }, ref) => {
     const handleDecrement = () => {
       if (value > min) onChange(value - 1);
     };
