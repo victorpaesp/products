@@ -13,6 +13,8 @@ import {
 } from "~/components/ui/select";
 import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
 import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
+import { EmptyState } from "~/components/ui/EmptyState";
+import { LoadingState } from "~/components/ui/LoadingState";
 import { MetaFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
@@ -64,6 +66,7 @@ export default function Products() {
     if (urlOrder && (urlOrder === "asc") !== sortAsc) {
       setSortAsc(urlOrder === "asc");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const lastProductRef = useCallback(
@@ -137,6 +140,7 @@ export default function Products() {
         })
         .finally(() => setLoading(false));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, page, sortAsc, sortBy]);
 
   function getSelectLabelWithIcon(value: string) {
@@ -183,58 +187,70 @@ export default function Products() {
       >
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">Resultados para: {searchTerm}</h1>
-          <div className="flex items-center gap-2">
-            <label htmlFor="sort-select" className="text-sm whitespace-nowrap">
-              Ordenar por:
-            </label>
-            <Select
-              value={`${sortBy ? sortBy : "name"}-${sortAsc ? "asc" : "desc"}`}
-              onValueChange={(value) => {
-                const [by, order] = value.split("-");
-                const newSortBy = by as "name" | "price";
-                const newSortAsc = order === "asc";
+          {data && data.data.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="sort-select"
+                className="text-sm whitespace-nowrap"
+              >
+                Ordenar por:
+              </label>
+              <Select
+                value={`${sortBy ? sortBy : "name"}-${
+                  sortAsc ? "asc" : "desc"
+                }`}
+                onValueChange={(value) => {
+                  const [by, order] = value.split("-");
+                  const newSortBy = by as "name" | "price";
+                  const newSortAsc = order === "asc";
 
-                setSortBy(newSortBy);
-                setSortAsc(newSortAsc);
-                setPage(1);
-                setData(null);
+                  setSortBy(newSortBy);
+                  setSortAsc(newSortAsc);
+                  setPage(1);
+                  setData(null);
 
-                const newSearchParams = new URLSearchParams(searchParams);
-                newSearchParams.set("sort_by", newSortBy);
-                newSearchParams.set("order", order);
-                setSearchParams(newSearchParams);
-              }}
-            >
-              <SelectTrigger id="sort-select">
-                <SelectValue>
-                  {getSelectLabelWithIcon(
-                    `${sortBy ? sortBy : "name"}-${sortAsc ? "asc" : "desc"}`
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name-asc">
-                  <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
-                  Nome: A-Z
-                </SelectItem>
-                <SelectItem value="name-desc">
-                  <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
-                  Nome: Z-A
-                </SelectItem>
-                <SelectItem value="price-asc">
-                  <ArrowDown01 className="mr-2 h-4 w-4 inline" />
-                  Preço: Menor ao maior
-                </SelectItem>
-                <SelectItem value="price-desc">
-                  <ArrowUp01 className="mr-2 h-4 w-4 inline" />
-                  Preço: Maior ao menor
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+                  const newSearchParams = new URLSearchParams(searchParams);
+                  newSearchParams.set("sort_by", newSortBy);
+                  newSearchParams.set("order", order);
+                  setSearchParams(newSearchParams);
+                }}
+              >
+                <SelectTrigger id="sort-select">
+                  <SelectValue>
+                    {getSelectLabelWithIcon(
+                      `${sortBy ? sortBy : "name"}-${sortAsc ? "asc" : "desc"}`
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">
+                    <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+                    Nome: A-Z
+                  </SelectItem>
+                  <SelectItem value="name-desc">
+                    <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+                    Nome: Z-A
+                  </SelectItem>
+                  <SelectItem value="price-asc">
+                    <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+                    Preço: Menor ao maior
+                  </SelectItem>
+                  <SelectItem value="price-desc">
+                    <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+                    Preço: Maior ao menor
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
-        {loading && <div className="text-center">Carregando...</div>}
-        {data && (
+        {data && data.data.length === 0 && (
+          <div className="flex justify-center items-center h-64">
+            <EmptyState message="Nenhum produto encontrado" />
+          </div>
+        )}
+        {loading && <LoadingState />}
+        {data && data.data.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {data.data.map((product, index) => (
               <div
