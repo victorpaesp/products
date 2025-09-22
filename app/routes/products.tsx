@@ -32,10 +32,16 @@ export default function Products() {
   const [page, setPage] = useState(1);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
 
-  const [sortBy, setSortBy] = useState<"name" | "price">(
-    (searchParams.get("sort_by") as "name" | "price") || "name"
-  );
-  const [sortAsc, setSortAsc] = useState(searchParams.get("order") !== "desc");
+  const [sortType, setSortType] = useState<"name" | "price">(() => {
+    if (searchParams.get("name_sort")) return "name";
+    if (searchParams.get("price_sort")) return "price";
+    return "name";
+  });
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(() => {
+    return (searchParams.get("name_sort") ||
+      searchParams.get("price_sort") ||
+      "asc") as "asc" | "desc";
+  });
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -57,14 +63,14 @@ export default function Products() {
   }, [selectedProducts]);
 
   useEffect(() => {
-    const urlSortBy = searchParams.get("sort_by") as "name" | "price";
-    const urlOrder = searchParams.get("order");
-
-    if (urlSortBy && urlSortBy !== sortBy) {
-      setSortBy(urlSortBy);
-    }
-    if (urlOrder && (urlOrder === "asc") !== sortAsc) {
-      setSortAsc(urlOrder === "asc");
+    const nameSort = searchParams.get("name_sort");
+    const priceSort = searchParams.get("price_sort");
+    if (nameSort) {
+      setSortType("name");
+      setSortOrder(nameSort as "asc" | "desc");
+    } else if (priceSort) {
+      setSortType("price");
+      setSortOrder(priceSort as "asc" | "desc");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -119,15 +125,19 @@ export default function Products() {
       }
 
       setLoading(true);
+      const params: Record<string, any> = {
+        productName: searchTerm,
+        page: page,
+        per_page: searchParams.get("per_page") || "12",
+      };
+      if (sortType === "name") {
+        params["name_sort"] = sortOrder;
+      } else if (sortType === "price") {
+        params["price_sort"] = sortOrder;
+      }
       api
         .get<ApiResponse>("/dados", {
-          params: {
-            productName: searchTerm,
-            page: page,
-            per_page: searchParams.get("per_page") || "12",
-            sort_by: sortBy,
-            order: sortAsc ? "asc" : "desc",
-          },
+          params,
         })
         .then((response) => {
           setData((prev) => {
@@ -141,7 +151,7 @@ export default function Products() {
         .finally(() => setLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, page, sortAsc, sortBy]);
+  }, [searchTerm, page, sortType, sortOrder]);
 
   function getSelectLabelWithIcon(value: string) {
     if (value.startsWith("name")) {
@@ -196,30 +206,27 @@ export default function Products() {
                 Ordenar por:
               </label>
               <Select
-                value={`${sortBy ? sortBy : "name"}-${
-                  sortAsc ? "asc" : "desc"
-                }`}
+                value={`${sortType}-${sortOrder}`}
                 onValueChange={(value) => {
-                  const [by, order] = value.split("-");
-                  const newSortBy = by as "name" | "price";
-                  const newSortAsc = order === "asc";
-
-                  setSortBy(newSortBy);
-                  setSortAsc(newSortAsc);
+                  const [type, order] = value.split("-");
+                  setSortType(type as "name" | "price");
+                  setSortOrder(order as "asc" | "desc");
                   setPage(1);
                   setData(null);
-
                   const newSearchParams = new URLSearchParams(searchParams);
-                  newSearchParams.set("sort_by", newSortBy);
-                  newSearchParams.set("order", order);
+                  if (type === "name") {
+                    newSearchParams.delete("price_sort");
+                    newSearchParams.set("name_sort", order);
+                  } else if (type === "price") {
+                    newSearchParams.delete("name_sort");
+                    newSearchParams.set("price_sort", order);
+                  }
                   setSearchParams(newSearchParams);
                 }}
               >
                 <SelectTrigger id="sort-select">
                   <SelectValue>
-                    {getSelectLabelWithIcon(
-                      `${sortBy ? sortBy : "name"}-${sortAsc ? "asc" : "desc"}`
-                    )}
+                    {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -249,7 +256,6 @@ export default function Products() {
             <EmptyState message="Nenhum produto encontrado" />
           </div>
         )}
-        {loading && <LoadingState />}
         {data && data.data.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {data.data.map((product, index) => (
@@ -270,6 +276,7 @@ export default function Products() {
             ))}
           </div>
         )}
+        {loading && <LoadingState />}
       </div>
 
       <SelectedProductsDrawer
