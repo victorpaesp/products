@@ -49,7 +49,7 @@ export function ProductCard({
         </div>
         <div className="p-4">
           <h2 className="text-lg text-gray-900 font-semibold mb-2 line-clamp-1">
-            {product.Name}
+            {product.ProductCod} - {product.Name}
           </h2>
           <p className="text-gray-900 text-sm line-clamp-2 mb-2">
             {product.Description}

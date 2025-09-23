@@ -9,7 +9,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   return (
     <div className="space-y-4">
       <h2 id="modal-title" className="text-2xl font-bold text-gray-900">
-        {product.Name}
+        {product.ProductCod} - {product.Name}
       </h2>
 
       <div className="text-gray-600">

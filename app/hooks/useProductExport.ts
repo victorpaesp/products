@@ -56,7 +56,7 @@ export function useProductExport() {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `${product.Name}`,
+                  text: `${product.ProductCod} - ${product.Name}`,
                   bold: true,
                   color: "000000",
                   size: 23,
