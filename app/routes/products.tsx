@@ -16,6 +16,7 @@ import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { EmptyState } from "~/components/ui/EmptyState";
 import { LoadingState } from "~/components/ui/LoadingState";
 import { MetaFunction } from "@remix-run/node";
+import { removeHtmlTags } from "~/lib/utils";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Santo Mimo" }];
@@ -136,15 +137,20 @@ export default function Products() {
         params["price_sort"] = sortOrder;
       }
       api
-        .get<ApiResponse>("/dados", {
-          params,
-        })
+        .get<ApiResponse>("/dados", { params })
         .then((response) => {
+          const cleanData = {
+            ...response.data,
+            data: response.data.data.map((product) => ({
+              ...product,
+              Description: removeHtmlTags(product.Description),
+            })),
+          };
           setData((prev) => {
-            if (!prev || page === 1) return response.data;
+            if (!prev || page === 1) return cleanData;
             return {
-              ...response.data,
-              data: [...prev.data, ...response.data.data],
+              ...cleanData,
+              data: [...prev.data, ...cleanData.data],
             };
           });
         })

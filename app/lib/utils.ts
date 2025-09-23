@@ -25,3 +25,7 @@ export const parsePrice = (val: string | number): number => {
 
   return Number(val.replace(",", "."));
 };
+
+export const removeHtmlTags = (text: string): string => {
+  return text.replace(/<[^>]*>/g, "");
+};
