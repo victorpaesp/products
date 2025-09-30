@@ -24,6 +24,7 @@ export function SearchBar({
 
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set("q", search);
+    newSearchParams.set("page", "1");
 
     navigate(`/products?${newSearchParams.toString()}`);
   };

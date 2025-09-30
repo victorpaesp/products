@@ -6,7 +6,7 @@ import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
 import { ExportProposalModal } from "./ExportProposalModal";
-import { QuantityInput } from "~/components/ui/quantity-input";
+import { QuantityInput } from "~/components/shared/QuantityInput";
 
 interface SelectedProductsDrawerProps {
   isOpen: boolean;

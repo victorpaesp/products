@@ -1,5 +1,5 @@
 import { useSearchParams } from "@remix-run/react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import type { ApiResponse, Product } from "~/types";
 import { api } from "~/lib/axios";
 import { ProductCard } from "~/components/ProductCard";
@@ -11,10 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "~/components/ui/pagination";
 import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
 import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
-import { EmptyState } from "~/components/ui/EmptyState";
-import { LoadingState } from "~/components/ui/LoadingState";
+import { EmptyState } from "~/components/shared/EmptyState";
+import { LoadingState } from "~/components/shared/LoadingState";
 import { MetaFunction } from "@remix-run/node";
 import { removeHtmlTags } from "~/lib/utils";
 
@@ -25,24 +34,22 @@ export const meta: MetaFunction = () => {
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchTerm = searchParams.get("q");
-  const observer = useRef<IntersectionObserver | null>(null);
-  const prevSearchTerm = useRef<string | null>(null);
 
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const page = Number(searchParams.get("page")) || 1;
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const perPage = Number(searchParams.get("per_page")) || 12;
 
-  const [sortType, setSortType] = useState<"name" | "price">(() => {
+  const sortType: "name" | "price" = (() => {
     if (searchParams.get("name_sort")) return "name";
     if (searchParams.get("price_sort")) return "price";
     return "name";
-  });
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(() => {
-    return (searchParams.get("name_sort") ||
-      searchParams.get("price_sort") ||
-      "asc") as "asc" | "desc";
-  });
+  })();
+
+  const sortOrder: "asc" | "desc" = (searchParams.get("name_sort") ||
+    searchParams.get("price_sort") ||
+    "asc") as "asc" | "desc";
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -62,33 +69,6 @@ export default function Products() {
     const value = JSON.stringify(selectedProducts);
     sessionStorage.setItem("selectedProducts", value);
   }, [selectedProducts]);
-
-  useEffect(() => {
-    const nameSort = searchParams.get("name_sort");
-    const priceSort = searchParams.get("price_sort");
-    if (nameSort) {
-      setSortType("name");
-      setSortOrder(nameSort as "asc" | "desc");
-    } else if (priceSort) {
-      setSortType("price");
-      setSortOrder(priceSort as "asc" | "desc");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
-  const lastProductRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && data?.next_page_url) {
-          setPage((prev) => prev + 1);
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [loading, data?.next_page_url]
-  );
 
   const toogleSelectProduct = (product: Product) => {
     setSelectedProducts((prev) => {
@@ -114,22 +94,12 @@ export default function Products() {
 
   useEffect(() => {
     if (searchTerm) {
-      const isNewSearch = prevSearchTerm.current !== searchTerm;
-
-      if (isNewSearch) {
-        setData(null);
-        prevSearchTerm.current = searchTerm;
-        if (page !== 1) {
-          setPage(1);
-          return;
-        }
-      }
-
+      setData(null);
       setLoading(true);
       const params: Record<string, any> = {
         productName: searchTerm,
         page: page,
-        per_page: searchParams.get("per_page") || "12",
+        per_page: perPage,
       };
       if (sortType === "name") {
         params["name_sort"] = sortOrder;
@@ -157,7 +127,7 @@ export default function Products() {
         .finally(() => setLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, page, sortType, sortOrder]);
+  }, [searchTerm, page, sortType, sortOrder, perPage]);
 
   function getSelectLabelWithIcon(value: string) {
     if (value.startsWith("name")) {
@@ -205,6 +175,34 @@ export default function Products() {
           <h1 className="text-2xl font-bold">Resultados para: {searchTerm}</h1>
           {data && data.data.length > 0 && (
             <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <label
+                  htmlFor="per-page-select"
+                  className="text-sm whitespace-nowrap"
+                >
+                  Itens por página:
+                </label>
+                <Select
+                  value={String(perPage)}
+                  onValueChange={(value) => {
+                    setData(null);
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    newSearchParams.set("per_page", value);
+                    newSearchParams.set("page", "1");
+                    setSearchParams(newSearchParams);
+                  }}
+                >
+                  <SelectTrigger id="per-page-select">
+                    <SelectValue>{perPage}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6">6</SelectItem>
+                    <SelectItem value="12">12</SelectItem>
+                    <SelectItem value="24">24</SelectItem>
+                    <SelectItem value="48">48</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <label
                 htmlFor="sort-select"
                 className="text-sm whitespace-nowrap"
@@ -215,9 +213,6 @@ export default function Products() {
                 value={`${sortType}-${sortOrder}`}
                 onValueChange={(value) => {
                   const [type, order] = value.split("-");
-                  setSortType(type as "name" | "price");
-                  setSortOrder(order as "asc" | "desc");
-                  setPage(1);
                   setData(null);
                   const newSearchParams = new URLSearchParams(searchParams);
                   if (type === "name") {
@@ -227,6 +222,7 @@ export default function Products() {
                     newSearchParams.delete("name_sort");
                     newSearchParams.set("price_sort", order);
                   }
+                  newSearchParams.set("page", "1");
                   setSearchParams(newSearchParams);
                 }}
               >
@@ -263,24 +259,153 @@ export default function Products() {
           </div>
         )}
         {data && data.data.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {data.data.map((product, index) => (
-              <div
-                key={`product.ProductCod-${product.ProductCod}-${index}-${product.Name}`}
-                ref={
-                  index === data.data.length - 1 ? lastProductRef : undefined
-                }
-              >
-                <ProductCard
-                  product={product}
-                  isSelected={selectedProducts.some(
-                    (p) => p.ProductCod === product.ProductCod
-                  )}
-                  onSelect={toogleSelectProduct}
-                />
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {data.data.map((product, index) => (
+                <div
+                  key={`product.ProductCod-${product.ProductCod}-${index}-${product.Name}`}
+                >
+                  <ProductCard
+                    product={product}
+                    isSelected={selectedProducts.some(
+                      (p) => p.ProductCod === product.ProductCod
+                    )}
+                    onSelect={toogleSelectProduct}
+                  />
+                </div>
+              ))}
+            </div>
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (page > 1) {
+                        const newSearchParams = new URLSearchParams(
+                          searchParams
+                        );
+                        newSearchParams.set("page", String(page - 1));
+                        setSearchParams(newSearchParams);
+                        setData(null);
+                      }
+                    }}
+                    aria-disabled={page === 1}
+                  />
+                </PaginationItem>
+                {(() => {
+                  const pageCount = data?.total
+                    ? Math.ceil(data.total / perPage)
+                    : 1;
+                  const items = [];
+                  let start = Math.max(1, page - 2);
+                  let end = Math.min(pageCount, page + 2);
+                  if (start > 1) {
+                    items.push(
+                      <PaginationItem key={1}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === 1}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const newSearchParams = new URLSearchParams(
+                              searchParams
+                            );
+                            newSearchParams.set("page", "1");
+                            setSearchParams(newSearchParams);
+                            setData(null);
+                          }}
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                    if (start > 2) {
+                      items.push(
+                        <PaginationItem key="start-ellipsis">
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                  }
+                  for (let p = start; p <= end; p++) {
+                    items.push(
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === p}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const newSearchParams = new URLSearchParams(
+                              searchParams
+                            );
+                            newSearchParams.set("page", String(p));
+                            setSearchParams(newSearchParams);
+                            setData(null);
+                          }}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  }
+                  if (end < pageCount) {
+                    if (end < pageCount - 1) {
+                      items.push(
+                        <PaginationItem key="end-ellipsis">
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    items.push(
+                      <PaginationItem key={pageCount}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === pageCount}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const newSearchParams = new URLSearchParams(
+                              searchParams
+                            );
+                            newSearchParams.set("page", String(pageCount));
+                            setSearchParams(newSearchParams);
+                            setData(null);
+                          }}
+                        >
+                          {pageCount}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  }
+                  return items;
+                })()}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const pageCount = data?.total
+                        ? Math.ceil(data.total / perPage)
+                        : 1;
+                      if (page < pageCount) {
+                        const newSearchParams = new URLSearchParams(
+                          searchParams
+                        );
+                        newSearchParams.set("page", String(page + 1));
+                        setSearchParams(newSearchParams);
+                        setData(null);
+                      }
+                    }}
+                    aria-disabled={
+                      page ===
+                      (data?.total ? Math.ceil(data.total / perPage) : 1)
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </>
         )}
         {loading && <LoadingState />}
       </div>
