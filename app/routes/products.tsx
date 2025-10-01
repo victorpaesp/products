@@ -171,14 +171,14 @@ export default function Products() {
             : "mt-[142px] sm:mt-[82px]"
         }`}
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <h1 className="text-2xl font-bold">Resultados para: {searchTerm}</h1>
           {data && data.data.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col sm:flex-row items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                 <label
                   htmlFor="per-page-select"
-                  className="text-sm whitespace-nowrap"
+                  className="text-sm whitespace-nowrap mb-1 sm:mb-0"
                 >
                   Itens por página:
                 </label>
@@ -192,7 +192,10 @@ export default function Products() {
                     setSearchParams(newSearchParams);
                   }}
                 >
-                  <SelectTrigger id="per-page-select">
+                  <SelectTrigger
+                    id="per-page-select"
+                    className="w-full sm:w-24"
+                  >
                     <SelectValue>{perPage}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -203,53 +206,55 @@ export default function Products() {
                   </SelectContent>
                 </Select>
               </div>
-              <label
-                htmlFor="sort-select"
-                className="text-sm whitespace-nowrap"
-              >
-                Ordenar por:
-              </label>
-              <Select
-                value={`${sortType}-${sortOrder}`}
-                onValueChange={(value) => {
-                  const [type, order] = value.split("-");
-                  setData(null);
-                  const newSearchParams = new URLSearchParams(searchParams);
-                  if (type === "name") {
-                    newSearchParams.delete("price_sort");
-                    newSearchParams.set("name_sort", order);
-                  } else if (type === "price") {
-                    newSearchParams.delete("name_sort");
-                    newSearchParams.set("price_sort", order);
-                  }
-                  newSearchParams.set("page", "1");
-                  setSearchParams(newSearchParams);
-                }}
-              >
-                <SelectTrigger id="sort-select">
-                  <SelectValue>
-                    {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name-asc">
-                    <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
-                    Nome: A-Z
-                  </SelectItem>
-                  <SelectItem value="name-desc">
-                    <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
-                    Nome: Z-A
-                  </SelectItem>
-                  <SelectItem value="price-asc">
-                    <ArrowDown01 className="mr-2 h-4 w-4 inline" />
-                    Preço: Menor ao maior
-                  </SelectItem>
-                  <SelectItem value="price-desc">
-                    <ArrowUp01 className="mr-2 h-4 w-4 inline" />
-                    Preço: Maior ao menor
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <label
+                  htmlFor="sort-select"
+                  className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                >
+                  Ordenar por:
+                </label>
+                <Select
+                  value={`${sortType}-${sortOrder}`}
+                  onValueChange={(value) => {
+                    const [type, order] = value.split("-");
+                    setData(null);
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    if (type === "name") {
+                      newSearchParams.delete("price_sort");
+                      newSearchParams.set("name_sort", order);
+                    } else if (type === "price") {
+                      newSearchParams.delete("name_sort");
+                      newSearchParams.set("price_sort", order);
+                    }
+                    newSearchParams.set("page", "1");
+                    setSearchParams(newSearchParams);
+                  }}
+                >
+                  <SelectTrigger id="sort-select" className="w-full sm:w-40">
+                    <SelectValue>
+                      {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">
+                      <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+                      Nome: A-Z
+                    </SelectItem>
+                    <SelectItem value="name-desc">
+                      <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+                      Nome: Z-A
+                    </SelectItem>
+                    <SelectItem value="price-asc">
+                      <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+                      Preço: Menor ao maior
+                    </SelectItem>
+                    <SelectItem value="price-desc">
+                      <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+                      Preço: Maior ao menor
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
         </div>

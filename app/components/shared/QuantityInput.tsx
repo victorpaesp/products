@@ -37,7 +37,7 @@ const QuantityInput = React.forwardRef<HTMLDivElement, QuantityInputProps>(
           size="icon"
           onClick={handleDecrement}
           disabled={value <= min}
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+          className="absolute left-0.5 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
           tabIndex={-1}
         >
           <Minus size={16} />
@@ -54,7 +54,7 @@ const QuantityInput = React.forwardRef<HTMLDivElement, QuantityInputProps>(
           size="icon"
           onClick={handleIncrement}
           disabled={value >= max}
-          className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+          className="absolute right-0.5 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
           tabIndex={-1}
         >
           <Plus size={16} />

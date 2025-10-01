@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Checkbox } from "~/components/ui/checkbox";
 import type { Product } from "~/types/index";
 import { formatPrice } from "~/lib/utils";
 import { ProductModal } from "./product-modal/ProductModal";
@@ -29,17 +30,18 @@ export function ProductCard({
           }
         }}
       >
-        <input
-          type="checkbox"
-          className="absolute top-2 right-2 w-5 h-5 cursor-pointer"
-          checked={isSelected}
-          onClick={(e) => {
-            e.stopPropagation(); // Prevents triggering the modal
-            if (onSelect) {
-              onSelect(product);
-            }
-          }} // Prevents triggering the modal
-        />
+        <label className="absolute top-4 right-4 md:top-2 md:right-2 flex items-center justify-center cursor-pointer">
+          <Checkbox
+            checked={isSelected}
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.stopPropagation();
+              if (onSelect) {
+                onSelect(product);
+              }
+            }}
+            className="size-10 md:size-6 bg-white dark:bg-[#3b3b3b] rounded-xl md:rounded-md border-gray-700"
+          />
+        </label>
         <div className="aspect-square">
           <img
             src={product.Image}
