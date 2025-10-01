@@ -30,7 +30,10 @@ export function ProductCard({
           }
         }}
       >
-        <label className="absolute top-4 right-4 md:top-2 md:right-2 flex items-center justify-center cursor-pointer">
+        <label
+          htmlFor="product-checkbox"
+          className="absolute top-4 right-4 md:top-2 md:right-2 flex items-center justify-center cursor-pointer"
+        >
           <Checkbox
             checked={isSelected}
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {

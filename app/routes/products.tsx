@@ -96,7 +96,7 @@ export default function Products() {
     if (searchTerm) {
       setData(null);
       setLoading(true);
-      const params: Record<string, any> = {
+      const params: Record<string, unknown> = {
         productName: searchTerm,
         page: page,
         per_page: perPage,
@@ -304,8 +304,8 @@ export default function Products() {
                     ? Math.ceil(data.total / perPage)
                     : 1;
                   const items = [];
-                  let start = Math.max(1, page - 2);
-                  let end = Math.min(pageCount, page + 2);
+                  const start = Math.max(1, page - 2);
+                  const end = Math.min(pageCount, page + 2);
                   if (start > 1) {
                     items.push(
                       <PaginationItem key={1}>
