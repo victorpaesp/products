@@ -11,15 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from "~/components/ui/pagination";
+import { ProductsPagination } from "../components/ProductsPagination";
 import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
 import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { EmptyState } from "~/components/shared/EmptyState";
@@ -265,6 +257,15 @@ export default function Products() {
         )}
         {data && data.data.length > 0 && (
           <>
+            <ProductsPagination
+              page={page}
+              perPage={perPage}
+              data={data}
+              searchParams={searchParams}
+              setSearchParams={setSearchParams}
+              setData={setData}
+              className="mb-8"
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {data.data.map((product, index) => (
                 <div
@@ -280,136 +281,15 @@ export default function Products() {
                 </div>
               ))}
             </div>
-            <Pagination className="mt-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (page > 1) {
-                        const newSearchParams = new URLSearchParams(
-                          searchParams
-                        );
-                        newSearchParams.set("page", String(page - 1));
-                        setSearchParams(newSearchParams);
-                        setData(null);
-                      }
-                    }}
-                    aria-disabled={page === 1}
-                  />
-                </PaginationItem>
-                {(() => {
-                  const pageCount = data?.total
-                    ? Math.ceil(data.total / perPage)
-                    : 1;
-                  const items = [];
-                  const start = Math.max(1, page - 2);
-                  const end = Math.min(pageCount, page + 2);
-                  if (start > 1) {
-                    items.push(
-                      <PaginationItem key={1}>
-                        <PaginationLink
-                          href="#"
-                          isActive={page === 1}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const newSearchParams = new URLSearchParams(
-                              searchParams
-                            );
-                            newSearchParams.set("page", "1");
-                            setSearchParams(newSearchParams);
-                            setData(null);
-                          }}
-                        >
-                          1
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                    if (start > 2) {
-                      items.push(
-                        <PaginationItem key="start-ellipsis">
-                          <PaginationEllipsis />
-                        </PaginationItem>
-                      );
-                    }
-                  }
-                  for (let p = start; p <= end; p++) {
-                    items.push(
-                      <PaginationItem key={p}>
-                        <PaginationLink
-                          href="#"
-                          isActive={page === p}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const newSearchParams = new URLSearchParams(
-                              searchParams
-                            );
-                            newSearchParams.set("page", String(p));
-                            setSearchParams(newSearchParams);
-                            setData(null);
-                          }}
-                        >
-                          {p}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  }
-                  if (end < pageCount) {
-                    if (end < pageCount - 1) {
-                      items.push(
-                        <PaginationItem key="end-ellipsis">
-                          <PaginationEllipsis />
-                        </PaginationItem>
-                      );
-                    }
-                    items.push(
-                      <PaginationItem key={pageCount}>
-                        <PaginationLink
-                          href="#"
-                          isActive={page === pageCount}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const newSearchParams = new URLSearchParams(
-                              searchParams
-                            );
-                            newSearchParams.set("page", String(pageCount));
-                            setSearchParams(newSearchParams);
-                            setData(null);
-                          }}
-                        >
-                          {pageCount}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  }
-                  return items;
-                })()}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const pageCount = data?.total
-                        ? Math.ceil(data.total / perPage)
-                        : 1;
-                      if (page < pageCount) {
-                        const newSearchParams = new URLSearchParams(
-                          searchParams
-                        );
-                        newSearchParams.set("page", String(page + 1));
-                        setSearchParams(newSearchParams);
-                        setData(null);
-                      }
-                    }}
-                    aria-disabled={
-                      page ===
-                      (data?.total ? Math.ceil(data.total / perPage) : 1)
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <ProductsPagination
+              page={page}
+              perPage={perPage}
+              data={data}
+              searchParams={searchParams}
+              setSearchParams={setSearchParams}
+              setData={setData}
+              className="mt-8"
+            />
           </>
         )}
         {loading && <LoadingState />}
