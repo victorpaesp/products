@@ -11,6 +11,7 @@ import {
   TableRow,
   TableCell,
   WidthType,
+  ExternalHyperlink,
 } from "docx";
 import { loadImageWithCORS } from "~/lib/document-utils";
 import { formatPrice } from "~/lib/utils";
@@ -412,6 +413,7 @@ export function useProductExport() {
                       text: "Mariana Szabloczky",
                       size: 24,
                       color: "000000",
+                      noProof: true,
                     }),
                   ],
                 }),
@@ -430,6 +432,35 @@ export function useProductExport() {
                       text: "Fone 11 96641-9950",
                       size: 24,
                       color: "000000",
+                    }),
+                  ],
+                }),
+                new Paragraph({
+                  children: [
+                    new ExternalHyperlink({
+                      children: [
+                        new TextRun({
+                          text: "www.santomimo.com",
+                          size: 24,
+                          style: "Hyperlink",
+                        }),
+                      ],
+                      link: "https://www.santomimo.com",
+                    }),
+                  ],
+                }),
+                new Paragraph({
+                  children: [
+                    new ExternalHyperlink({
+                      children: [
+                        new TextRun({
+                          text: "@santomimo.brindes",
+                          size: 24,
+                          style: "Hyperlink",
+                          noProof: true,
+                        }),
+                      ],
+                      link: "https://instagram.com/santomimo.brindes",
                     }),
                   ],
                 }),
