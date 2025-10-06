@@ -258,7 +258,7 @@ export default function Products() {
         </div>
         {error && (
           <div className="flex justify-center items-center h-64">
-            <ErrorState message="Erro ao carregar os produtos. Tente novamente mais tarde." />
+            <ErrorState message="Erro ao carregar os produtos." />
           </div>
         )}
         {!error && data && data.data.length === 0 && (
