@@ -15,6 +15,7 @@ import { ProductsPagination } from "../components/ProductsPagination";
 import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
 import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { EmptyState } from "~/components/shared/EmptyState";
+import { ErrorState } from "~/components/shared/ErrorState";
 import { LoadingState } from "~/components/shared/LoadingState";
 import { MetaFunction } from "@remix-run/node";
 import { removeHtmlTags } from "~/lib/utils";
@@ -29,6 +30,7 @@ export default function Products() {
 
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const page = Number(searchParams.get("page")) || 1;
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const perPage = Number(searchParams.get("per_page")) || 12;
@@ -87,6 +89,7 @@ export default function Products() {
   useEffect(() => {
     if (searchTerm) {
       setData(null);
+      setError(null);
       setLoading(true);
       const params: Record<string, unknown> = {
         productName: searchTerm,
@@ -115,6 +118,9 @@ export default function Products() {
               data: [...prev.data, ...cleanData.data],
             };
           });
+        })
+        .catch(() => {
+          setError("Error");
         })
         .finally(() => setLoading(false));
     }
@@ -250,12 +256,17 @@ export default function Products() {
             </div>
           )}
         </div>
-        {data && data.data.length === 0 && (
+        {error && (
+          <div className="flex justify-center items-center h-64">
+            <ErrorState message="Erro ao carregar os produtos. Tente novamente mais tarde." />
+          </div>
+        )}
+        {!error && data && data.data.length === 0 && (
           <div className="flex justify-center items-center h-64">
             <EmptyState message="Nenhum produto encontrado" />
           </div>
         )}
-        {data && data.data.length > 0 && (
+        {!error && data && data.data.length > 0 && (
           <>
             <ProductsPagination
               page={page}
