@@ -7,6 +7,7 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "./ui/pagination";
+import type { ApiResponse } from "~/types";
 
 interface ProductsPaginationProps {
   page: number;
@@ -14,7 +15,7 @@ interface ProductsPaginationProps {
   data: { total: number } | null;
   searchParams: URLSearchParams;
   setSearchParams: (params: URLSearchParams) => void;
-  setData: (data: any) => void;
+  setData: (data: ApiResponse | null) => void;
   className?: string;
 }
 

@@ -1,9 +1,12 @@
 import { useSearchParams } from "@remix-run/react";
+import { LoaderFunctionArgs } from "@remix-run/node";
 import { useEffect, useState } from "react";
 import type { ApiResponse, Product } from "~/types";
 import { api } from "~/lib/axios";
+import { ProtectedRoute } from "~/components/ProtectedRoute";
 import { ProductCard } from "~/components/ProductCard";
-import { SearchBar } from "~/components/SearchBar";
+import { useOutletContext } from "@remix-run/react";
+
 import {
   Select,
   SelectContent,
@@ -13,12 +16,16 @@ import {
 } from "~/components/ui/select";
 import { ProductsPagination } from "../components/ProductsPagination";
 import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
-import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { EmptyState } from "~/components/shared/EmptyState";
 import { ErrorState } from "~/components/shared/ErrorState";
 import { LoadingState } from "~/components/shared/LoadingState";
 import { MetaFunction } from "@remix-run/node";
 import { removeHtmlTags } from "~/lib/utils";
+import { useAuth } from "~/hooks/useAuth";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  return null;
+}
 
 export const meta: MetaFunction = () => {
   return [{ title: "Santo Mimo" }];
@@ -26,13 +33,25 @@ export const meta: MetaFunction = () => {
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { loading: authLoading, isAuthenticated } = useAuth();
   const searchTerm = searchParams.get("q");
 
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const page = Number(searchParams.get("page")) || 1;
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  type OutletContextType = {
+    selectedProducts: Product[];
+    setSelectedProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+    isDrawerOpen: boolean;
+    setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  };
+  const {
+    selectedProducts,
+    setSelectedProducts,
+    isDrawerOpen,
+    setIsDrawerOpen,
+  } = useOutletContext<OutletContextType>();
   const perPage = Number(searchParams.get("per_page")) || 12;
 
   const sortType: "name" | "price" = (() => {
@@ -44,8 +63,6 @@ export default function Products() {
   const sortOrder: "asc" | "desc" = (searchParams.get("name_sort") ||
     searchParams.get("price_sort") ||
     "asc") as "asc" | "desc";
-
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("selectedProducts");
@@ -65,28 +82,20 @@ export default function Products() {
   }, [selectedProducts]);
 
   const toogleSelectProduct = (product: Product) => {
-    setSelectedProducts((prev) => {
-      const isSelected = prev.some((p) => p.ProductCod === product.ProductCod);
+    setSelectedProducts((prev: Product[]) => {
+      const isSelected = prev.some(
+        (p: Product) => p.ProductCod === product.ProductCod
+      );
       if (isSelected) {
-        return prev.filter((p) => p.ProductCod !== product.ProductCod);
+        return prev.filter((p: Product) => p.ProductCod !== product.ProductCod);
       } else {
         return [...prev, product];
       }
     });
   };
 
-  const removeProduct = (productCod: string) => {
-    setSelectedProducts((prev) =>
-      prev.filter((p) => p.ProductCod !== productCod)
-    );
-  };
-
-  const clearSelectedProducts = () => {
-    setSelectedProducts([]);
-    setIsDrawerOpen(false);
-  };
-
   useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
     if (searchTerm) {
       setData(null);
       setError(null);
@@ -119,13 +128,24 @@ export default function Products() {
             };
           });
         })
-        .catch(() => {
+        .catch((error) => {
+          setData(null);
           setError("Error");
+          console.error("Erro ao buscar produtos:", error);
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false);
+        });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, page, sortType, sortOrder, perPage]);
+  }, [
+    searchTerm,
+    page,
+    perPage,
+    sortType,
+    sortOrder,
+    authLoading,
+    isAuthenticated,
+  ]);
 
   function getSelectLabelWithIcon(value: string) {
     if (value.startsWith("name")) {
@@ -156,163 +176,152 @@ export default function Products() {
   }
 
   return (
-    <div>
-      <SearchBar
-        selectedProducts={selectedProducts}
-        setSelectedProducts={setSelectedProducts}
-        onOpenDrawer={() => setIsDrawerOpen(true)}
-      />
-      <div
-        className={`container mx-auto px-4 py-8 ${
-          selectedProducts.length > 0
-            ? "mt-[202px] sm:mt-[82px]"
-            : "mt-[142px] sm:mt-[82px]"
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-          <h1 className="text-2xl font-bold">Resultados para: {searchTerm}</h1>
-          {data && data.data.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                <label
-                  htmlFor="per-page-select"
-                  className="text-sm whitespace-nowrap mb-1 sm:mb-0"
-                >
-                  Itens por página:
-                </label>
-                <Select
-                  value={String(perPage)}
-                  onValueChange={(value) => {
-                    setData(null);
-                    const newSearchParams = new URLSearchParams(searchParams);
-                    newSearchParams.set("per_page", value);
-                    newSearchParams.set("page", "1");
-                    setSearchParams(newSearchParams);
-                  }}
-                >
-                  <SelectTrigger
-                    id="per-page-select"
-                    className="w-full sm:w-24"
+    <ProtectedRoute>
+      <div>
+        <div
+          className={`container mx-auto px-4 py-8 sm:mt-[82px] ${
+            selectedProducts.length > 0 ? "mt-[122px]" : "mt-[74px]"
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+            <h1 className="text-2xl font-bold">
+              Resultados para: {searchTerm}
+            </h1>
+            {data && data.data.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                  <label
+                    htmlFor="per-page-select"
+                    className="text-sm whitespace-nowrap mb-1 sm:mb-0"
                   >
-                    <SelectValue>{perPage}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="6">6</SelectItem>
-                    <SelectItem value="12">12</SelectItem>
-                    <SelectItem value="24">24</SelectItem>
-                    <SelectItem value="48">48</SelectItem>
-                  </SelectContent>
-                </Select>
+                    Itens por página:
+                  </label>
+                  <Select
+                    value={String(perPage)}
+                    onValueChange={(value) => {
+                      setData(null);
+                      const newSearchParams = new URLSearchParams(searchParams);
+                      newSearchParams.set("per_page", value);
+                      newSearchParams.set("page", "1");
+                      setSearchParams(newSearchParams);
+                    }}
+                  >
+                    <SelectTrigger
+                      id="per-page-select"
+                      className="w-full sm:w-24"
+                    >
+                      <SelectValue>{perPage}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="6">6</SelectItem>
+                      <SelectItem value="12">12</SelectItem>
+                      <SelectItem value="24">24</SelectItem>
+                      <SelectItem value="48">48</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                  <label
+                    htmlFor="sort-select"
+                    className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                  >
+                    Ordenar por:
+                  </label>
+                  <Select
+                    value={`${sortType}-${sortOrder}`}
+                    onValueChange={(value) => {
+                      const [type, order] = value.split("-");
+                      setData(null);
+                      const newSearchParams = new URLSearchParams(searchParams);
+                      if (type === "name") {
+                        newSearchParams.delete("price_sort");
+                        newSearchParams.set("name_sort", order);
+                      } else if (type === "price") {
+                        newSearchParams.delete("name_sort");
+                        newSearchParams.set("price_sort", order);
+                      }
+                      newSearchParams.set("page", "1");
+                      setSearchParams(newSearchParams);
+                    }}
+                  >
+                    <SelectTrigger id="sort-select" className="w-full sm:w-40">
+                      <SelectValue>
+                        {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name-asc">
+                        <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+                        Nome: A-Z
+                      </SelectItem>
+                      <SelectItem value="name-desc">
+                        <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+                        Nome: Z-A
+                      </SelectItem>
+                      <SelectItem value="price-asc">
+                        <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+                        Preço: Menor ao maior
+                      </SelectItem>
+                      <SelectItem value="price-desc">
+                        <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+                        Preço: Maior ao menor
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                <label
-                  htmlFor="sort-select"
-                  className="text-sm whitespace-nowrap mb-1 sm:mb-0"
-                >
-                  Ordenar por:
-                </label>
-                <Select
-                  value={`${sortType}-${sortOrder}`}
-                  onValueChange={(value) => {
-                    const [type, order] = value.split("-");
-                    setData(null);
-                    const newSearchParams = new URLSearchParams(searchParams);
-                    if (type === "name") {
-                      newSearchParams.delete("price_sort");
-                      newSearchParams.set("name_sort", order);
-                    } else if (type === "price") {
-                      newSearchParams.delete("name_sort");
-                      newSearchParams.set("price_sort", order);
-                    }
-                    newSearchParams.set("page", "1");
-                    setSearchParams(newSearchParams);
-                  }}
-                >
-                  <SelectTrigger id="sort-select" className="w-full sm:w-40">
-                    <SelectValue>
-                      {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name-asc">
-                      <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
-                      Nome: A-Z
-                    </SelectItem>
-                    <SelectItem value="name-desc">
-                      <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
-                      Nome: Z-A
-                    </SelectItem>
-                    <SelectItem value="price-asc">
-                      <ArrowDown01 className="mr-2 h-4 w-4 inline" />
-                      Preço: Menor ao maior
-                    </SelectItem>
-                    <SelectItem value="price-desc">
-                      <ArrowUp01 className="mr-2 h-4 w-4 inline" />
-                      Preço: Maior ao menor
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            )}
+          </div>
+          {error && (
+            <div className="flex justify-center items-center h-64">
+              <ErrorState message="Erro ao carregar os produtos." />
             </div>
           )}
-        </div>
-        {error && (
-          <div className="flex justify-center items-center h-64">
-            <ErrorState message="Erro ao carregar os produtos." />
-          </div>
-        )}
-        {!error && data && data.data.length === 0 && (
-          <div className="flex justify-center items-center h-64">
-            <EmptyState message="Nenhum produto encontrado" />
-          </div>
-        )}
-        {!error && data && data.data.length > 0 && (
-          <>
-            <ProductsPagination
-              page={page}
-              perPage={perPage}
-              data={data}
-              searchParams={searchParams}
-              setSearchParams={setSearchParams}
-              setData={setData}
-              className="mb-8"
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {data.data.map((product, index) => (
-                <div
-                  key={`product.ProductCod-${product.ProductCod}-${index}-${product.Name}`}
-                >
-                  <ProductCard
-                    product={product}
-                    isSelected={selectedProducts.some(
-                      (p) => p.ProductCod === product.ProductCod
-                    )}
-                    onSelect={toogleSelectProduct}
-                  />
-                </div>
-              ))}
+          {!error && data && data.data.length === 0 && (
+            <div className="flex justify-center items-center h-64">
+              <EmptyState message="Nenhum produto encontrado" />
             </div>
-            <ProductsPagination
-              page={page}
-              perPage={perPage}
-              data={data}
-              searchParams={searchParams}
-              setSearchParams={setSearchParams}
-              setData={setData}
-              className="mt-8"
-            />
-          </>
-        )}
-        {loading && <LoadingState />}
+          )}
+          {!error && data && data.data.length > 0 && (
+            <>
+              <ProductsPagination
+                page={page}
+                perPage={perPage}
+                data={data}
+                searchParams={searchParams}
+                setSearchParams={setSearchParams}
+                setData={setData}
+                className="mb-8"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {data.data.map((product, index) => (
+                  <div
+                    key={`product.ProductCod-${product.ProductCod}-${index}-${product.Name}`}
+                  >
+                    <ProductCard
+                      product={product}
+                      isSelected={selectedProducts.some(
+                        (p) => p.ProductCod === product.ProductCod
+                      )}
+                      onSelect={toogleSelectProduct}
+                    />
+                  </div>
+                ))}
+              </div>
+              <ProductsPagination
+                page={page}
+                perPage={perPage}
+                data={data}
+                searchParams={searchParams}
+                setSearchParams={setSearchParams}
+                setData={setData}
+                className="mt-8"
+              />
+            </>
+          )}
+          {loading && <LoadingState />}
+        </div>
       </div>
-
-      <SelectedProductsDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        selectedProducts={selectedProducts}
-        onRemoveProduct={removeProduct}
-        onClearProducts={clearSelectedProducts}
-      />
-    </div>
+    </ProtectedRoute>
   );
 }

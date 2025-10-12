@@ -1,7 +1,16 @@
-import { Search } from "lucide-react";
+import { Search, UserRound } from "lucide-react";
 import { useNavigate, useSearchParams } from "@remix-run/react";
 import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
 import { Product } from "~/types";
+import { useAuth } from "~/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 interface SearchBarProps {
   selectedProducts?: Product[];
@@ -16,6 +25,7 @@ export function SearchBar({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const searchTerm = searchParams.get("q") || "";
+  const { user, logout } = useAuth();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,10 +40,16 @@ export function SearchBar({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10">
-      <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <img src="/logo.jpeg" alt="logo" className="w-[50px]" />
-        <form onSubmit={handleSubmit} className="max-w-2xl w-full mx-auto">
+    <div className="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10 flex items-center flex-col">
+      <div className="container mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <Button
+          type="button"
+          onClick={() => navigate("/")}
+          className="p-0 bg-transparent border-none"
+        >
+          <img src="/logo.jpeg" alt="logo" className="w-[50px] shrink-0" />
+        </Button>
+        <form onSubmit={handleSubmit} className="max-w-2xl flex-1 min-w-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
@@ -41,22 +57,50 @@ export function SearchBar({
               type="search"
               placeholder="Buscar produtos..."
               defaultValue={searchTerm}
-              className="h-12 text-lg pl-10 w-full bg-black text-white placeholder:text-gray-400"
+              className="pl-10"
             />
           </div>
         </form>
 
         {selectedProducts.length > 0 && (
-          <button
+          <Button
             onClick={onOpenDrawer}
-            className="relative self-stretch flex h-[48px] items-center gap-2 bg-black hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded shadow-md transition-all duration-200"
+            className="relative w-full sm:w-auto basis-full sm:basis-auto order-last sm:order-none"
           >
             <span className="inline">Produtos selecionados</span>
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
               {selectedProducts.length}
             </span>
-          </button>
+          </Button>
         )}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <div className="border border-gray-100 rounded-full p-1">
+              <UserRound size={24} strokeWidth={1.5} className=" text-white" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {user && (
+              <>
+                <DropdownMenuItem disabled>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-800">
+                      {user.name}
+                    </span>
+                    <span className="text-xs text-gray-600">{user.email}</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
+              Configurações
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout}>Sair</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
