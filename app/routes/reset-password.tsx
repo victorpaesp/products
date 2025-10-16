@@ -35,8 +35,8 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const email = searchParams.get("email") || "";
-  const token = searchParams.get("token") || "";
+  const email = decodeURIComponent(searchParams.get("email") || "");
+  const token = decodeURIComponent(searchParams.get("token") || "");
 
   useEffect(() => {
     if (!email || !token) {
