@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { api } from "~/lib/axios";
+import toast from "~/components/ui/toast-client";
 import { UseFormReturn } from "react-hook-form";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -43,16 +45,30 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   }, [emailSent, timer]);
 
   const handleSubmit = async (values: ForgotPasswordFormValues) => {
-    await onSubmit(values);
-    setEmailSent(true);
-    setTimer(30);
-    setCanResend(false);
+    try {
+      await api.post("/password/forgot", { email: values.email });
+      setEmailSent(true);
+      setTimer(30);
+      setCanResend(false);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Erro ao enviar e-mail de recuperação."
+      );
+    }
   };
 
   const handleResend = async () => {
-    await onSubmit(form.getValues());
-    setTimer(30);
-    setCanResend(false);
+    try {
+      await api.post("/password/forgot", { email: form.getValues().email });
+      setTimer(30);
+      setCanResend(false);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Erro ao reenviar e-mail de recuperação."
+      );
+    }
   };
 
   return (
@@ -86,14 +102,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               )}
             />
             <Button type="submit" size="lg" className="bg-gray-900 text-white">
-              Resetar senha
+              Enviar
             </Button>
           </>
         ) : (
           <div className="flex flex-col items-center gap-4">
             <p className="text-sm text-gray-900 text-center max-w-xs">
-              Um link foi enviado para seu e-mail. Siga as instruções para
-              redefinir sua senha.
+              Um link foi enviado para seu e-mail caso ele esteja cadastrado.
+              Siga as instruções para redefinir sua senha.
             </p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-600">

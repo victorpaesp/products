@@ -19,12 +19,29 @@ import {
   ForgotPasswordFormValues,
 } from "../components/ForgotPasswordForm";
 import type { FormValues } from "../types";
+import { LoaderFunctionArgs, redirect } from "@remix-run/node";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader
+    ?.split(";")
+    .find((c) => c.trim().startsWith("token="))
+    ?.split("=")[1];
+
+  if (token) return redirect("/");
+
+  return null;
+}
 
 export default function Login() {
   const [isForgotPassword, setIsForgotPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [loginError, setLoginError] = React.useState<string | null>(null);
+  const [isPageLoading, setIsPageLoading] = React.useState(true);
   const navigate = useNavigate();
+  React.useEffect(() => {
+    setIsPageLoading(false);
+  }, []);
 
   const loginSchema = z.object({
     email: z.string().email({ message: "Email inválido." }),
@@ -132,16 +149,17 @@ export default function Login() {
                   </FormItem>
                 )}
               />
-              <button
+              <Button
                 type="button"
-                className="text-sm text-gray-700 hover:underline self-end"
+                variant="ghost"
+                className="self-end"
                 onClick={() => {
                   setIsForgotPassword(true);
                   form.clearErrors();
                 }}
               >
                 Esqueci minha senha
-              </button>
+              </Button>
               {loginError && (
                 <div className="text-red-600 text-sm mb-2">{loginError}</div>
               )}
@@ -149,7 +167,7 @@ export default function Login() {
                 type="submit"
                 size={"lg"}
                 className={`bg-gray-900 text-white`}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isPageLoading}
               >
                 {isSubmitting ? "Entrando..." : "Login"}
               </Button>

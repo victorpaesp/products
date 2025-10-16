@@ -1,26 +1,29 @@
 import { useAuth } from "~/hooks/useAuth";
 import { Input } from "~/components/ui/input";
+import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
-// import { Dialog, DialogContent } from "~/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "~/lib/axios";
-// import { PasswordChecklist } from "./PasswordChecklist";
-// import { PasswordInput } from "~/components/ui/password-input";
+import { PasswordChecklist } from "./PasswordChecklist";
+import { PasswordInput } from "~/components/ui/password-input";
+import toast from "~/components/ui/toast-client";
+import { formatPhoneNumber, unformatPhoneNumber } from "~/lib/utils";
 
 export function ProfileForm() {
   const { logout, isAdmin } = useAuth();
+  const [logoutTimer, setLogoutTimer] = useState<number>(10);
+  const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
   });
-  const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
-  // const [showPasswordModal, setShowPasswordModal] = useState(false);
-  // const [newPassword, setNewPassword] = useState("");
-  // const [confirmPassword, setConfirmPassword] = useState("");
-  // const [changingPassword, setChangingPassword] = useState(false);
-  // const [passwordError, setPasswordError] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
 
   useEffect(() => {
     const cachedUser = localStorage.getItem("user");
@@ -30,7 +33,7 @@ export function ProfileForm() {
         setForm({
           name: data.name || "",
           email: data.email || "",
-          phone: data.phone || "",
+          phone: formatPhoneNumber(data.phone || ""),
         });
         return;
       } catch (e) {
@@ -44,7 +47,7 @@ export function ProfileForm() {
         setForm({
           name: data.name || "",
           email: data.email || "",
-          phone: data.phone || "",
+          phone: formatPhoneNumber(data.phone || ""),
         });
         localStorage.setItem("user", JSON.stringify(data));
       } catch (error) {
@@ -60,219 +63,185 @@ export function ProfileForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleEdit = () => setEditMode(true);
-  const handleCancel = () => setEditMode(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
       const currentUser = await api.get("/me");
       const userId = currentUser.data.id;
-
-      await api.put(`/users/${userId}`, form);
-
+      const payload = {
+        ...form,
+        phone: unformatPhoneNumber(form.phone),
+      };
+      await api.put(`/users/${userId}`, payload);
       const res = await api.get("/me");
       const data = res.data;
       setForm({
         name: data.name || "",
         email: data.email || "",
-        phone: data.phone || "",
+        phone: formatPhoneNumber(data.phone || ""),
       });
-      sessionStorage.setItem("profile", JSON.stringify(data));
-      setEditMode(false);
+      localStorage.setItem("user", JSON.stringify(data));
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith("users-table-page")) {
+          sessionStorage.removeItem(key);
+        }
+      });
+      toast.success("Perfil atualizado com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
+      toast.error("Erro ao atualizar perfil.", {
+        description: "Algo deu errado. Tente novamente mais tarde.",
+      });
     } finally {
       setSaving(false);
     }
   };
 
-  // const handleOpenPasswordModal = () => {
-  //   setShowPasswordModal(true);
-  //   setNewPassword("");
-  //   setConfirmPassword("");
-  //   setPasswordError("");
-  // };
-  // const handleClosePasswordModal = () => {
-  //   setShowPasswordModal(false);
-  //   setNewPassword("");
-  //   setConfirmPassword("");
-  //   setPasswordError("");
-  // };
-
-  // const handleChangePassword = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setChangingPassword(true);
-  //   setPasswordError("");
-  //   if (newPassword.length < 8) {
-  //     setPasswordError("A senha deve ter pelo menos 8 caracteres.");
-  //     setChangingPassword(false);
-  //     return;
-  //   }
-  //   if (newPassword !== confirmPassword) {
-  //     setPasswordError("As senhas não coincidem.");
-  //     setChangingPassword(false);
-  //     return;
-  //   }
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     await api.post("/password/reset", {
-  //       email: form.email,
-  //       password: newPassword,
-  //       password_confirmation: confirmPassword,
-  //       token,
-  //     });
-  //     setShowPasswordModal(false);
-  //   } catch (err) {
-  //     setPasswordError("Erro ao mudar senha.");
-  //   }
-  //   setChangingPassword(false);
-  // };
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangingPassword(true);
+    setPasswordError("");
+    if (!isPasswordValid) {
+      setPasswordError("A senha não atende todos os requisitos.");
+      setChangingPassword(false);
+      return;
+    }
+    try {
+      const currentUser = await api.get("/me");
+      const userId = currentUser.data.id;
+      await api.put(`/users/${userId}`, { password: newPassword });
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsPasswordValid(false);
+      setPasswordError("");
+      setLogoutTimer(10);
+      const toastId = "logout-timer";
+      let seconds = 10;
+      const updateToast = () => {
+        toast.success("Senha alterada com sucesso!", {
+          description: `Você será deslogado para autenticação com a nova senha em ${seconds} segundos.`,
+          id: toastId,
+        });
+      };
+      updateToast();
+      if (logoutTimeoutRef.current) clearInterval(logoutTimeoutRef.current);
+      logoutTimeoutRef.current = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(logoutTimeoutRef.current!);
+          logout();
+        } else {
+          updateToast();
+        }
+      }, 1000);
+    } catch (err) {
+      toast.error("Erro ao alterar senha.", {
+        description: `Algo deu errado ao alterar senha, tente novamente mais tarde.`,
+      });
+      setPasswordError("Erro ao alterar senha.");
+    }
+    setChangingPassword(false);
+  };
 
   return (
     <div>
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex flex-col md:max-w-lg w-full gap-6">
         <div>
           <h2 className="text-2xl font-bold mb-1">Meu Perfil</h2>
           <p className="text-sm text-muted-foreground mb-4">
             Gerencie e atualize seus dados de conta e informações de login.
           </p>
         </div>
-      </div>
-      <div className="flex gap-2 justify-between w-full md:max-w-lg">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={isAdmin ? handleSubmit : undefined}
+          className="flex flex-col gap-4"
+        >
           <div>
             <label className="block text-sm font-medium mb-1">Nome</label>
-            {!editMode ? (
-              <div className="text-base text-gray-800 mb-2">
-                {form.name ? form.name : "Não definido"}
-              </div>
-            ) : (
-              <Input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                required
-              />
-            )}
+            <Input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+              readOnly={!isAdmin}
+              disabled={!isAdmin}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
-            {!editMode ? (
-              <div className="text-base text-gray-800 mb-2">
-                {form.email ? form.email : "Não definido"}
-              </div>
-            ) : (
-              <Input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-              />
-            )}
+            <Input
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              readOnly={!isAdmin}
+              disabled={!isAdmin}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Telefone</label>
-            {!editMode ? (
-              <div className="text-base text-gray-800 mb-2">
-                {form.phone ? form.phone : "Não definido"}
-              </div>
-            ) : (
-              <Input
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                maxLength={20}
-              />
-            )}
+            <PhoneInput
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              readOnly={!isAdmin}
+              disabled={!isAdmin}
+            />
           </div>
-          {editMode && (
-            <div className="col-span-2 flex gap-2 mt-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleCancel}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" className="w-full" disabled={saving}>
-                {saving ? "Salvando..." : "Salvar"}
-              </Button>
-            </div>
+          {isAdmin && (
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
           )}
         </form>
-        {!editMode && isAdmin && (
-          <Button size="sm" variant="outline" onClick={handleEdit}>
-            Editar
-          </Button>
-        )}
       </div>
-
-      <div className="my-8 border-t" />
-
-      {/* <div>
-        <h3 className="text-lg font-semibold mb-2">Mudar Senha</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Troque sua senha de acesso.
-        </p>
-        <Button variant="outline" onClick={handleOpenPasswordModal}>
-          Mudar Senha
-        </Button>
-        <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-          {showPasswordModal && (
-            <DialogContent>
-              <h4 className="text-lg font-bold mb-4">Alterar Senha</h4>
-              <form onSubmit={handleChangePassword} className="space-y-3">
-                <div>
-                  <PasswordInput
-                    label="Nova senha"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <PasswordInput
-                    label="Repetir nova senha"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <PasswordChecklist
-                  password={newPassword}
-                  confirmPassword={confirmPassword}
+      {isAdmin && (
+        <div>
+          <div className="my-8 border-t" />
+          <div className="flex flex-col md:max-w-lg w-full">
+            <form
+              onSubmit={handleChangePassword}
+              className="flex flex-col gap-4"
+            >
+              <h3 className="text-lg font-semibold mb-2">Redefinir Senha</h3>
+              <div>
+                <PasswordInput
+                  label="Nova senha"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
                 />
-                {passwordError && (
-                  <div className="text-red-500 text-sm">{passwordError}</div>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleClosePasswordModal}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={changingPassword}
-                  >
-                    {changingPassword ? "Mudando..." : "Salvar Senha"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          )}
-        </Dialog>
-      </div>
-
-      <div className="my-8 border-t" /> */}
+              </div>
+              <div>
+                <PasswordInput
+                  label="Repetir nova senha"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <PasswordChecklist
+                password={newPassword}
+                confirmPassword={confirmPassword}
+                onValidChange={setIsPasswordValid}
+              />
+              {passwordError && (
+                <div className="text-red-500 text-sm">{passwordError}</div>
+              )}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={changingPassword || !isPasswordValid}
+              >
+                {changingPassword ? "Salvando..." : "Salvar"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+      <div className="my-8 border-t" />
       <Button variant="destructive" className="" onClick={logout}>
         Sair
       </Button>

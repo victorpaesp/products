@@ -7,6 +7,7 @@ import { Button } from "~/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { EditUserDialog } from "./EditUserDialog";
+import toast from "~/components/ui/toast-client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,8 +100,9 @@ export function UsersTable() {
       sessionStorage.removeItem(cacheKey);
       setOpenDeleteAlert(false);
       setUserToDelete(null);
+      toast.success("Usuário removido com sucesso!");
     } catch (error) {
-      alert("Erro ao remover usuário.");
+      toast.error("Não foi possível remover usuário.");
     }
   };
 

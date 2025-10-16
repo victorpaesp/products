@@ -1,4 +1,5 @@
 import { api } from "./axios";
+import toast from "~/components/ui/toast-client";
 import type { LoginResponse, RegisterData, User } from "~/types";
 
 export async function login(
@@ -17,6 +18,11 @@ export async function login(
 
         const expiresAt = Date.now() + response.data.expires_in * 1000;
         localStorage.setItem("token_expires_at", expiresAt.toString());
+
+        const expiresDate = new Date(expiresAt);
+        document.cookie = `token=${
+          response.data.token
+        }; expires=${expiresDate.toUTCString()}; path=/; SameSite=Lax`;
 
         try {
           const userResponse = await api.get<User>("/me");
@@ -74,6 +80,7 @@ export function logout() {
     localStorage.removeItem("token_expires_at");
     localStorage.removeItem("user");
     sessionStorage.clear();
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   }
 }
 
@@ -103,6 +110,10 @@ export function isAuthenticated(): boolean {
     const isExpired = Date.now() >= parseInt(expiresAt);
 
     if (isExpired) {
+      toast.info("Token expirado", {
+        description:
+          "Sua sessão expirou. Você será redirecionado para o login e deve se autenticar novamente.",
+      });
       logout();
       return false;
     }

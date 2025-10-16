@@ -8,6 +8,13 @@ import { useAuth } from "~/hooks/useAuth";
 import { LoadingState } from "~/components/shared/LoadingState";
 import { useState, useEffect } from "react";
 import { Product } from "~/types";
+import { LoaderFunctionArgs } from "@remix-run/node";
+import { requireAuth } from "~/lib/auth.server";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  await requireAuth(request);
+  return null;
+}
 
 const tabs = [
   {

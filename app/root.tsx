@@ -13,6 +13,7 @@ import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { useState } from "react";
 import { useLocation } from "@remix-run/react";
 import type { Product } from "~/types";
+import { Toaster } from "~/components/ui/sonner";
 
 import "./tailwind.css";
 
@@ -42,6 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
+        <Toaster />
       </body>
     </html>
   );
@@ -52,11 +54,11 @@ export default function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const hideSearchBarRoutes = ["/login"];
+  const hideSearchBarRoutes = ["/login", "/reset-password"];
   const shouldShowSearchBar = !hideSearchBarRoutes.includes(location.pathname);
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       {shouldShowSearchBar && (
         <SearchBar
           selectedProducts={selectedProducts}

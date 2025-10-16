@@ -6,9 +6,12 @@ import {
   DialogDescription,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
+import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
 import { api } from "~/lib/axios";
+import toast from "~/components/ui/toast-client";
 import type { User } from "./users-columns";
+import { formatPhoneNumber, unformatPhoneNumber } from "~/lib/utils";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -34,7 +37,7 @@ export function EditUserDialog({
       setFormData({
         name: user.name || "",
         email: user.email || "",
-        phone: user.phone || "",
+        phone: formatPhoneNumber(user.phone || ""),
       });
     }
   }, [user]);
@@ -52,15 +55,16 @@ export function EditUserDialog({
     const userData = {
       name: formData.name,
       email: formData.email,
-      phone: formData.phone,
+      phone: unformatPhoneNumber(formData.phone),
     };
 
     try {
       await api.put(`/users/${user.id}`, userData);
       onOpenChange(false);
       onSuccess();
+      toast.success("Usuário atualizado com sucesso!");
     } catch (error) {
-      alert("Erro ao atualizar usuário.");
+      toast.error("Não foi possível atualizar o usuário.");
     }
   };
 
@@ -95,12 +99,11 @@ export function EditUserDialog({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Telefone</label>
-            <Input
+            <PhoneInput
               id="phone"
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              maxLength={20}
             />
           </div>
           <Button type="submit" className="w-full">

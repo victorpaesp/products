@@ -31,7 +31,8 @@ export function useAuth() {
 
       if (!authenticated) {
         setLoading(false);
-        if (location.pathname !== "/login") {
+        const publicRoutes = ["/login", "/reset-password"];
+        if (!publicRoutes.includes(location.pathname)) {
           navigate("/login", { replace: true });
         }
         return;

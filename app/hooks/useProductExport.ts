@@ -469,7 +469,6 @@ export function useProductExport() {
           ],
         });
 
-        // Gera o arquivo Word e inicia o download
         Packer.toBlob(doc)
           .then((blob) => {
             const url = URL.createObjectURL(blob);
@@ -485,16 +484,13 @@ export function useProductExport() {
             URL.revokeObjectURL(url);
             console.log("Arquivo Word gerado e download iniciado.");
 
-            // Mostra toast de sucesso
             setExportToast({
               isVisible: true,
               status: "success",
             });
 
-            // Limpa a seleção após exportar
             if (setSelectedProducts) setSelectedProducts([]);
 
-            // Esconde o toast de sucesso após 3 segundos
             setTimeout(() => {
               setExportToast((prev) => ({ ...prev, isVisible: false }));
             }, 3000);
@@ -507,7 +503,6 @@ export function useProductExport() {
               message: "Erro ao gerar o arquivo Word",
             });
 
-            // Esconde o toast de erro após 5 segundos
             setTimeout(() => {
               setExportToast((prev) => ({ ...prev, isVisible: false }));
             }, 5000);
@@ -520,7 +515,6 @@ export function useProductExport() {
           message: "Erro ao processar as imagens",
         });
 
-        // Esconde o toast de erro após 5 segundos
         setTimeout(() => {
           setExportToast((prev) => ({ ...prev, isVisible: false }));
         }, 5000);

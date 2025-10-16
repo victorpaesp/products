@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { formatPhoneNumber } from "~/lib/utils";
 
 export type User = {
   id: string | number;
@@ -33,6 +34,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "phone",
     header: "Telefone",
+    cell: ({ row }) => formatPhoneNumber(row.original.phone),
   },
   {
     accessorKey: "role",

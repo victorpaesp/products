@@ -1,6 +1,7 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Input } from "~/components/ui/input";
+import { PhoneInput } from "~/components/ui/phone-input";
 import { PasswordInput } from "~/components/ui/password-input";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,6 +19,7 @@ import {
 } from "~/components/ui/select";
 import { PasswordChecklist } from "./PasswordChecklist";
 import type { FormValues } from "~/types";
+import { unformatPhoneNumber } from "~/lib/utils";
 
 interface RegisterFormProps {
   onSubmit: (values: FormValues) => void;
@@ -32,9 +34,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   setIsPasswordValid,
   form,
 }) => {
+  const handleSubmit = (values: FormValues) => {
+    const normalized = {
+      ...values,
+      phone: values.phone ? unformatPhoneNumber(values.phone) : undefined,
+    };
+    onSubmit(normalized);
+  };
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(handleSubmit)}
       className="w-full flex flex-col gap-4 pt-12 px-8 pb-0"
     >
       <div className="flex flex-col">
@@ -80,7 +89,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input placeholder="Telefone" type="tel" {...field} />
+              <PhoneInput placeholder="Telefone" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

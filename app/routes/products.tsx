@@ -22,8 +22,10 @@ import { LoadingState } from "~/components/shared/LoadingState";
 import { MetaFunction } from "@remix-run/node";
 import { removeHtmlTags } from "~/lib/utils";
 import { useAuth } from "~/hooks/useAuth";
+import { requireAuth } from "~/lib/auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  await requireAuth(request);
   return null;
 }
 

@@ -6,10 +6,13 @@ import {
   DialogDescription,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
+import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
 import { PasswordInput } from "~/components/ui/password-input";
 import { PasswordChecklist } from "./PasswordChecklist";
 import { api } from "~/lib/axios";
+import toast from "~/components/ui/toast-client";
+import { unformatPhoneNumber } from "~/lib/utils";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -42,7 +45,7 @@ export function CreateUserDialog({
     const userData = {
       name: formData.name,
       email: formData.email,
-      phone: formData.phone,
+      phone: unformatPhoneNumber(formData.phone),
       password: formData.password,
       preferred_contact_method: "email",
     };
@@ -59,8 +62,9 @@ export function CreateUserDialog({
       setIsPasswordValid(false);
       onOpenChange(false);
       onSuccess();
+      toast.success("Usuário criado com sucesso!");
     } catch (error) {
-      alert("Erro ao criar usuário.");
+      toast.error("Não foi possível criar usuário.");
     }
   };
 
@@ -115,7 +119,7 @@ export function CreateUserDialog({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Telefone</label>
-            <Input
+            <PhoneInput
               id="phone"
               name="phone"
               value={formData.phone}
@@ -123,7 +127,6 @@ export function CreateUserDialog({
               autoComplete="off"
               readOnly
               onFocus={(e) => e.currentTarget.removeAttribute("readonly")}
-              maxLength={20}
             />
           </div>
           <div>
