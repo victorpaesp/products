@@ -1,6 +1,6 @@
 import React from "react";
 import { login as apiLogin } from "../lib/auth";
-import { useNavigate } from "@remix-run/react";
+import { useNavigate, Link } from "@remix-run/react";
 import { z } from "zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -171,6 +171,15 @@ export default function Login() {
               >
                 {isSubmitting ? "Entrando..." : "Login"}
               </Button>
+              <div className="text-center text-sm text-gray-600">
+                Não tem uma conta ainda?{" "}
+                <Link
+                  to="/register"
+                  className="text-gray-900 font-medium hover:underline"
+                >
+                  Criar conta
+                </Link>
+              </div>
             </form>
           </Form>
         )}

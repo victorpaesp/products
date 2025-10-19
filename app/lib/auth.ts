@@ -59,6 +59,29 @@ export async function register(
   }
 }
 
+export async function registerUser(data: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+}): Promise<LoginResponse | null> {
+  try {
+    const response = await api.post("/register", {
+      ...data,
+      preferred_contact_method: "email",
+    });
+
+    if (response.data) {
+      return await login(data.email, data.password);
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Erro no registro:", error);
+    throw error;
+  }
+}
+
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const response = await api.get<User>("/me");

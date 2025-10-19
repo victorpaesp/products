@@ -54,7 +54,7 @@ export default function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const hideSearchBarRoutes = ["/login", "/reset-password"];
+  const hideSearchBarRoutes = ["/login", "/register", "/reset-password"];
   const shouldShowSearchBar = !hideSearchBarRoutes.includes(location.pathname);
 
   return (
