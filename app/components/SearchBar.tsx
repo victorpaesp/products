@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { useNavigate, useSearchParams } from "@remix-run/react";
+import { useNavigate, useSearchParams, Link } from "@remix-run/react";
 import { Input } from "~/components/ui/input";
 import { Product } from "~/types";
 
@@ -32,7 +32,13 @@ export function SearchBar({
   return (
     <div className="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10">
       <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <img src="/logo.jpeg" alt="logo" className="w-[50px]" />
+        <Link to="/">
+          <img
+            src="/santo-mimo-logo.jpg"
+            alt="logo"
+            className="w-[50px] cursor-pointer"
+          />
+        </Link>
         <form onSubmit={handleSubmit} className="max-w-2xl w-full mx-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

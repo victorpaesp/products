@@ -87,43 +87,43 @@ export default function Products() {
   };
 
   useEffect(() => {
+    setData(null);
+    setError(null);
+    setLoading(true);
+    const params: Record<string, unknown> = {
+      page: page,
+      per_page: perPage,
+    };
     if (searchTerm) {
-      setData(null);
-      setError(null);
-      setLoading(true);
-      const params: Record<string, unknown> = {
-        productName: searchTerm,
-        page: page,
-        per_page: perPage,
-      };
-      if (sortType === "name") {
-        params["name_sort"] = sortOrder;
-      } else if (sortType === "price") {
-        params["price_sort"] = sortOrder;
-      }
-      api
-        .get<ApiResponse>("/dados", { params })
-        .then((response) => {
-          const cleanData = {
-            ...response.data,
-            data: response.data.data.map((product) => ({
-              ...product,
-              Description: removeHtmlTags(product.Description),
-            })),
-          };
-          setData((prev) => {
-            if (!prev || page === 1) return cleanData;
-            return {
-              ...cleanData,
-              data: [...prev.data, ...cleanData.data],
-            };
-          });
-        })
-        .catch(() => {
-          setError("Error");
-        })
-        .finally(() => setLoading(false));
+      params["productName"] = searchTerm;
     }
+    if (sortType === "name") {
+      params["name_sort"] = sortOrder;
+    } else if (sortType === "price") {
+      params["price_sort"] = sortOrder;
+    }
+    api
+      .get<ApiResponse>("/dados", { params })
+      .then((response) => {
+        const cleanData = {
+          ...response.data,
+          data: response.data.data.map((product) => ({
+            ...product,
+            Description: removeHtmlTags(product.Description),
+          })),
+        };
+        setData((prev) => {
+          if (!prev || page === 1) return cleanData;
+          return {
+            ...cleanData,
+            data: [...prev.data, ...cleanData.data],
+          };
+        });
+      })
+      .catch(() => {
+        setError("Error");
+      })
+      .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, page, sortType, sortOrder, perPage]);
 
@@ -170,9 +170,13 @@ export default function Products() {
         }`}
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-          <h1 className="text-2xl font-bold">Resultados para: {searchTerm}</h1>
+          {searchTerm && (
+            <h1 className="text-2xl font-bold">
+              Resultados para: {searchTerm}
+            </h1>
+          )}
           {data && data.data.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+            <div className="flex flex-col ml-auto sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                 <label
                   htmlFor="per-page-select"

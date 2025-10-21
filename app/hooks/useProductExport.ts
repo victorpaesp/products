@@ -12,6 +12,7 @@ import {
   TableCell,
   WidthType,
   ExternalHyperlink,
+  Footer,
 } from "docx";
 import { loadImageWithCORS } from "~/lib/document-utils";
 import { formatPrice } from "~/lib/utils";
@@ -78,7 +79,7 @@ export function useProductExport() {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: "Preço Unitário: " + formatPrice(product.Price),
+                  text: "Valor unitário: " + formatPrice(product.Price),
                   size: 23,
                   bold: true,
                 }),
@@ -203,7 +204,7 @@ export function useProductExport() {
           status: "processing",
         });
 
-        const response = await fetch("/logo-document.jpg");
+        const response = await fetch("/santo-mimo-logo.jpg");
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
@@ -233,7 +234,7 @@ export function useProductExport() {
                           data: arrayBuffer,
                           transformation: {
                             width: 172,
-                            height: 106,
+                            height: 140,
                           },
                           type: "jpg",
                         }),
@@ -465,6 +466,161 @@ export function useProductExport() {
                   ],
                 }),
               ],
+              footers: {
+                default: new Footer({
+                  children: [
+                    new Table({
+                      rows: [
+                        new TableRow({
+                          children: [
+                            new TableCell({
+                              children: [
+                                new Paragraph({
+                                  children: [
+                                    new TextRun({
+                                      text: "Fone 11 96641-9950",
+                                      size: 24,
+                                      color: "000000",
+                                    }),
+                                  ],
+                                  alignment: "left",
+                                }),
+                              ],
+                              borders: {
+                                top: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                bottom: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                left: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                right: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                              },
+                              width: { size: 2833, type: WidthType.DXA },
+                            }),
+                            new TableCell({
+                              children: [
+                                new Paragraph({
+                                  children: [
+                                    new ExternalHyperlink({
+                                      children: [
+                                        new TextRun({
+                                          text: "www.santomimo.com",
+                                          size: 24,
+                                          style: "Hyperlink",
+                                        }),
+                                      ],
+                                      link: "https://www.santomimo.com",
+                                    }),
+                                  ],
+                                  alignment: "center",
+                                }),
+                              ],
+                              borders: {
+                                top: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                bottom: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                left: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                right: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                              },
+                              width: { size: 2833, type: WidthType.DXA },
+                            }),
+                            new TableCell({
+                              children: [
+                                new Paragraph({
+                                  children: [
+                                    new ExternalHyperlink({
+                                      children: [
+                                        new TextRun({
+                                          text: "@santomimo.brindes",
+                                          size: 24,
+                                          style: "Hyperlink",
+                                          noProof: true,
+                                        }),
+                                      ],
+                                      link: "https://instagram.com/santomimo.brindes",
+                                    }),
+                                  ],
+                                  alignment: "right",
+                                }),
+                              ],
+                              borders: {
+                                top: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                bottom: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                left: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                                right: {
+                                  style: "none",
+                                  size: 0,
+                                  color: "FFFFFF",
+                                },
+                              },
+                              width: { size: 2833, type: WidthType.DXA },
+                            }),
+                          ],
+                        }),
+                      ],
+                      width: { size: 8500, type: WidthType.DXA },
+                      alignment: "center",
+                      columnWidths: [2833, 2833, 2833],
+                      borders: {
+                        top: { style: "none", size: 0, color: "FFFFFF" },
+                        bottom: { style: "none", size: 0, color: "FFFFFF" },
+                        left: { style: "none", size: 0, color: "FFFFFF" },
+                        right: { style: "none", size: 0, color: "FFFFFF" },
+                        insideHorizontal: {
+                          style: "none",
+                          size: 0,
+                          color: "FFFFFF",
+                        },
+                        insideVertical: {
+                          style: "none",
+                          size: 0,
+                          color: "FFFFFF",
+                        },
+                      },
+                    }),
+                  ],
+                }),
+              },
             },
           ],
         });

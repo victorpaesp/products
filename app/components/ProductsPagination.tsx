@@ -14,7 +14,7 @@ interface ProductsPaginationProps {
   data: { total: number } | null;
   searchParams: URLSearchParams;
   setSearchParams: (params: URLSearchParams) => void;
-  setData: (data: any) => void;
+  setData: (data: import("../types").ApiResponse | null) => void;
   className?: string;
 }
 
