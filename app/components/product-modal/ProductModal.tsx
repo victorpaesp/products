@@ -3,6 +3,7 @@ import type { Product } from "~/types/index";
 import { X } from "lucide-react";
 import { ImageCarousel } from "./atoms/ImageCarousel";
 import { ProductDetails } from "./atoms/ProductDetails";
+import { getProductImage } from "~/lib/utils";
 
 interface ProductModalProps {
   product: Product;
@@ -31,7 +32,9 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
         if (!focusableElements?.length) return;
 
         const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
 
         if (event.shiftKey && document.activeElement === firstElement) {
           event.preventDefault();
@@ -45,7 +48,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Handle mount/unmount and visibility
@@ -83,7 +86,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
   if (!isMounted) return null;
 
-  const allImages = [product.Image, ...(product.Gallery || [])];
+  const allImages = [getProductImage(product), ...(product.Gallery || [])];
 
   return (
     <div
@@ -105,9 +108,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       <div
         ref={modalRef}
         className={`relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto transition-all duration-300 transform ${
-          isVisible
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-4"
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         }`}
       >
         {/* Close button */}
@@ -127,4 +128,4 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       </div>
     </div>
   );
-} 
+}

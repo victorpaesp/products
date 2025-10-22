@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { Product } from "~/types";
-import { formatPrice } from "~/lib/utils";
+import { formatPrice, getProductImage } from "~/lib/utils";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
@@ -110,7 +110,7 @@ export function SelectedProductsDrawer({
                   >
                     <img
                       src={`/api/image-proxy?url=${encodeURIComponent(
-                        product.Image
+                        getProductImage(product)
                       )}`}
                       alt={product.Name}
                       className="w-16 h-16 object-cover rounded-md flex-shrink-0"

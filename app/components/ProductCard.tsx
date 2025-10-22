@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Checkbox } from "~/components/ui/checkbox";
 import type { Product } from "~/types/index";
-import { formatPrice } from "~/lib/utils";
+import { formatPrice, getProductImage } from "~/lib/utils";
 import { ProductModal } from "./product-modal/ProductModal";
 
 interface ProductCardProps {
@@ -47,7 +47,7 @@ export function ProductCard({
         </label>
         <div className="aspect-square">
           <img
-            src={product.Image}
+            src={getProductImage(product)}
             alt={product.Name}
             className="w-full h-full object-cover"
           />

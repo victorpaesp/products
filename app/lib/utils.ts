@@ -29,3 +29,24 @@ export const parsePrice = (val: string | number): number => {
 export const removeHtmlTags = (text: string): string => {
   return text.replace(/<[^>]*>/g, "");
 };
+
+/**
+ * Obtém a URL da imagem correta do produto baseado no Provider
+ * Para "MinhaXBZ", usa Gallery[1] se existir, caso contrário usa Image
+ * @param product O produto
+ * @returns URL da imagem
+ */
+export const getProductImage = (product: {
+  Provider: string;
+  Image: string;
+  Gallery?: string[];
+}): string => {
+  if (
+    product.Provider === "MinhaXBZ" &&
+    product.Gallery &&
+    product.Gallery.length > 1
+  ) {
+    return product.Gallery[1];
+  }
+  return product.Image;
+};

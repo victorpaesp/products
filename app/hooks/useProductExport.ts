@@ -15,7 +15,7 @@ import {
   Footer,
 } from "docx";
 import { loadImageWithCORS } from "~/lib/document-utils";
-import { formatPrice } from "~/lib/utils";
+import { formatPrice, getProductImage } from "~/lib/utils";
 
 interface ExportToastState {
   isVisible: boolean;
@@ -34,11 +34,11 @@ export function useProductExport() {
       const paragraphs = await Promise.all(
         products.map(async (product, index) => {
           const imageUrl =
-            product.Image ||
+            getProductImage(product) ||
             "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
           let imageArrayBuffer = await loadImageWithCORS(imageUrl);
 
-          if (!imageArrayBuffer && product.Image) {
+          if (!imageArrayBuffer && getProductImage(product)) {
             console.warn(
               `Falha ao carregar imagem para ${product.Name}, usando placeholder`
             );
