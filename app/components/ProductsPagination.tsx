@@ -7,6 +7,7 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "./ui/pagination";
+import type { ApiResponse } from "~/types";
 
 interface ProductsPaginationProps {
   page: number;

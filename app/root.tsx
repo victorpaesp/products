@@ -7,6 +7,14 @@ import {
 } from "@remix-run/react";
 import type { LinksFunction } from "@remix-run/node";
 
+import { ThemeProvider } from "~/components/theme-provider";
+import { SearchBar } from "~/components/SearchBar";
+import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
+import { useState } from "react";
+import { useLocation } from "@remix-run/react";
+import type { Product } from "~/types";
+import { Toaster } from "~/components/ui/sonner";
+
 import "./tailwind.css";
 
 export const links: LinksFunction = () => [
@@ -35,11 +43,51 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
+        <Toaster />
       </body>
     </html>
   );
 }
 
 export default function App() {
-  return <Outlet />;
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const location = useLocation();
+
+  const hideSearchBarRoutes = ["/login", "/register", "/reset-password"];
+  const shouldShowSearchBar = !hideSearchBarRoutes.includes(location.pathname);
+
+  return (
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      {shouldShowSearchBar && (
+        <SearchBar
+          selectedProducts={selectedProducts}
+          setSelectedProducts={setSelectedProducts}
+          onOpenDrawer={() => setIsDrawerOpen(true)}
+        />
+      )}
+      <Outlet
+        context={{
+          selectedProducts,
+          setSelectedProducts,
+          isDrawerOpen,
+          setIsDrawerOpen,
+        }}
+      />
+      <SelectedProductsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        selectedProducts={selectedProducts}
+        onRemoveProduct={(productCod: string) =>
+          setSelectedProducts((prev) =>
+            prev.filter((p) => p.ProductCod !== productCod)
+          )
+        }
+        onClearProducts={() => {
+          setSelectedProducts([]);
+          setIsDrawerOpen(false);
+        }}
+      />
+    </ThemeProvider>
+  );
 }

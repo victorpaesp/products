@@ -1,13 +1,19 @@
-import type { MetaFunction } from "@remix-run/node";
+import { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
 // import { Input } from "~/components/ui/input";
 // import { Search } from "lucide-react";
 import { useNavigate } from "@remix-run/react";
 // import { useRef } from "react";
 import { useEffect } from "react";
+import { requireAuth } from "~/lib/auth.server";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Santo Mimo" }];
 };
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  await requireAuth(request);
+  return null;
+}
 
 export default function Index() {
   const navigate = useNavigate();

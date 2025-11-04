@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
+  darkMode: "class",
   content: ["./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
@@ -17,6 +18,18 @@ export default {
         ],
       },
       colors: {
+        gray: {
+          50: "#FAFAFA",
+          100: "#F5F5F5",
+          200: "#EEEEEE",
+          300: "#E0E0E0",
+          400: "#BDBDBD",
+          500: "#9E9E9E",
+          600: "#757575",
+          700: "#616161",
+          800: "#424242",
+          900: "#212121",
+        },
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
@@ -31,8 +44,8 @@ export default {
           foreground: "var(--secondary-foreground)",
         },
         destructive: {
-          DEFAULT: "var(--destructive) / <alpha-value>)",
-          foreground: "var(--destructive-foreground) / <alpha-value>)",
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
         },
         muted: {
           DEFAULT: "var(--muted)",
