@@ -53,22 +53,30 @@ export const unformatPhoneNumber = (value: string): string => {
 };
 
 /**
- * Obtém a URL da imagem correta do produto baseado no Provider
- * Para "MinhaXBZ", usa Gallery[1] se existir, caso contrário usa Image
+ * Obtém a URL da imagem correta do produto baseado no provider
+ * Para "MinhaXBZ", usa gallery[1] se existir, caso contrário usa image
  * @param product O produto
  * @returns URL da imagem
  */
 export const getProductImage = (product: {
-  Provider: string;
-  Image: string;
-  Gallery?: string[];
+  provider: string;
+  image: string;
+  gallery?: string[];
 }): string => {
   if (
-    product.Provider === "MinhaXBZ" &&
-    product.Gallery &&
-    product.Gallery.length > 1
+    product.provider === "MinhaXBZ" &&
+    Array.isArray(product.gallery) &&
+    product.gallery[1]
   ) {
-    return product.Gallery[1];
+    const img = product.gallery[1].trim();
+    if (img) return img;
   }
-  return product.Image;
+  if (Array.isArray(product.gallery)) {
+    const img = product.gallery[0]?.trim();
+    if (img) return img;
+  }
+  if (product.image && product.image.trim()) {
+    return product.image.trim();
+  }
+  return "/logo.jpeg";
 };

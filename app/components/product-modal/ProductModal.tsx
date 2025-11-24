@@ -86,7 +86,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
   if (!isMounted) return null;
 
-  const allImages = [getProductImage(product), ...(product.Gallery || [])];
+  const allImages = [getProductImage(product), ...(product.gallery || [])];
 
   return (
     <div
@@ -122,7 +122,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
         </button>
 
         <div className="p-6">
-          <ImageCarousel images={allImages} productName={product.Name} />
+          <ImageCarousel images={allImages} productName={product.name} />
           <ProductDetails product={product} />
         </div>
       </div>

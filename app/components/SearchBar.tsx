@@ -47,7 +47,7 @@ export function SearchBar({
             <img
               src="/santo-mimo-logo.jpg"
               alt="logo"
-              className="w-[50px] cursor-pointer"
+              className="w-[50px] cursor-pointer rounded-sm"
             />
           </Link>
         </div>

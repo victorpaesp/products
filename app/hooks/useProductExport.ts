@@ -40,17 +40,17 @@ export function useProductExport() {
 
           if (!imageArrayBuffer && getProductImage(product)) {
             console.warn(
-              `Falha ao carregar imagem para ${product.Name}, usando placeholder`
+              `Falha ao carregar imagem para ${product.name}, usando placeholder`
             );
             imageArrayBuffer = await loadImageWithCORS(
               "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem"
             );
           }
 
-          const quantity = productQuantities?.[product.ProductCod] ?? 1;
+          const quantity = productQuantities?.[product.product_cod] ?? 1;
           const stock =
-            product.variation && product.variation.length > 0
-              ? product.variation[0].Stock ?? 0
+            product.variations && product.variations.length > 0
+              ? product.variations[0].stock ?? 0
               : 9999;
           const isQuantityExceeded = quantity > stock;
 
@@ -58,7 +58,7 @@ export function useProductExport() {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `${product.ProductCod} - ${product.Name}`,
+                  text: `${product.product_cod} - ${product.name}`,
                   bold: true,
                   color: "000000",
                   size: 23,
@@ -69,7 +69,7 @@ export function useProductExport() {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `${(product.Description || "N/A").replace(/\n/g, " ")}`,
+                  text: `${(product.description || "N/A").replace(/\n/g, " ")}`,
                   color: "000000",
                   size: 22,
                 }),
@@ -79,7 +79,7 @@ export function useProductExport() {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: "Valor unitário: " + formatPrice(product.Price),
+                  text: "Valor unitário: " + formatPrice(product.price),
                   size: 23,
                   bold: true,
                 }),

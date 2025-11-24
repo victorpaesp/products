@@ -12,7 +12,7 @@ interface SelectedProductsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   selectedProducts: Product[];
-  onRemoveProduct: (productCod: string) => void;
+  onRemoveProduct: (product_cod: string) => void;
   onClearProducts?: () => void;
 }
 
@@ -32,8 +32,8 @@ export function SelectedProductsDrawer({
   useBodyOverflow(isOpen);
 
   const getProductStock = (product: Product): number => {
-    return product.variation && product.variation.length > 0
-      ? product.variation[0].Stock ?? 0
+    return product.variations && product.variations.length > 0
+      ? product.variations[0].stock ?? 0
       : 9999;
   };
 
@@ -101,18 +101,18 @@ export function SelectedProductsDrawer({
             <div className="space-y-4">
               {selectedProducts.map((product) => {
                 const stock = getProductStock(product);
-                const quantity = productQuantities[product.ProductCod] ?? 1;
+                const quantity = productQuantities[product.product_cod] ?? 1;
                 const isQuantityExceeded = quantity > stock;
                 return (
                   <div
-                    key={product.ProductCod}
+                    key={product.product_cod}
                     className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-shadow bg-white dark:bg-gray-950"
                   >
                     <img
                       src={`/api/image-proxy?url=${encodeURIComponent(
                         getProductImage(product)
                       )}`}
-                      alt={product.Name}
+                      alt={product.name}
                       className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -123,10 +123,10 @@ export function SelectedProductsDrawer({
                     <div className="flex-1 min-w-0">
                       <div>
                         <h3 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
-                          {product.Name}
+                          {product.name}
                         </h3>
                         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          Cod: {product.ProductCod} - Estoque: {stock}
+                          Cod: {product.product_cod} - Estoque: {stock}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
@@ -135,13 +135,13 @@ export function SelectedProductsDrawer({
                           onChange={(val) =>
                             setproductQuantities((q) => ({
                               ...q,
-                              [product.ProductCod]: val,
+                              [product.product_cod]: val,
                             }))
                           }
                           min={1}
                         />
                         <p className="text-gray-900 dark:text-white mt-1">
-                          {formatPrice(product.Price)}
+                          {formatPrice(product.price)}
                         </p>
                       </div>
                       <div className="mt-2">
@@ -154,7 +154,7 @@ export function SelectedProductsDrawer({
                     </div>
 
                     <button
-                      onClick={() => onRemoveProduct(product.ProductCod)}
+                      onClick={() => onRemoveProduct(product.product_cod)}
                       className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-gray-900 rounded-full transition-colors flex-shrink-0"
                       title="Remover produto"
                     >

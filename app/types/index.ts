@@ -37,42 +37,51 @@ export type RegisterData = {
 };
 
 export type ApiResponse = {
-  current_page: number;
+  success: boolean;
   data: Product[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: Link[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+    from: number;
+    to: number;
+    next_page_url: string | null;
+    prev_page_url: string | null;
+    has_more_pages: boolean;
+  };
+  filters: {
+    search?: string;
+    sort?: Record<string, "asc" | "desc">;
+  };
 };
 
 export type Product = {
-  ProductCod: string;
-  Provider: string;
-  Name: string;
-  Description: string;
-  Price: string;
-  Image: string;
-  Gallery: string[];
-  Product_Mention: string | null;
-  Product_Weight: string | null;
-  Quantity_Box: string | null;
-  Box_Mention: string | null;
-  variation: Variation[];
+  id: number;
+  product_cod: string;
+  provider: string;
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+  product_mention: string;
+  product_weight: number;
+  quantity_box: number;
+  box_mention: string;
+  gallery: string[];
+  created_at: string;
+  updated_at: string;
+  variations: Variation[];
 };
 
 export type Variation = {
-  ProductCod: string;
-  Name: string;
-  Price: string;
-  Stock: number;
-  Image: string;
+  id: number;
+  product_id: number;
+  product_cod: string;
+  name: string;
+  price: string;
+  stock: number;
+  images: string[];
 };
 
 export type Link = {

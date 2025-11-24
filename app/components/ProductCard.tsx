@@ -10,17 +10,16 @@ interface ProductCardProps {
   isSelected?: boolean;
 }
 
-export function ProductCard({
-  product,
-  isSelected,
-  onSelect,
-}: ProductCardProps) {
+export function ProductCard(props: ProductCardProps) {
+  const { product, isSelected, onSelect } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const imageSrc = getProductImage(product);
 
   return (
     <>
       <div
-        className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow relative"
+        className="bg-white flex flex-col rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow relative"
         onClick={() => setIsModalOpen(true)}
         role="button"
         tabIndex={0}
@@ -47,24 +46,23 @@ export function ProductCard({
         </label>
         <div className="aspect-square">
           <img
-            src={getProductImage(product)}
-            alt={product.Name}
+            src={imageSrc}
+            alt={product.name}
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="p-4">
+        <div className="p-4 h-full flex flex-col">
           <h2 className="text-lg text-gray-900 font-semibold mb-2 line-clamp-1">
-            {product.ProductCod} - {product.Name}
+            {product.product_cod} - {product.name}
           </h2>
           <p className="text-gray-900 text-sm line-clamp-2 mb-2">
-            {product.Description}
+            {product.description}
           </p>
-          <p className="text-lg font-bold text-gray-900">
-            {formatPrice(product.Price)}
+          <p className="text-lg font-bold text-gray-900 mt-auto">
+            {formatPrice(product.price)}
           </p>
         </div>
       </div>
-
       <ProductModal
         product={product}
         isOpen={isModalOpen}

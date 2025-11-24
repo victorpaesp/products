@@ -4,20 +4,35 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 interface ImageCarouselProps {
   images: string[];
   productName: string;
+  mainImage?: string;
 }
 
-export function ImageCarousel({ images, productName }: ImageCarouselProps) {
+export function ImageCarousel({
+  images,
+  productName,
+  mainImage,
+}: ImageCarouselProps) {
+  let validImages: string[] = Array.isArray(images)
+    ? images.filter((img) => typeof img === "string" && img.trim() !== "")
+    : [];
+
+  validImages = validImages.filter((img, idx, arr) => arr.indexOf(img) === idx);
+
+  if (validImages.length === 0) return null;
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const nextImage = () => {
     setIsLoading(true);
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % validImages.length);
   };
 
   const prevImage = () => {
     setIsLoading(true);
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + validImages.length) % validImages.length
+    );
   };
 
   return (
@@ -29,14 +44,17 @@ export function ImageCarousel({ images, productName }: ImageCarouselProps) {
           </div>
         )}
         <img
-          src={images[currentImageIndex]}
+          key={currentImageIndex}
+          src={validImages[currentImageIndex]}
           alt={`${productName} - Imagem ${currentImageIndex + 1}`}
-          className={`w-full h-full object-contain rounded-lg ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full object-contain rounded-lg ${
+            isLoading ? "opacity-0" : "opacity-100"
+          }`}
           onLoad={() => setIsLoading(false)}
           onError={() => setIsLoading(false)}
         />
-        
-        {images.length > 1 && (
+
+        {validImages.length > 1 && (
           <>
             <button
               onClick={prevImage}
@@ -56,9 +74,9 @@ export function ImageCarousel({ images, productName }: ImageCarouselProps) {
         )}
       </div>
 
-      {images.length > 1 && (
+      {validImages.length > 1 && (
         <div className="flex justify-center gap-2 mt-4">
-          {images.map((_, index) => (
+          {validImages.map((_, index) => (
             <button
               key={index}
               onClick={() => {
@@ -75,4 +93,4 @@ export function ImageCarousel({ images, productName }: ImageCarouselProps) {
       )}
     </div>
   );
-} 
+}
