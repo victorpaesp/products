@@ -78,9 +78,9 @@ export default function App() {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         selectedProducts={selectedProducts}
-        onRemoveProduct={(productCod: string) =>
+        onRemoveProduct={(product_cod: string) =>
           setSelectedProducts((prev) =>
-            prev.filter((p) => p.ProductCod !== productCod)
+            prev.filter((p) => p.product_cod !== product_cod)
           )
         }
         onClearProducts={() => {
