@@ -23,6 +23,26 @@ interface ExportToastState {
   message?: string;
 }
 
+const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
+
+function formatDateForFilename(date: Date) {
+  const pad2 = (n: number) => n.toString().padStart(2, "0");
+  return `${pad2(date.getDate())}-${pad2(
+    date.getMonth() + 1,
+  )}-${date.getFullYear()}`;
+}
+
+function formatCompanyForFilename(company?: string, maxLength = 20) {
+  const cleaned = (company ?? "")
+    .replace(INVALID_FILENAME_CHARS, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength)
+    .trim();
+
+  return cleaned ? `${cleaned} ` : "";
+}
+
 export function useProductExport() {
   const [exportToast, setExportToast] = useState<ExportToastState>({
     isVisible: false,
@@ -40,10 +60,10 @@ export function useProductExport() {
 
           if (!imageArrayBuffer && getProductImage(product)) {
             console.warn(
-              `Falha ao carregar imagem para ${product.name}, usando placeholder`
+              `Falha ao carregar imagem para ${product.name}, usando placeholder`,
             );
             imageArrayBuffer = await loadImageWithCORS(
-              "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem"
+              "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem",
             );
           }
 
@@ -180,11 +200,11 @@ export function useProductExport() {
               spacing: { after: 60 },
             }),
           ];
-        })
+        }),
       );
       return paragraphs.flat();
     },
-    []
+    [],
   );
 
   const exportProducts = useCallback(
@@ -194,7 +214,7 @@ export function useProductExport() {
       productQuantities?: Record<string, number>,
       seller?: string,
       company?: string,
-      contact?: string
+      contact?: string,
     ) => {
       if (!products || products.length === 0) return;
 
@@ -210,7 +230,7 @@ export function useProductExport() {
 
         const productParagraphs = await generateProductParagraphs(
           products,
-          productQuantities ?? {}
+          productQuantities ?? {},
         );
 
         const doc = new Document({
@@ -398,7 +418,7 @@ export function useProductExport() {
                           day: "2-digit",
                           month: "long",
                           year: "numeric",
-                        }
+                        },
                       )}.`,
                       size: 24,
                       color: "000000",
@@ -629,11 +649,10 @@ export function useProductExport() {
           .then((blob) => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            const dateStr = new Date()
-              .toLocaleDateString("pt-BR")
-              .replace(/\//g, "-");
+            const dateStr = formatDateForFilename(new Date());
+            const companyPart = formatCompanyForFilename(company, 20);
             a.href = url;
-            a.download = `proposta_${dateStr}.docx`;
+            a.download = `Santo Mimo - ${companyPart}${dateStr}.docx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -676,7 +695,7 @@ export function useProductExport() {
         }, 5000);
       }
     },
-    [generateProductParagraphs]
+    [generateProductParagraphs],
   );
 
   const resetExportState = () => {
