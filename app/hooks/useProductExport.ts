@@ -53,12 +53,26 @@ export function useProductExport() {
     async (products: Product[], productQuantities: Record<string, number>) => {
       const paragraphs = await Promise.all(
         products.map(async (product, index) => {
-          const imageUrl =
+          let imageUrl: string | undefined;
+          const productWithImages = product as Product & { images?: string[] };
+
+          if (productWithImages.images) {
+            if (Array.isArray(productWithImages.images[0])) {
+              imageUrl = (
+                productWithImages.images[0] as unknown as string[]
+              )[0];
+            } else {
+              imageUrl = productWithImages.images[0];
+            }
+          }
+
+          imageUrl =
+            imageUrl ||
             getProductImage(product) ||
             "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
           let imageArrayBuffer = await loadImageWithCORS(imageUrl);
 
-          if (!imageArrayBuffer && getProductImage(product)) {
+          if (!imageArrayBuffer && imageUrl) {
             console.warn(
               `Falha ao carregar imagem para ${product.name}, usando placeholder`,
             );

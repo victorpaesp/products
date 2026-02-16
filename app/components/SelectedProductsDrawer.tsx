@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
-import { Product } from "~/types";
+import { Product, SelectedProduct } from "~/types";
 import { formatPrice, getProductImage } from "~/lib/utils";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
 import { ExportProposalModal } from "./ExportProposalModal";
 import { QuantityInput } from "~/components/shared/QuantityInput";
+import { Input } from "~/components/ui/input";
 
 interface SelectedProductsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedProducts: Product[];
-  onRemoveProduct: (product_cod: string) => void;
+  selectedProducts: SelectedProduct[];
+  onRemoveProduct: (product_cod: string, variation_cod: string) => void;
   onClearProducts?: () => void;
 }
 
@@ -31,12 +32,6 @@ export function SelectedProductsDrawer({
 
   useBodyOverflow(isOpen);
 
-  const getProductStock = (product: Product): number => {
-    return product.variations && product.variations.length > 0
-      ? product.variations[0].stock ?? 0
-      : 9999;
-  };
-
   const handleExportClick = () => {
     setExportModalOpen(true);
   };
@@ -46,14 +41,49 @@ export function SelectedProductsDrawer({
     company: string;
     contact: string;
   }) => {
-    const productsToExport = selectedProducts;
+    const productsToExport = selectedProducts.map(({ product, variation }) => {
+      const isSingleVariation =
+        product.variations && product.variations.length === 1;
+      if (isSingleVariation) {
+        return {
+          ...product,
+          name: product.name,
+          product_cod: product.product_cod,
+          price: product.price,
+          images: product.gallery,
+          stock: product.variations?.[0]?.stock ?? 0,
+          description: product.description,
+          gallery: product.gallery,
+        };
+      } else {
+        let exportImages;
+        if (Array.isArray(variation.images?.[0])) {
+          exportImages = variation.images[0];
+        } else if (variation.images?.length) {
+          exportImages = variation.images;
+        } else {
+          exportImages = product.gallery;
+        }
+        return {
+          ...product,
+          ...variation,
+          name: variation.name || product.name,
+          product_cod: variation.product_cod,
+          price: variation.price ?? product.price,
+          images: exportImages,
+          stock: variation.stock ?? 0,
+          description: product.description,
+          gallery: product.gallery,
+        };
+      }
+    });
     await exportProducts(
       productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
       productQuantities,
       formData.seller,
       formData.company,
-      formData.contact
+      formData.contact,
     );
     setproductQuantities({});
     setExportModalOpen(false);
@@ -99,20 +129,35 @@ export function SelectedProductsDrawer({
             </div>
           ) : (
             <div className="space-y-4">
-              {selectedProducts.map((product) => {
-                const stock = getProductStock(product);
-                const quantity = productQuantities[product.product_cod] ?? 1;
+              {selectedProducts.map(({ product, variation }) => {
+                const isSingleVariation =
+                  product.variations && product.variations.length === 1;
+                let name, code, price, image, stock;
+                if (isSingleVariation) {
+                  name = product.name;
+                  code = product.product_cod;
+                  price = product.price;
+                  image = product.gallery?.[0] || getProductImage(product);
+                  stock = product.variations?.[0]?.stock ?? 0;
+                } else {
+                  name = variation.name || product.name;
+                  code = variation.product_cod;
+                  price = variation.price ?? product.price;
+                  image = Array.isArray(variation.images?.[0])
+                    ? variation.images[0][0] || getProductImage(product)
+                    : variation.images?.[0] || getProductImage(product);
+                  stock = variation.stock ?? 0;
+                }
+                const quantity = productQuantities[code] ?? 1;
                 const isQuantityExceeded = quantity > stock;
                 return (
                   <div
-                    key={product.product_cod}
+                    key={product.product_cod + "-" + variation.product_cod}
                     className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-shadow bg-white dark:bg-gray-950"
                   >
                     <img
-                      src={`/api/image-proxy?url=${encodeURIComponent(
-                        getProductImage(product)
-                      )}`}
-                      alt={product.name}
+                      src={`/api/image-proxy?url=${encodeURIComponent(image)}`}
+                      alt={name}
                       className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -123,10 +168,10 @@ export function SelectedProductsDrawer({
                     <div className="flex-1 min-w-0">
                       <div>
                         <h3 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
-                          {product.name}
+                          {name}
                         </h3>
                         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          Cod: {product.product_cod} - Estoque: {stock}
+                          Cod: {code} - Estoque: {stock}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
@@ -135,13 +180,13 @@ export function SelectedProductsDrawer({
                           onChange={(val) =>
                             setproductQuantities((q) => ({
                               ...q,
-                              [product.product_cod]: val,
+                              [code]: val,
                             }))
                           }
                           min={1}
                         />
                         <p className="text-gray-900 dark:text-white mt-1">
-                          {formatPrice(product.price)}
+                          {formatPrice(price)}
                         </p>
                       </div>
                       <div className="mt-2">
@@ -154,7 +199,9 @@ export function SelectedProductsDrawer({
                     </div>
 
                     <button
-                      onClick={() => onRemoveProduct(product.product_cod)}
+                      onClick={() => {
+                        onRemoveProduct(product.product_cod, code);
+                      }}
                       className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-gray-900 rounded-full transition-colors flex-shrink-0"
                       title="Remover produto"
                     >

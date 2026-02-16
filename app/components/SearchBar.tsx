@@ -2,7 +2,7 @@ import { Search, UserRound } from "lucide-react";
 import { useNavigate, useSearchParams, Link } from "@remix-run/react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { Product } from "~/types";
+import { Product, SelectedProduct } from "~/types";
 import { useAuth } from "~/hooks/useAuth";
 import {
   DropdownMenu,
@@ -13,8 +13,8 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 interface SearchBarProps {
-  selectedProducts?: Product[];
-  setSelectedProducts?: (products: Product[]) => void;
+  selectedProducts?: SelectedProduct[];
+  setSelectedProducts?: (products: SelectedProduct[]) => void;
   onOpenDrawer?: () => void;
 }
 
@@ -35,6 +35,7 @@ export function SearchBar({
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set("q", search);
     newSearchParams.set("page", "1");
+    newSearchParams.delete("variation_search");
 
     navigate(`/products?${newSearchParams.toString()}`);
   };

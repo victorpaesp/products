@@ -5,15 +5,15 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import type { LinksFunction } from "@remix-run/node";
-
 import { ThemeProvider } from "~/components/theme-provider";
 import { SearchBar } from "~/components/SearchBar";
 import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
 import { useState } from "react";
 import { useLocation } from "@remix-run/react";
-import type { Product } from "~/types";
 import { Toaster } from "~/components/ui/sonner";
+
+import type { LinksFunction } from "@remix-run/node";
+import type { SelectedProduct } from "~/types";
 
 import "./tailwind.css";
 
@@ -50,7 +50,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
+    []
+  );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
@@ -78,11 +80,22 @@ export default function App() {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         selectedProducts={selectedProducts}
-        onRemoveProduct={(product_cod: string) =>
+        onRemoveProduct={(product_cod: string, variation_cod: string) => {
           setSelectedProducts((prev) =>
-            prev.filter((p) => p.product_cod !== product_cod)
-          )
-        }
+            prev.filter((item) => {
+              if (
+                item.product.variations.length === 1 &&
+                item.product.product_cod === product_cod
+              ) {
+                return false;
+              }
+              return !(
+                item.product.product_cod === product_cod &&
+                item.variation.product_cod === variation_cod
+              );
+            })
+          );
+        }}
         onClearProducts={() => {
           setSelectedProducts([]);
           setIsDrawerOpen(false);

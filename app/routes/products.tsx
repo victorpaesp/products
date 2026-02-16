@@ -1,7 +1,7 @@
 import { useSearchParams } from "@remix-run/react";
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { useEffect, useState } from "react";
-import type { ApiResponse, Product } from "~/types";
+import type { ApiResponse, Product, SelectedProduct } from "~/types";
 import { api } from "~/lib/axios";
 import { ProtectedRoute } from "~/components/ProtectedRoute";
 import { ProductCard } from "~/components/ProductCard";
@@ -14,8 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
 import { ProductsPagination } from "../components/ProductsPagination";
-import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
+import {
+  ArrowDownAZ,
+  ArrowUpAZ,
+  ArrowDown01,
+  ArrowUp01,
+  SlidersHorizontal,
+  ChevronUp,
+} from "lucide-react";
 import { EmptyState } from "~/components/shared/EmptyState";
 import { ErrorState } from "~/components/shared/ErrorState";
 import { LoadingState } from "~/components/shared/LoadingState";
@@ -34,6 +43,7 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Products() {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { loading: authLoading, isAuthenticated } = useAuth();
   const searchTermRaw = searchParams.get("q");
@@ -42,10 +52,20 @@ export default function Products() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const variationSearch = searchParams.get("variation_search") || "";
+  const [variationSearchInput, setVariationSearchInput] =
+    useState(variationSearch);
+
+  useEffect(() => {
+    if (!variationSearch) setVariationSearchInput("");
+  }, [variationSearch]);
+
   const page = Number(searchParams.get("page")) || 1;
   type OutletContextType = {
-    selectedProducts: Product[];
-    setSelectedProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+    selectedProducts: SelectedProduct[];
+    setSelectedProducts: React.Dispatch<
+      React.SetStateAction<SelectedProduct[]>
+    >;
     isDrawerOpen: boolean;
     setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
   };
@@ -84,37 +104,28 @@ export default function Products() {
     sessionStorage.setItem("selectedProducts", value);
   }, [selectedProducts]);
 
-  const toogleSelectProduct = (product: Product) => {
-    setSelectedProducts((prev: Product[]) => {
+  const toggleSelectProduct = (
+    product: Product,
+    variation: Product["variations"][0],
+  ) => {
+    setSelectedProducts((prev: SelectedProduct[]) => {
       const isSelected = prev.some(
-        (p: Product) => p.product_cod === product.product_cod,
+        (p) =>
+          p.product.product_cod === product.product_cod &&
+          p.variation.product_cod === variation.product_cod,
       );
       if (isSelected) {
         return prev.filter(
-          (p: Product) => p.product_cod !== product.product_cod,
+          (p) =>
+            !(
+              p.product.product_cod === product.product_cod &&
+              p.variation.product_cod === variation.product_cod
+            ),
         );
       } else {
-        return [...prev, product];
+        return [...prev, { product, variation }];
       }
     });
-  };
-
-  const handleProductUpdate = (updatedProduct: Product) => {
-    // Update product in the main data list
-    setData((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        data: prev.data.map((p) =>
-          p.id === updatedProduct.id ? updatedProduct : p,
-        ),
-      };
-    });
-
-    // Also update in selectedProducts if it's selected
-    setSelectedProducts((prev: Product[]) =>
-      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)),
-    );
   };
 
   useEffect(() => {
@@ -128,6 +139,9 @@ export default function Products() {
     };
     if (searchTerm) {
       params["search"] = searchTerm;
+    }
+    if (variationSearch) {
+      params["variation_search"] = variationSearch;
     }
     const allowedSortFields = ["name", "price"];
     const sortParams: Record<string, "asc" | "desc"> = {};
@@ -172,6 +186,7 @@ export default function Products() {
       });
   }, [
     searchTerm,
+    variationSearch,
     page,
     perPage,
     sortType,
@@ -223,87 +238,158 @@ export default function Products() {
               </h1>
             )}
             {data && data.data.length > 0 && (
-              <div className="flex flex-col ml-auto sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                  <label
-                    htmlFor="per-page-select"
-                    className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+              <div className="flex flex-col ml-auto items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                {!filtersOpen ? (
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2"
+                    onClick={() => setFiltersOpen(true)}
                   >
-                    Itens por página:
-                  </label>
-                  <Select
-                    value={String(perPage)}
-                    onValueChange={(value) => {
-                      setData(null);
-                      const newSearchParams = new URLSearchParams(searchParams);
-                      newSearchParams.set("per_page", value);
-                      newSearchParams.set("page", "1");
-                      setSearchParams(newSearchParams);
-                    }}
-                  >
-                    <SelectTrigger
-                      id="per-page-select"
-                      className="w-full sm:w-24"
+                    <SlidersHorizontal className="w-4 h-4" /> Filtros
+                  </Button>
+                ) : (
+                  <>
+                    <div className="flex gap-4 mb-4">
+                      {/* Itens por página */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        <label
+                          htmlFor="per-page-select"
+                          className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                        >
+                          Itens por página:
+                        </label>
+                        <Select
+                          value={String(perPage)}
+                          onValueChange={(value) => {
+                            setData(null);
+                            const newSearchParams = new URLSearchParams(
+                              searchParams,
+                            );
+                            newSearchParams.set("per_page", value);
+                            newSearchParams.set("page", "1");
+                            setSearchParams(newSearchParams);
+                          }}
+                        >
+                          <SelectTrigger
+                            id="per-page-select"
+                            className="w-full sm:w-24"
+                          >
+                            <SelectValue>{perPage}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="6">6</SelectItem>
+                            <SelectItem value="12">12</SelectItem>
+                            <SelectItem value="24">24</SelectItem>
+                            <SelectItem value="48">48</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {/* Ordenar por */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        <label
+                          htmlFor="sort-select"
+                          className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                        >
+                          Ordenar por:
+                        </label>
+                        <Select
+                          value={`${sortType}-${sortOrder}`}
+                          onValueChange={(value) => {
+                            const [type, order] = value.split("-");
+                            setData(null);
+                            const newSearchParams = new URLSearchParams(
+                              searchParams,
+                            );
+                            newSearchParams.delete("sort[name]");
+                            newSearchParams.delete("sort[price]");
+                            if (type === "name") {
+                              newSearchParams.set("sort[name]", order);
+                            } else if (type === "price") {
+                              newSearchParams.set("sort[price]", order);
+                            }
+                            newSearchParams.set("page", "1");
+                            setSearchParams(newSearchParams);
+                          }}
+                        >
+                          <SelectTrigger
+                            id="sort-select"
+                            className="w-full sm:w-40"
+                          >
+                            <SelectValue>
+                              {getSelectLabelWithIcon(
+                                `${sortType}-${sortOrder}`,
+                              )}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="name-asc">
+                              <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+                              Nome: A-Z
+                            </SelectItem>
+                            <SelectItem value="name-desc">
+                              <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+                              Nome: Z-A
+                            </SelectItem>
+                            <SelectItem value="price-asc">
+                              <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+                              Preço: Menor ao maior
+                            </SelectItem>
+                            <SelectItem value="price-desc">
+                              <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+                              Preço: Maior ao menor
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    {/* Campo de pesquisa para variação */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full mb-4">
+                      <label
+                        htmlFor="variation-search"
+                        className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                      >
+                        Pesquisar variação:
+                      </label>
+                      <Input
+                        id="variation-search"
+                        type="text"
+                        placeholder="Digite a variação..."
+                        value={variationSearchInput}
+                        className="w-full"
+                        onChange={(e) =>
+                          setVariationSearchInput(e.target.value)
+                        }
+                      />
+                      <Button
+                        onClick={() => {
+                          const newSearchParams = new URLSearchParams(
+                            searchParams,
+                          );
+                          if (variationSearchInput.trim()) {
+                            newSearchParams.set(
+                              "variation_search",
+                              variationSearchInput,
+                            );
+                          } else {
+                            newSearchParams.delete("variation_search");
+                          }
+                          newSearchParams.set("page", "1");
+                          setSearchParams(newSearchParams);
+                        }}
+                        disabled={!variationSearchInput.trim()}
+                      >
+                        Pesquisar
+                      </Button>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 self-end"
+                      onClick={() => setFiltersOpen(false)}
                     >
-                      <SelectValue>{perPage}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="6">6</SelectItem>
-                      <SelectItem value="12">12</SelectItem>
-                      <SelectItem value="24">24</SelectItem>
-                      <SelectItem value="48">48</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                  <label
-                    htmlFor="sort-select"
-                    className="text-sm whitespace-nowrap mb-1 sm:mb-0"
-                  >
-                    Ordenar por:
-                  </label>
-                  <Select
-                    value={`${sortType}-${sortOrder}`}
-                    onValueChange={(value) => {
-                      const [type, order] = value.split("-");
-                      setData(null);
-                      const newSearchParams = new URLSearchParams(searchParams);
-                      newSearchParams.delete("sort[name]");
-                      newSearchParams.delete("sort[price]");
-                      if (type === "name") {
-                        newSearchParams.set("sort[name]", order);
-                      } else if (type === "price") {
-                        newSearchParams.set("sort[price]", order);
-                      }
-                      newSearchParams.set("page", "1");
-                      setSearchParams(newSearchParams);
-                    }}
-                  >
-                    <SelectTrigger id="sort-select" className="w-full sm:w-40">
-                      <SelectValue>
-                        {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name-asc">
-                        <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
-                        Nome: A-Z
-                      </SelectItem>
-                      <SelectItem value="name-desc">
-                        <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
-                        Nome: Z-A
-                      </SelectItem>
-                      <SelectItem value="price-asc">
-                        <ArrowDown01 className="mr-2 h-4 w-4 inline" />
-                        Preço: Menor ao maior
-                      </SelectItem>
-                      <SelectItem value="price-desc">
-                        <ArrowUp01 className="mr-2 h-4 w-4 inline" />
-                        Preço: Maior ao menor
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      <ChevronUp className="w-4 h-4" /> Recolher filtros
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -329,21 +415,25 @@ export default function Products() {
                 className="mb-8"
               />
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {data.data.map((product, index) => (
-                  <div
-                    key={`product.product_cod-${product.product_cod}-${index}-${product.name}`}
-                    className="h-full flex"
-                  >
-                    <ProductCard
-                      product={product}
-                      isSelected={selectedProducts.some(
-                        (p) => p.product_cod === product.product_cod,
-                      )}
-                      onSelect={toogleSelectProduct}
-                      onProductUpdate={handleProductUpdate}
-                    />
-                  </div>
-                ))}
+                {data.data.map((product, index) => {
+                  const selectedVariations = selectedProducts
+                    .filter(
+                      (p) => p.product.product_cod === product.product_cod,
+                    )
+                    .map((p) => p.variation.product_cod);
+                  return (
+                    <div
+                      key={`product.product_cod-${product.product_cod}-${index}-${product.name}`}
+                      className="h-full flex"
+                    >
+                      <ProductCard
+                        product={product}
+                        selectedVariations={selectedVariations}
+                        onSelect={toggleSelectProduct}
+                      />
+                    </div>
+                  );
+                })}
               </div>
               <ProductsPagination
                 page={page}

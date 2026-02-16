@@ -86,6 +86,11 @@ export type Variation = {
   images: string[];
 };
 
+export type SelectedProduct = {
+  product: Product;
+  variation: Variation;
+};
+
 export type Link = {
   url: string | null;
   label: string;
