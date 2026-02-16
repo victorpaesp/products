@@ -9,9 +9,15 @@ interface ProductModalProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
+  onProductUpdate?: (updatedProduct: Product) => void;
 }
 
-export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
+export function ProductModal({
+  product,
+  isOpen,
+  onClose,
+  onProductUpdate,
+}: ProductModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -27,7 +33,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       }
       if (event.key === "Tab") {
         const focusableElements = modalRef.current?.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
         if (!focusableElements?.length) return;
 
@@ -123,7 +129,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
         <div className="p-6">
           <ImageCarousel images={allImages} productName={product.name} />
-          <ProductDetails product={product} />
+          <ProductDetails product={product} onProductUpdate={onProductUpdate} />
         </div>
       </div>
     </div>

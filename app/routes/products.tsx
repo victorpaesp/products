@@ -87,16 +87,34 @@ export default function Products() {
   const toogleSelectProduct = (product: Product) => {
     setSelectedProducts((prev: Product[]) => {
       const isSelected = prev.some(
-        (p: Product) => p.product_cod === product.product_cod
+        (p: Product) => p.product_cod === product.product_cod,
       );
       if (isSelected) {
         return prev.filter(
-          (p: Product) => p.product_cod !== product.product_cod
+          (p: Product) => p.product_cod !== product.product_cod,
         );
       } else {
         return [...prev, product];
       }
     });
+  };
+
+  const handleProductUpdate = (updatedProduct: Product) => {
+    // Update product in the main data list
+    setData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        data: prev.data.map((p) =>
+          p.id === updatedProduct.id ? updatedProduct : p,
+        ),
+      };
+    });
+
+    // Also update in selectedProducts if it's selected
+    setSelectedProducts((prev: Product[]) =>
+      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)),
+    );
   };
 
   useEffect(() => {
@@ -319,9 +337,10 @@ export default function Products() {
                     <ProductCard
                       product={product}
                       isSelected={selectedProducts.some(
-                        (p) => p.product_cod === product.product_cod
+                        (p) => p.product_cod === product.product_cod,
                       )}
                       onSelect={toogleSelectProduct}
+                      onProductUpdate={handleProductUpdate}
                     />
                   </div>
                 ))}

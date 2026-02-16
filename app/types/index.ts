@@ -62,6 +62,8 @@ export type Product = {
   provider: string;
   name: string;
   description: string;
+  description_original?: string;
+  description_override?: string | null;
   price: string;
   image: string;
   product_mention: string;

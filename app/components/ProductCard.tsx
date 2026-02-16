@@ -8,10 +8,11 @@ interface ProductCardProps {
   product: Product;
   onSelect?: (product: Product) => void;
   isSelected?: boolean;
+  onProductUpdate?: (updatedProduct: Product) => void;
 }
 
 export function ProductCard(props: ProductCardProps) {
-  const { product, isSelected, onSelect } = props;
+  const { product, isSelected, onSelect, onProductUpdate } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const imageSrc = getProductImage(product);
@@ -56,7 +57,9 @@ export function ProductCard(props: ProductCardProps) {
             {product.product_cod} - {product.name}
           </h2>
           <p className="text-gray-900 text-sm line-clamp-2 mb-2">
-            {product.description}
+            {product.description_override ||
+              product.description_original ||
+              product.description}
           </p>
           <p className="text-lg font-bold text-gray-900 mt-auto">
             {formatPrice(product.price)}
@@ -67,6 +70,7 @@ export function ProductCard(props: ProductCardProps) {
         product={product}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onProductUpdate={onProductUpdate}
       />
     </>
   );
