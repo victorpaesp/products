@@ -7,7 +7,14 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "./ui/pagination";
-import type { ApiResponse } from "~/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
 
 interface ProductsPaginationProps {
   page: number;
@@ -39,85 +46,114 @@ export function ProductsPagination({
     setData(null);
   };
 
+  const handlePerPageChange = (value: string) => {
+    setData(null);
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("per_page", value);
+    newSearchParams.set("page", "1");
+    setSearchParams(newSearchParams);
+  };
+
   return (
-    <Pagination className={className}>
-      <PaginationContent>
-        <PaginationItem>
-          <PaginationPrevious
-            href="#"
-            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              if (page > 1) handlePageChange(page - 1);
-            }}
-            aria-disabled={page === 1}
-          />
-        </PaginationItem>
-        {start > 1 && (
-          <PaginationItem key={1}>
-            <PaginationLink
+    <div
+      className={`flex flex-col sm:flex-row items-center justify-center gap-4 ${className || ""}`}
+    >
+      <Pagination className="w-auto mx-0">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
               href="#"
-              isActive={page === 1}
               onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                 e.preventDefault();
-                handlePageChange(1);
+                if (page > 1) handlePageChange(page - 1);
               }}
-            >
-              1
-            </PaginationLink>
+              aria-disabled={page === 1}
+            />
           </PaginationItem>
-        )}
-        {start > 2 && (
-          <PaginationItem key="start-ellipsis">
-            <PaginationEllipsis />
-          </PaginationItem>
-        )}
-        {Array.from({ length: end - start + 1 }, (_, i) => {
-          const p = start + i;
-          return (
-            <PaginationItem key={p}>
+          {start > 1 && (
+            <PaginationItem key={1}>
               <PaginationLink
                 href="#"
-                isActive={page === p}
+                isActive={page === 1}
                 onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                   e.preventDefault();
-                  handlePageChange(p);
+                  handlePageChange(1);
                 }}
               >
-                {p}
+                1
               </PaginationLink>
             </PaginationItem>
-          );
-        })}
-        {end < pageCount - 1 && (
-          <PaginationItem key="end-ellipsis">
-            <PaginationEllipsis />
-          </PaginationItem>
-        )}
-        {end < pageCount && (
-          <PaginationItem key={pageCount}>
-            <PaginationLink
+          )}
+          {start > 2 && (
+            <PaginationItem key="start-ellipsis">
+              <PaginationEllipsis />
+            </PaginationItem>
+          )}
+          {Array.from({ length: end - start + 1 }, (_, i) => {
+            const p = start + i;
+            return (
+              <PaginationItem key={p}>
+                <PaginationLink
+                  href="#"
+                  isActive={page === p}
+                  onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                    e.preventDefault();
+                    handlePageChange(p);
+                  }}
+                >
+                  {p}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          })}
+          {end < pageCount - 1 && (
+            <PaginationItem key="end-ellipsis">
+              <PaginationEllipsis />
+            </PaginationItem>
+          )}
+          {end < pageCount && (
+            <PaginationItem key={pageCount}>
+              <PaginationLink
+                href="#"
+                isActive={page === pageCount}
+                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                  e.preventDefault();
+                  handlePageChange(pageCount);
+                }}
+              >
+                {pageCount}
+              </PaginationLink>
+            </PaginationItem>
+          )}
+          <PaginationItem>
+            <PaginationNext
               href="#"
-              isActive={page === pageCount}
               onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                 e.preventDefault();
-                handlePageChange(pageCount);
+                if (page < pageCount) handlePageChange(page + 1);
               }}
-            >
-              {pageCount}
-            </PaginationLink>
+              aria-disabled={page === pageCount}
+            />
           </PaginationItem>
-        )}
-        <PaginationItem>
-          <PaginationNext
-            href="#"
-            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              if (page < pageCount) handlePageChange(page + 1);
-            }}
-            aria-disabled={page === pageCount}
-          />
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
+        </PaginationContent>
+      </Pagination>
+
+      <div className="flex items-center gap-2">
+        <label htmlFor="per-page-select" className="text-sm whitespace-nowrap">
+          Itens por página:
+        </label>
+        <Select value={String(perPage)} onValueChange={handlePerPageChange}>
+          <SelectTrigger id="per-page-select" className="w-20">
+            <SelectValue>{perPage}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="6">6</SelectItem>
+            <SelectItem value="12">12</SelectItem>
+            <SelectItem value="24">24</SelectItem>
+            <SelectItem value="48">48</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
 }

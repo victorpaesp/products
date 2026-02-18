@@ -43,7 +43,6 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Products() {
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { loading: authLoading, isAuthenticated } = useAuth();
   const searchTermRaw = searchParams.get("q");
@@ -75,7 +74,7 @@ export default function Products() {
     isDrawerOpen,
     setIsDrawerOpen,
   } = useOutletContext<OutletContextType>();
-  const perPage = Number(searchParams.get("per_page")) || 12;
+  const perPage = Number(searchParams.get("per_page")) || 48;
 
   let sortType: "name" | "price" = "name";
   let sortOrder: "asc" | "desc" = "asc";
@@ -231,165 +230,110 @@ export default function Products() {
             selectedProducts.length > 0 ? "mt-[122px]" : "mt-[74px]"
           }`}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-betweenm mb-14 gap-4">
             {searchTerm && (
               <h1 className="text-2xl font-bold">
                 Resultados para: {searchTerm}
               </h1>
             )}
             {data && data.data.length > 0 && (
-              <div className="flex flex-col ml-auto items-stretch sm:items-center gap-4 w-full sm:w-auto">
-                {!filtersOpen ? (
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    onClick={() => setFiltersOpen(true)}
-                  >
-                    <SlidersHorizontal className="w-4 h-4" /> Filtros
-                  </Button>
-                ) : (
-                  <>
-                    <div className="flex gap-4 mb-4">
-                      {/* Itens por página */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                        <label
-                          htmlFor="per-page-select"
-                          className="text-sm whitespace-nowrap mb-1 sm:mb-0"
-                        >
-                          Itens por página:
-                        </label>
-                        <Select
-                          value={String(perPage)}
-                          onValueChange={(value) => {
-                            setData(null);
-                            const newSearchParams = new URLSearchParams(
-                              searchParams,
-                            );
-                            newSearchParams.set("per_page", value);
-                            newSearchParams.set("page", "1");
-                            setSearchParams(newSearchParams);
-                          }}
-                        >
-                          <SelectTrigger
-                            id="per-page-select"
-                            className="w-full sm:w-24"
-                          >
-                            <SelectValue>{perPage}</SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="6">6</SelectItem>
-                            <SelectItem value="12">12</SelectItem>
-                            <SelectItem value="24">24</SelectItem>
-                            <SelectItem value="48">48</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* Ordenar por */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                        <label
-                          htmlFor="sort-select"
-                          className="text-sm whitespace-nowrap mb-1 sm:mb-0"
-                        >
-                          Ordenar por:
-                        </label>
-                        <Select
-                          value={`${sortType}-${sortOrder}`}
-                          onValueChange={(value) => {
-                            const [type, order] = value.split("-");
-                            setData(null);
-                            const newSearchParams = new URLSearchParams(
-                              searchParams,
-                            );
-                            newSearchParams.delete("sort[name]");
-                            newSearchParams.delete("sort[price]");
-                            if (type === "name") {
-                              newSearchParams.set("sort[name]", order);
-                            } else if (type === "price") {
-                              newSearchParams.set("sort[price]", order);
-                            }
-                            newSearchParams.set("page", "1");
-                            setSearchParams(newSearchParams);
-                          }}
-                        >
-                          <SelectTrigger
-                            id="sort-select"
-                            className="w-full sm:w-40"
-                          >
-                            <SelectValue>
-                              {getSelectLabelWithIcon(
-                                `${sortType}-${sortOrder}`,
-                              )}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="name-asc">
-                              <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
-                              Nome: A-Z
-                            </SelectItem>
-                            <SelectItem value="name-desc">
-                              <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
-                              Nome: Z-A
-                            </SelectItem>
-                            <SelectItem value="price-asc">
-                              <ArrowDown01 className="mr-2 h-4 w-4 inline" />
-                              Preço: Menor ao maior
-                            </SelectItem>
-                            <SelectItem value="price-desc">
-                              <ArrowUp01 className="mr-2 h-4 w-4 inline" />
-                              Preço: Maior ao menor
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    {/* Campo de pesquisa para variação */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full mb-4">
-                      <label
-                        htmlFor="variation-search"
-                        className="text-sm whitespace-nowrap mb-1 sm:mb-0"
-                      >
-                        Pesquisar variação:
-                      </label>
-                      <Input
-                        id="variation-search"
-                        type="text"
-                        placeholder="Digite a variação..."
-                        value={variationSearchInput}
-                        className="w-full"
-                        onChange={(e) =>
-                          setVariationSearchInput(e.target.value)
-                        }
-                      />
-                      <Button
-                        onClick={() => {
-                          const newSearchParams = new URLSearchParams(
-                            searchParams,
-                          );
-                          if (variationSearchInput.trim()) {
-                            newSearchParams.set(
-                              "variation_search",
-                              variationSearchInput,
-                            );
-                          } else {
-                            newSearchParams.delete("variation_search");
-                          }
-                          newSearchParams.set("page", "1");
-                          setSearchParams(newSearchParams);
-                        }}
-                        disabled={!variationSearchInput.trim()}
-                      >
-                        Pesquisar
-                      </Button>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="flex items-center gap-2 self-end"
-                      onClick={() => setFiltersOpen(false)}
+              <div className="flex flex-col sm:flex-row ml-auto items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                <div className="flex gap-4">
+                  {/* Ordenar por */}
+                  <div className="flex flex-col items-stretch gap-2 w-full sm:w-auto">
+                    <label
+                      htmlFor="sort-select"
+                      className="text-sm whitespace-nowrap mb-1 sm:mb-0"
                     >
-                      <ChevronUp className="w-4 h-4" /> Recolher filtros
+                      Ordenar por:
+                    </label>
+                    <Select
+                      value={`${sortType}-${sortOrder}`}
+                      onValueChange={(value) => {
+                        const [type, order] = value.split("-");
+                        setData(null);
+                        const newSearchParams = new URLSearchParams(
+                          searchParams,
+                        );
+                        newSearchParams.delete("sort[name]");
+                        newSearchParams.delete("sort[price]");
+                        if (type === "name") {
+                          newSearchParams.set("sort[name]", order);
+                        } else if (type === "price") {
+                          newSearchParams.set("sort[price]", order);
+                        }
+                        newSearchParams.set("page", "1");
+                        setSearchParams(newSearchParams);
+                      }}
+                    >
+                      <SelectTrigger
+                        id="sort-select"
+                        className="w-full sm:w-40"
+                      >
+                        <SelectValue>
+                          {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name-asc">
+                          <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+                          Nome: A-Z
+                        </SelectItem>
+                        <SelectItem value="name-desc">
+                          <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+                          Nome: Z-A
+                        </SelectItem>
+                        <SelectItem value="price-asc">
+                          <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+                          Preço: Menor ao maior
+                        </SelectItem>
+                        <SelectItem value="price-desc">
+                          <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+                          Preço: Maior ao menor
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {/* Campo de pesquisa para variação */}
+                <div className="flex flex-col items-stretch gap-2 w-full">
+                  <label
+                    htmlFor="variation-search"
+                    className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                  >
+                    Pesquisar variação:
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="variation-search"
+                      type="text"
+                      placeholder="Digite a variação..."
+                      value={variationSearchInput}
+                      className="w-full"
+                      onChange={(e) => setVariationSearchInput(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        const newSearchParams = new URLSearchParams(
+                          searchParams,
+                        );
+                        if (variationSearchInput.trim()) {
+                          newSearchParams.set(
+                            "variation_search",
+                            variationSearchInput,
+                          );
+                        } else {
+                          newSearchParams.delete("variation_search");
+                        }
+                        newSearchParams.set("page", "1");
+                        setSearchParams(newSearchParams);
+                      }}
+                      disabled={!variationSearchInput.trim()}
+                    >
+                      Pesquisar
                     </Button>
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
