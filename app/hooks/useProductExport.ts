@@ -23,6 +23,11 @@ interface ExportToastState {
   message?: string;
 }
 
+type ExportProduct = Product & {
+  images?: string[];
+  stock?: number;
+};
+
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
 
 function formatDateForFilename(date: Date) {
@@ -43,6 +48,22 @@ function formatCompanyForFilename(company?: string, maxLength = 20) {
   return cleaned ? `${cleaned} ` : "";
 }
 
+function getEffectiveStock(product: ExportProduct) {
+  const selectedVariationStock =
+    typeof product.stock === "number" ? product.stock : undefined;
+  const matchingVariationStock = product.variations?.find(
+    (variation) => variation.product_cod === product.product_cod,
+  )?.stock;
+
+  return (
+    selectedVariationStock ??
+    matchingVariationStock ??
+    (product.variations && product.variations.length > 0
+      ? product.variations[0].stock ?? 0
+      : 9999)
+  );
+}
+
 export function useProductExport() {
   const [exportToast, setExportToast] = useState<ExportToastState>({
     isVisible: false,
@@ -50,11 +71,14 @@ export function useProductExport() {
   });
 
   const generateProductParagraphs = useCallback(
-    async (products: Product[], productQuantities: Record<string, number>) => {
+    async (
+      products: ExportProduct[],
+      productQuantities: Record<string, number>,
+    ) => {
       const paragraphs = await Promise.all(
         products.map(async (product, index) => {
           let imageUrl: string | undefined;
-          const productWithImages = product as Product & { images?: string[] };
+          const productWithImages = product;
 
           if (productWithImages.images) {
             if (Array.isArray(productWithImages.images[0])) {
@@ -82,10 +106,7 @@ export function useProductExport() {
           }
 
           const quantity = productQuantities?.[product.product_cod] ?? 1;
-          const stock =
-            product.variations && product.variations.length > 0
-              ? product.variations[0].stock ?? 0
-              : 9999;
+          const stock = getEffectiveStock(product);
           const isQuantityExceeded = quantity > stock;
 
           const descriptionBlock = [
@@ -223,7 +244,7 @@ export function useProductExport() {
 
   const exportProducts = useCallback(
     async (
-      products: Product[],
+      products: ExportProduct[],
       setSelectedProducts?: (products: Product[]) => void,
       productQuantities?: Record<string, number>,
       seller?: string,
