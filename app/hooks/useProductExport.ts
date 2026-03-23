@@ -482,7 +482,17 @@ export function useProductExport() {
                 new Paragraph({
                   children: [
                     new TextRun({
-                      text: "Fone 11 96641-9950",
+                      text: "SP 11 96641-9950",
+                      size: 24,
+                      color: "000000",
+                    }),
+                  ],
+                  keepNext: true,
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "RJ 21 97682-0431",
                       size: 24,
                       color: "000000",
                     }),
@@ -533,7 +543,7 @@ export function useProductExport() {
                                 new Paragraph({
                                   children: [
                                     new TextRun({
-                                      text: "SP (11) 96641-9950",
+                                      text: "SP 11 96641-9950",
                                       size: 24,
                                       color: "000000",
                                     }),
@@ -543,7 +553,7 @@ export function useProductExport() {
                                 new Paragraph({
                                   children: [
                                     new TextRun({
-                                      text: "RJ (21) 97682-0431",
+                                      text: "RJ 21 97682-0431",
                                       size: 24,
                                       color: "000000",
                                     }),
