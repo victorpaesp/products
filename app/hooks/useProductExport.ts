@@ -10,6 +10,7 @@ import {
   Table,
   TableRow,
   TableCell,
+  TableLayoutType,
   WidthType,
   ExternalHyperlink,
   Footer,
@@ -259,7 +260,7 @@ export function useProductExport() {
           status: "processing",
         });
 
-        const response = await fetch("/santo-mimo-logo.jpg");
+        const response = await fetch("/logo-santomimo.png");
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
@@ -289,7 +290,7 @@ export function useProductExport() {
                           data: arrayBuffer,
                           transformation: {
                             width: 172,
-                            height: 140,
+                            height: 172,
                           },
                           type: "jpg",
                         }),
@@ -440,9 +441,11 @@ export function useProductExport() {
                       color: "000000",
                     }),
                   ],
+                  keepNext: true,
                 }),
                 new Paragraph({
                   children: [new TextRun({ text: "", size: 24 })],
+                  keepNext: true,
                 }),
                 new Paragraph({
                   children: [
@@ -459,28 +462,22 @@ export function useProductExport() {
                       color: "000000",
                     }),
                   ],
+                  keepNext: true,
                 }),
                 new Paragraph({
                   children: [new TextRun({ text: "", size: 24 })],
+                  keepNext: true,
                 }),
                 new Paragraph({
                   children: [
                     new TextRun({
-                      text: "Mariana Szabloczky",
+                      text: "Santo Mimo Brindes",
                       size: 24,
                       color: "000000",
                       noProof: true,
                     }),
                   ],
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: "Santo Mimo",
-                      size: 24,
-                      color: "000000",
-                    }),
-                  ],
+                  keepNext: true,
                 }),
                 new Paragraph({
                   children: [
@@ -490,6 +487,7 @@ export function useProductExport() {
                       color: "000000",
                     }),
                   ],
+                  keepNext: true,
                 }),
                 new Paragraph({
                   children: [
@@ -504,6 +502,7 @@ export function useProductExport() {
                       link: "https://www.santomimo.com",
                     }),
                   ],
+                  keepNext: true,
                 }),
                 new Paragraph({
                   children: [
@@ -525,6 +524,7 @@ export function useProductExport() {
                 default: new Footer({
                   children: [
                     new Table({
+                      layout: TableLayoutType.FIXED,
                       rows: [
                         new TableRow({
                           children: [
@@ -533,7 +533,17 @@ export function useProductExport() {
                                 new Paragraph({
                                   children: [
                                     new TextRun({
-                                      text: "Fone 11 96641-9950",
+                                      text: "SP (11) 96641-9950",
+                                      size: 24,
+                                      color: "000000",
+                                    }),
+                                  ],
+                                  alignment: "left",
+                                }),
+                                new Paragraph({
+                                  children: [
+                                    new TextRun({
+                                      text: "RJ (21) 97682-0431",
                                       size: 24,
                                       color: "000000",
                                     }),
@@ -541,6 +551,7 @@ export function useProductExport() {
                                   alignment: "left",
                                 }),
                               ],
+                              verticalAlign: "center",
                               borders: {
                                 top: {
                                   style: "none",
@@ -580,9 +591,10 @@ export function useProductExport() {
                                       link: "https://www.santomimo.com",
                                     }),
                                   ],
-                                  alignment: "center",
+                                  alignment: "left",
                                 }),
                               ],
+                              verticalAlign: "center",
                               borders: {
                                 top: {
                                   style: "none",
@@ -626,6 +638,7 @@ export function useProductExport() {
                                   alignment: "right",
                                 }),
                               ],
+                              verticalAlign: "center",
                               borders: {
                                 top: {
                                   style: "none",

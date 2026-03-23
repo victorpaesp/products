@@ -144,14 +144,14 @@ export function ProductCard({
                 <img
                   src={
                     Array.isArray(v.images?.[0])
-                      ? v.images[0][0] || "/santo-mimo-logo.jpg"
-                      : v.images?.[0] || "/santo-mimo-logo.jpg"
+                      ? v.images[0][0] || "/logo-santomimo.png"
+                      : v.images?.[0] || "/logo-santomimo.png"
                   }
                   alt={v.name || product.name}
                   className="size-20 object-cover rounded-md flex-shrink-0"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = "/santo-mimo-logo.jpg";
+                    target.src = "/logo-santomimo.png";
                   }}
                 />
                 <div className="flex-1 min-w-0">

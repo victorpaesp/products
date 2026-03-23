@@ -84,7 +84,7 @@ export default function Login() {
 
   const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(
-      z.object({ email: z.string().email({ message: "Email inválido." }) })
+      z.object({ email: z.string().email({ message: "Email inválido." }) }),
     ),
     defaultValues: { email: "" },
   });
@@ -116,7 +116,7 @@ export default function Login() {
               <div className="flex flex-col">
                 <div className="flex justify-center mb-14">
                   <img
-                    src="/santo-mimo-logo.jpg"
+                    src="/logo-santomimo.png"
                     alt="Logo"
                     className="rounded-lg max-w-40"
                   />

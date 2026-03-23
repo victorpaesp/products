@@ -53,7 +53,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          "Erro ao enviar e-mail de recuperação."
+          "Erro ao enviar e-mail de recuperação.",
       );
     }
   };
@@ -66,7 +66,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          "Erro ao reenviar e-mail de recuperação."
+          "Erro ao reenviar e-mail de recuperação.",
       );
     }
   };
@@ -79,7 +79,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       >
         <div className="flex flex-col items-center mb-10">
           <img
-            src="/santo-mimo-logo.jpg"
+            src="/logo-santomimo.png"
             alt="Logo"
             className="rounded-lg max-w-40"
           />

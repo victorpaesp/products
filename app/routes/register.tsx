@@ -117,7 +117,7 @@ export default function Register() {
             <div className="flex flex-col">
               <div className="flex justify-center mb-14">
                 <img
-                  src="/santo-mimo-logo.jpg"
+                  src="/logo-santomimo.png"
                   alt="Logo"
                   className="rounded-lg max-w-40"
                 />

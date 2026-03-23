@@ -43,7 +43,7 @@ export const formatPhoneNumber = (value: string): string => {
   } else {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(
       7,
-      11
+      11,
     )}`;
   }
 };
@@ -78,5 +78,5 @@ export const getProductImage = (product: {
   if (product.image && product.image.trim()) {
     return product.image.trim();
   }
-  return "/logo.jpeg";
+  return "/logo-santomimo.png";
 };

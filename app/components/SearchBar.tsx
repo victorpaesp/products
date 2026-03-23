@@ -42,13 +42,13 @@ export function SearchBar({
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10 flex items-center flex-col">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-3">
         <div className="flex items-center sm:basis-1/4">
           <Link to="/">
             <img
-              src="/santo-mimo-logo.jpg"
+              src="/logo-santomimo.png"
               alt="logo"
-              className="w-[50px] cursor-pointer rounded-sm"
+              className="w-[65px] cursor-pointer rounded-md bg-white"
             />
           </Link>
         </div>

@@ -161,7 +161,7 @@ export function SelectedProductsDrawer({
                       className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = "/santo-mimo-logo.jpg";
+                        target.src = "/logo-santomimo.png";
                       }}
                     />
 
