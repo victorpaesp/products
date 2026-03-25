@@ -39,6 +39,16 @@ export function ProductCard({
       selectedVariations.length === product.variations.length
     : selectedVariations && selectedVariations.length === 1;
 
+  const productAsVariation: Variation = {
+    id: product.id,
+    product_id: product.id,
+    product_cod: product.product_cod,
+    name: product.name,
+    price: product.price,
+    stock: 0,
+    images: [...(product.gallery || [])].filter(Boolean),
+  };
+
   const handleCheckboxChange = () => {
     if (hasMultipleVariations) {
       setShowVariationModal(true);
@@ -48,6 +58,12 @@ export function ProductCard({
       product.variations.length === 1
     ) {
       onSelect(product, product.variations[0]);
+    } else if (
+      onSelect &&
+      product.variations &&
+      product.variations.length === 0
+    ) {
+      onSelect(product, productAsVariation);
     }
   };
 
