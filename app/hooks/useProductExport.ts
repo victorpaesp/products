@@ -421,7 +421,7 @@ export function useProductExport() {
                           },
                         }),
                       ],
-                      cantSplit: false,
+                      cantSplit: true,
                     }),
                   ],
                   width: { size: 8500, type: WidthType.DXA },
