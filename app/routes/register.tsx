@@ -1,6 +1,10 @@
 import React from "react";
-import { registerUser } from "../lib/auth";
-import { useNavigate, Link } from "@remix-run/react";
+import {
+  Link,
+  useActionData,
+  useNavigation,
+  useSubmit,
+} from "@remix-run/react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,8 +20,16 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { PasswordChecklist } from "../components/PasswordChecklist";
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
 import { unformatPhoneNumber } from "~/lib/utils";
+import {
+  backendCurrentUser,
+  backendLogin,
+  backendRegister,
+  BackendApiError,
+} from "~/lib/backend.server";
+import { createUserSession, redirectIfAuthenticated } from "~/lib/auth.server";
+import type { RegisterActionData } from "~/types/routes";
 
 const registerSchema = z
   .object({
@@ -37,27 +49,94 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader
-    ?.split(";")
-    .find((c) => c.trim().startsWith("token="))
-    ?.split("=")[1];
-
-  if (token) return redirect("/");
-
+  await redirectIfAuthenticated(request);
   return null;
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const name = String(formData.get("name") || "");
+  const email = String(formData.get("email") || "");
+  const phone = String(formData.get("phone") || "");
+  const password = String(formData.get("password") || "");
+  const repeatPassword = String(formData.get("repeatPassword") || "");
+
+  const parsed = registerSchema.safeParse({
+    name,
+    email,
+    phone,
+    password,
+    repeatPassword,
+  });
+
+  if (!parsed.success) {
+    return data<RegisterActionData>(
+      { error: parsed.error.issues[0]?.message || "Dados inválidos." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    await backendRegister({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      phone: unformatPhoneNumber(parsed.data.phone),
+      password: parsed.data.password,
+      preferred_contact_method: "email",
+    });
+
+    const loginResponse = await backendLogin(
+      parsed.data.email,
+      parsed.data.password,
+    );
+    const currentUser = await backendCurrentUser(loginResponse.token);
+
+    return createUserSession({
+      request,
+      token: loginResponse.token,
+      user: {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
+      },
+      redirectTo: "/",
+      maxAgeSeconds: loginResponse.expires_in,
+    });
+  } catch (error) {
+    if (error instanceof BackendApiError && error.status === 422) {
+      return data<RegisterActionData>(
+        { error: "Dados inválidos para cadastro." },
+        { status: 422 },
+      );
+    }
+
+    return data<RegisterActionData>(
+      { error: "Erro ao criar conta." },
+      { status: 500 },
+    );
+  }
+}
+
 export default function Register() {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const submit = useSubmit();
   const [registerError, setRegisterError] = React.useState<string | null>(null);
   const [isPageLoading, setIsPageLoading] = React.useState(true);
   const [isPasswordValid, setIsPasswordValid] = React.useState(false);
-  const navigate = useNavigate();
+
+  const isSubmitting = navigation.state === "submitting";
 
   React.useEffect(() => {
     setIsPageLoading(false);
   }, []);
+
+  React.useEffect(() => {
+    if (actionData?.error) {
+      setRegisterError(actionData.error);
+    }
+  }, [actionData]);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -71,38 +150,17 @@ export default function Register() {
   });
 
   async function onSubmit(values: RegisterFormValues) {
-    setIsSubmitting(true);
-
-    try {
-      setRegisterError(null);
-      const normalizedPhone = values.phone
-        ? unformatPhoneNumber(values.phone)
-        : "";
-      const result = await registerUser({
+    setRegisterError(null);
+    submit(
+      {
         name: values.name,
         email: values.email,
-        phone: normalizedPhone,
+        phone: values.phone,
         password: values.password,
-      });
-
-      if (result) {
-        navigate("/");
-      } else {
-        setRegisterError("Erro ao criar conta.");
-      }
-    } catch (error: any) {
-      console.error("Erro no registro:", error);
-      if (error.response?.data?.message) {
-        setRegisterError(error.response.data.message);
-      } else if (error.response?.data?.errors) {
-        const errors = error.response.data.errors;
-        setRegisterError(errors[Object.keys(errors)[0]][0]);
-      } else {
-        setRegisterError("Erro ao criar conta.");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+        repeatPassword: values.repeatPassword,
+      },
+      { method: "post" },
+    );
   }
 
   return (
@@ -224,8 +282,10 @@ export default function Register() {
               onValidChange={setIsPasswordValid}
             />
 
-            {registerError && (
-              <div className="text-red-600 text-sm mb-2">{registerError}</div>
+            {(registerError || actionData?.error) && (
+              <div className="text-red-600 text-sm mb-2">
+                {registerError || actionData?.error}
+              </div>
             )}
 
             <Button

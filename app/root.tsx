@@ -4,18 +4,29 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigation,
 } from "@remix-run/react";
 import { ThemeProvider } from "~/components/theme-provider";
 import { SearchBar } from "~/components/SearchBar";
 import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "@remix-run/react";
 import { Toaster } from "~/components/ui/sonner";
 
-import type { LinksFunction } from "@remix-run/node";
+import {
+  data,
+  type LoaderFunctionArgs,
+  type LinksFunction,
+} from "@remix-run/node";
 import type { SelectedProduct } from "~/types";
+import { getSessionUser } from "~/lib/auth.server";
 
 import "./tailwind.css";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getSessionUser(request);
+  return data({ user });
+}
 
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -50,8 +61,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const navigation = useNavigation();
+  const isNavigating = navigation.state !== "idle";
+  const [showGlobalProgress, setShowGlobalProgress] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
-    []
+    [],
   );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
@@ -59,12 +73,33 @@ export default function App() {
   const hideSearchBarRoutes = ["/login", "/register", "/reset-password"];
   const shouldShowSearchBar = !hideSearchBarRoutes.includes(location.pathname);
 
+  useEffect(() => {
+    if (!isNavigating) {
+      setShowGlobalProgress(false);
+      return;
+    }
+
+    const showDelay = setTimeout(() => {
+      setShowGlobalProgress(true);
+    }, 120);
+
+    return () => {
+      clearTimeout(showDelay);
+    };
+  }, [isNavigating]);
+
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      {showGlobalProgress && (
+        <div className="fixed top-0 left-0 right-0 z-[70] route-progress-track">
+          <div className="h-1 w-full bg-gray-200/70 overflow-hidden">
+            <div className="route-progress-indicator h-full" />
+          </div>
+        </div>
+      )}
       {shouldShowSearchBar && (
         <SearchBar
           selectedProducts={selectedProducts}
-          setSelectedProducts={setSelectedProducts}
           onOpenDrawer={() => setIsDrawerOpen(true)}
         />
       )}
@@ -93,7 +128,7 @@ export default function App() {
                 item.product.product_cod === product_cod &&
                 item.variation.product_cod === variation_cod
               );
-            })
+            }),
           );
         }}
         onClearProducts={() => {

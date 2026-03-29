@@ -1,8 +1,5 @@
 import { Info } from "lucide-react";
-
-interface ErrorStateProps {
-  message?: string;
-}
+import type { ErrorStateProps } from "~/types/components";
 
 export function ErrorState({
   message = "Ocorreu um erro ao carregar os produtos. Tente novamente mais tarde.",

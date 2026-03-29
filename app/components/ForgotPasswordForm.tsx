@@ -1,31 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { api } from "~/lib/axios";
 import toast from "~/components/ui/toast-client";
-import { UseFormReturn } from "react-hook-form";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
 } from "~/components/ui/form";
 import { ArrowLeft } from "lucide-react";
-
-export interface ForgotPasswordFormValues {
-  email: string;
-}
-
-interface ForgotPasswordFormProps {
-  onSubmit: (values: ForgotPasswordFormValues) => void;
-  form: UseFormReturn<ForgotPasswordFormValues>;
-  onBackToLogin: () => void;
-}
+import type {
+  ForgotPasswordFormProps,
+  ForgotPasswordFormValues,
+} from "~/types/components";
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
-  onSubmit,
   form,
   onBackToLogin,
 }) => {
@@ -44,30 +34,50 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     }
   }, [emailSent, timer]);
 
+  const sendForgotPasswordRequest = async (email: string) => {
+    const payload = new FormData();
+    payload.set("email", email);
+
+    const response = await fetch("/api/password-forgot", {
+      method: "POST",
+      body: payload,
+      credentials: "same-origin",
+    });
+
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      throw new Error(data?.error || "Erro ao enviar e-mail de recuperação.");
+    }
+  };
+
   const handleSubmit = async (values: ForgotPasswordFormValues) => {
     try {
-      await api.post("/password/forgot", { email: values.email });
+      await sendForgotPasswordRequest(values.email);
       setEmailSent(true);
       setTimer(30);
       setCanResend(false);
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message ||
-          "Erro ao enviar e-mail de recuperação.",
-      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao enviar e-mail de recuperação.";
+      toast.error(message);
     }
   };
 
   const handleResend = async () => {
     try {
-      await api.post("/password/forgot", { email: form.getValues().email });
+      await sendForgotPasswordRequest(form.getValues().email);
       setTimer(30);
       setCanResend(false);
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message ||
-          "Erro ao reenviar e-mail de recuperação.",
-      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao reenviar e-mail de recuperação.";
+      toast.error(message);
     }
   };
 

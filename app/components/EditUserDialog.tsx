@@ -15,17 +15,9 @@ import {
   SelectContent,
   SelectItem,
 } from "~/components/ui/select";
-import { api } from "~/lib/axios";
 import toast from "~/components/ui/toast-client";
-import type { User } from "./users-columns";
 import { formatPhoneNumber, unformatPhoneNumber } from "~/lib/utils";
-
-interface EditUserDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  user: User | null;
-  onSuccess: () => void;
-}
+import type { EditUserDialogProps } from "~/types/components";
 
 export function EditUserDialog({
   open,
@@ -72,7 +64,19 @@ export function EditUserDialog({
     };
 
     try {
-      await api.put(`/users/${user.id}`, userData);
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao atualizar usuário");
+      }
+
       onOpenChange(false);
       onSuccess();
       toast.success("Usuário atualizado com sucesso!");

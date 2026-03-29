@@ -3,14 +3,7 @@ import * as React from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
-
-export interface QuantityInputProps {
-  value: number;
-  onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-  className?: string;
-}
+import type { QuantityInputProps } from "~/types/components";
 
 const QuantityInput = React.forwardRef<HTMLDivElement, QuantityInputProps>(
   ({ className, value, onChange, min = 1, max = 99999, ...props }, ref) => {
@@ -61,7 +54,7 @@ const QuantityInput = React.forwardRef<HTMLDivElement, QuantityInputProps>(
         </Button>
       </div>
     );
-  }
+  },
 );
 
 QuantityInput.displayName = "QuantityInput";

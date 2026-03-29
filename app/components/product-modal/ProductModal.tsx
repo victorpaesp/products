@@ -4,13 +4,7 @@ import { X } from "lucide-react";
 import { ImageCarousel } from "./atoms/ImageCarousel";
 import { ProductDetails } from "./atoms/ProductDetails";
 import { getProductImage } from "~/lib/utils";
-
-interface ProductModalProps {
-  product: Product;
-  isOpen: boolean;
-  onClose: () => void;
-  onProductUpdate?: (updatedProduct: Product) => void;
-}
+import type { ProductModalProps } from "~/types/components";
 
 export function ProductModal({
   product,

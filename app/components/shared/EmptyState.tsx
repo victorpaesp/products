@@ -1,8 +1,5 @@
 import { Search } from "lucide-react";
-
-interface EmptyStateProps {
-  message?: string;
-}
+import type { EmptyStateProps } from "~/types/components";
 
 export function EmptyState({
   message = "Nenhum resultado encontrado.",

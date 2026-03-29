@@ -1,11 +1,6 @@
 import React, { useEffect } from "react";
 import { Check, X } from "lucide-react";
-
-export type PasswordChecklistProps = {
-  password: string;
-  confirmPassword?: string;
-  onValidChange?: (valid: boolean) => void;
-};
+import type { PasswordChecklistProps } from "~/types/components";
 
 const passwordRules = [
   {

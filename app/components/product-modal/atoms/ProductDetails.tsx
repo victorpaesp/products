@@ -1,17 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useFetcher, useRouteLoaderData } from "@remix-run/react";
 import type { Product } from "~/types/index";
 import { formatPrice } from "~/lib/utils";
-import { useAuth } from "~/hooks/useAuth";
-import { api } from "~/lib/axios";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
 import toast from "~/components/ui/toast-client";
 import { Pencil, RotateCcw, Save, X, Loader2 } from "lucide-react";
-
-interface ProductDetailsProps {
-  product: Product;
-  onProductUpdate?: (updatedProduct: Product) => void;
-}
+import type { loader as rootLoader } from "~/root";
+import type {
+  DescriptionActionData,
+  ProductDetailsProps,
+} from "~/types/components";
 
 function getDisplayDescription(product: Product): string {
   if (product.description_override) {
@@ -30,10 +29,14 @@ export function ProductDetails({
   product,
   onProductUpdate,
 }: ProductDetailsProps) {
-  const { isAdmin } = useAuth();
+  const rootData = useRouteLoaderData<typeof rootLoader>("root");
+  const fetcher = useFetcher<DescriptionActionData>();
+  const isAdmin = rootData?.user?.role === "admin";
+  const handledResponseRef = useRef<DescriptionActionData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+
+  const isSaving = fetcher.state !== "idle";
 
   const displayDescription = getDisplayDescription(product);
   const hasOverride = hasDescriptionOverride(product);
@@ -48,55 +51,53 @@ export function ProductDetails({
     setEditedDescription("");
   };
 
-  const handleSave = async () => {
+  const submitDescription = (value: string | null) => {
     if (isSaving) return;
 
-    setIsSaving(true);
-    try {
-      await api.patch(`/products/${product.id}/description`, {
-        description_override: editedDescription.trim() || null,
-      });
+    fetcher.submit(
+      {
+        description_override: value || "",
+      },
+      {
+        method: "post",
+        action: `/api/products/${product.id}/description`,
+      },
+    );
+  };
 
-      const updatedProduct: Product = {
-        ...product,
-        description_override: editedDescription.trim() || null,
-      };
-
-      onProductUpdate?.(updatedProduct);
-      setIsEditing(false);
-      toast.success("Descrição atualizada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao atualizar descrição:", error);
-      toast.error("Não foi possível atualizar a descrição.");
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSave = async () => {
+    submitDescription(editedDescription.trim() || null);
   };
 
   const handleRestoreOriginal = async () => {
-    if (isSaving) return;
+    submitDescription(null);
+  };
 
-    setIsSaving(true);
-    try {
-      await api.patch(`/products/${product.id}/description`, {
-        description_override: null,
-      });
+  useEffect(() => {
+    if (fetcher.state !== "idle" || !fetcher.data) return;
+    if (handledResponseRef.current === fetcher.data) return;
 
+    handledResponseRef.current = fetcher.data;
+
+    if (fetcher.data.error) {
+      toast.error(fetcher.data.error);
+      return;
+    }
+
+    if (fetcher.data.ok) {
       const updatedProduct: Product = {
         ...product,
-        description_override: null,
+        description_override: fetcher.data.description_override || null,
       };
-
       onProductUpdate?.(updatedProduct);
       setIsEditing(false);
-      toast.success("Descrição original restaurada!");
-    } catch (error) {
-      console.error("Erro ao restaurar descrição:", error);
-      toast.error("Não foi possível restaurar a descrição original.");
-    } finally {
-      setIsSaving(false);
+      toast.success(
+        fetcher.data.description_override
+          ? "Descrição atualizada com sucesso!"
+          : "Descrição original restaurada!",
+      );
     }
-  };
+  }, [fetcher.data, fetcher.state, onProductUpdate, product]);
 
   return (
     <div className="space-y-4">

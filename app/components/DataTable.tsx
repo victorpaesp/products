@@ -16,14 +16,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Input } from "~/components/ui/input";
-
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  filterColumn?: string;
-  filterPlaceholder?: string;
-  globalFilterFn?: (row: TData, filterValue: string) => boolean;
-}
+import type { DataTableProps } from "~/types/components";
 
 export function DataTable<TData, TValue>({
   columns,
@@ -33,7 +26,7 @@ export function DataTable<TData, TValue>({
   globalFilterFn,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
   const [globalFilter, setGlobalFilter] = React.useState("");
 
@@ -90,7 +83,7 @@ export function DataTable<TData, TValue>({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -105,7 +98,7 @@ export function DataTable<TData, TValue>({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

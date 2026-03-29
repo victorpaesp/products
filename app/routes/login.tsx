@@ -1,6 +1,10 @@
 import React from "react";
-import { login as apiLogin } from "../lib/auth";
-import { useNavigate, Link } from "@remix-run/react";
+import {
+  Link,
+  useActionData,
+  useNavigation,
+  useSubmit,
+} from "@remix-run/react";
 import { z } from "zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,39 +18,88 @@ import {
   FormControl,
   FormMessage,
 } from "~/components/ui/form";
-import {
-  ForgotPasswordForm,
-  ForgotPasswordFormValues,
-} from "../components/ForgotPasswordForm";
+import { ForgotPasswordForm } from "../components/ForgotPasswordForm";
 import type { FormValues } from "../types";
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
+import {
+  backendCurrentUser,
+  backendLogin,
+  BackendApiError,
+} from "~/lib/backend.server";
+import { createUserSession, redirectIfAuthenticated } from "~/lib/auth.server";
+import type { ForgotPasswordFormValues } from "~/types/components";
+import type { LoginActionData } from "~/types/routes";
+
+const loginSchema = z.object({
+  email: z.string().email({ message: "Email inválido." }),
+  password: z.string().min(1, { message: "Senha é obrigatória." }),
+});
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader
-    ?.split(";")
-    .find((c) => c.trim().startsWith("token="))
-    ?.split("=")[1];
-
-  if (token) return redirect("/");
-
+  await redirectIfAuthenticated(request);
   return null;
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const email = String(formData.get("email") || "");
+  const password = String(formData.get("password") || "");
+
+  const parsed = loginSchema.safeParse({ email, password });
+  if (!parsed.success) {
+    return data<LoginActionData>(
+      { error: parsed.error.issues[0]?.message || "Dados inválidos." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const loginResponse = await backendLogin(email, password);
+    const currentUser = await backendCurrentUser(loginResponse.token);
+
+    return createUserSession({
+      request,
+      token: loginResponse.token,
+      user: {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
+      },
+      redirectTo: "/",
+      maxAgeSeconds: loginResponse.expires_in,
+    });
+  } catch (error) {
+    if (error instanceof BackendApiError && error.status === 401) {
+      return data<LoginActionData>(
+        { error: "Email ou senha inválidos." },
+        { status: 401 },
+      );
+    }
+
+    return data<LoginActionData>({ error: "Erro no login." }, { status: 500 });
+  }
+}
+
 export default function Login() {
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const submit = useSubmit();
   const [isForgotPassword, setIsForgotPassword] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [loginError, setLoginError] = React.useState<string | null>(null);
   const [isPageLoading, setIsPageLoading] = React.useState(true);
-  const navigate = useNavigate();
+
+  const isSubmitting = navigation.state === "submitting";
+
   React.useEffect(() => {
     setIsPageLoading(false);
   }, []);
 
-  const loginSchema = z.object({
-    email: z.string().email({ message: "Email inválido." }),
-    password: z.string().min(1, { message: "Senha é obrigatória." }),
-  });
+  React.useEffect(() => {
+    if (actionData?.error) {
+      setLoginError(actionData.error);
+    }
+  }, [actionData]);
 
   const form: UseFormReturn<FormValues> = useForm<FormValues>({
     resolver: zodResolver(loginSchema),
@@ -57,29 +110,14 @@ export default function Login() {
   });
 
   async function onSubmit(values: FormValues) {
-    setIsSubmitting(true);
-
-    try {
-      setLoginError(null);
-      const result = await apiLogin(values.email, values.password);
-      if (result) {
-        navigate("/");
-      } else {
-        setLoginError("Email ou senha inválidos.");
-      }
-    } catch (error: any) {
-      console.error("Erro na autenticação:", error);
-      if (error.response?.data?.message) {
-        setLoginError(error.response.data.message);
-      } else if (error.response?.data?.errors) {
-        const errors = error.response.data.errors;
-        setLoginError(errors[Object.keys(errors)[0]][0]);
-      } else {
-        setLoginError("Erro no login.");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    setLoginError(null);
+    submit(
+      {
+        email: values.email,
+        password: values.password,
+      },
+      { method: "post" },
+    );
   }
 
   const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
@@ -89,17 +127,12 @@ export default function Login() {
     defaultValues: { email: "" },
   });
 
-  function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
-    console.log("Forgot Password");
-  }
-
   return (
     <div className="relative flex min-h-screen bg-transparent">
       <div className="relative z-10 w-full md:w-[50%] mr-auto flex items-center justify-center bg-[#f7f7f7] rounded-none md:rounded-e-3xl">
         {isForgotPassword ? (
           <div className="flex flex-col">
             <ForgotPasswordForm
-              onSubmit={onForgotPasswordSubmit}
               form={forgotPasswordForm}
               onBackToLogin={() => {
                 setIsForgotPassword(false);
@@ -164,8 +197,10 @@ export default function Login() {
               >
                 Esqueci minha senha
               </Button>
-              {loginError && (
-                <div className="text-red-600 text-sm mb-2">{loginError}</div>
+              {(loginError || actionData?.error) && (
+                <div className="text-red-600 text-sm mb-2">
+                  {loginError || actionData?.error}
+                </div>
               )}
               <Button
                 type="submit"

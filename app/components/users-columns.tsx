@@ -11,18 +11,9 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { formatPhoneNumber } from "~/lib/utils";
+import type { UsersTableUser } from "~/types/components";
 
-export type User = {
-  id: string | number;
-  name: string;
-  email: string;
-  cpf_cnpj: string;
-  phone: string;
-  preferred_contact_method: string;
-  role: "admin" | "user";
-};
-
-export const columns: ColumnDef<User>[] = [
+export const columns: ColumnDef<UsersTableUser>[] = [
   {
     accessorKey: "name",
     header: "Nome",

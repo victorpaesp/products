@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-
-interface ImageCarouselProps {
-  images: string[];
-  productName: string;
-  mainImage?: string;
-}
+import { normalizeImageUrl } from "~/lib/utils";
+import type { ImageCarouselProps } from "~/types/components";
 
 export function ImageCarousel({
   images,
@@ -13,12 +9,16 @@ export function ImageCarousel({
   mainImage,
 }: ImageCarouselProps) {
   let validImages: string[] = Array.isArray(images)
-    ? images.filter((img) => typeof img === "string" && img.trim() !== "")
+    ? images
+        .filter((img) => typeof img === "string" && img.trim() !== "")
+        .map((img) => normalizeImageUrl(img))
     : [];
 
   validImages = validImages.filter((img, idx, arr) => arr.indexOf(img) === idx);
 
-  if (validImages.length === 0) return null;
+  if (validImages.length === 0) {
+    validImages = ["/logo-santomimo.png"];
+  }
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +31,7 @@ export function ImageCarousel({
   const prevImage = () => {
     setIsLoading(true);
     setCurrentImageIndex(
-      (prev) => (prev - 1 + validImages.length) % validImages.length
+      (prev) => (prev - 1 + validImages.length) % validImages.length,
     );
   };
 
@@ -51,7 +51,12 @@ export function ImageCarousel({
             isLoading ? "opacity-0" : "opacity-100"
           }`}
           onLoad={() => setIsLoading(false)}
-          onError={() => setIsLoading(false)}
+          onError={(e) => {
+            const target = e.currentTarget;
+            target.onerror = null;
+            target.src = "/logo-santomimo.png";
+            setIsLoading(false);
+          }}
         />
 
         {validImages.length > 1 && (

@@ -52,6 +52,44 @@ export const unformatPhoneNumber = (value: string): string => {
   return value.replace(/\D/g, "");
 };
 
+const DEFAULT_PRODUCT_PLACEHOLDER = "/logo-santomimo.png";
+
+export const normalizeImageUrl = (
+  imageUrl?: string | null,
+  fallback = DEFAULT_PRODUCT_PLACEHOLDER,
+): string => {
+  if (!imageUrl || typeof imageUrl !== "string") return fallback;
+
+  const trimmed = imageUrl.trim();
+  if (!trimmed) return fallback;
+
+  if (trimmed.startsWith("data:image/")) {
+    return trimmed;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^\/\//.test(trimmed)) {
+    return `https:${trimmed}`;
+  }
+
+  if (trimmed.startsWith("/")) {
+    const firstSegment = trimmed.split("/")[1] ?? "";
+    const looksLikeDomain =
+      firstSegment.includes(".") && /[a-z]/i.test(firstSegment);
+
+    if (looksLikeDomain) {
+      return fallback;
+    }
+
+    return trimmed;
+  }
+
+  return fallback;
+};
+
 /**
  * Obtém a URL da imagem correta do produto baseado no provider
  * Para "MinhaXBZ", usa gallery[1] se existir, caso contrário usa image
@@ -68,15 +106,19 @@ export const getProductImage = (product: {
     Array.isArray(product.gallery) &&
     product.gallery[1]
   ) {
-    const img = product.gallery[1].trim();
-    if (img) return img;
+    const img = normalizeImageUrl(product.gallery[1]);
+    if (img !== DEFAULT_PRODUCT_PLACEHOLDER) return img;
   }
+
   if (Array.isArray(product.gallery)) {
-    const img = product.gallery[0]?.trim();
-    if (img) return img;
+    const img = normalizeImageUrl(product.gallery[0]);
+    if (img !== DEFAULT_PRODUCT_PLACEHOLDER) return img;
   }
-  if (product.image && product.image.trim()) {
-    return product.image.trim();
+
+  if (product.image) {
+    const img = normalizeImageUrl(product.image);
+    if (img !== DEFAULT_PRODUCT_PLACEHOLDER) return img;
   }
-  return "/logo-santomimo.png";
+
+  return DEFAULT_PRODUCT_PLACEHOLDER;
 };

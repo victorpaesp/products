@@ -1,19 +1,129 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
-import { useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import { ProfileForm } from "~/components/ProfileForm";
 import { UsersTable } from "~/components/UsersTable";
 import { Button } from "~/components/ui/button";
 import { Settings, User } from "lucide-react";
-import { useAuth } from "~/hooks/useAuth";
-import { LoadingState } from "~/components/shared/LoadingState";
 import { useState, useEffect } from "react";
 import { Product } from "~/types";
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { requireAuth } from "~/lib/auth.server";
+import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
+import {
+  commitUserSession,
+  requireAuth,
+  requireSessionUser,
+} from "~/lib/auth.server";
+import { backendCurrentUser, backendRequest } from "~/lib/backend.server";
+import { unformatPhoneNumber } from "~/lib/utils";
+import type { SettingsActionData } from "~/types/routes";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAuth(request);
-  return null;
+  const token = await requireAuth(request);
+  const sessionUser = await requireSessionUser(request);
+
+  try {
+    const currentUser = await backendCurrentUser(token);
+    return data({
+      user: {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
+        phone: currentUser.phone,
+      },
+    });
+  } catch {
+    return data({ user: sessionUser });
+  }
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const token = await requireAuth(request);
+  const sessionUser = await requireSessionUser(request);
+  const formData = await request.formData();
+  const intent = String(formData.get("intent") || "");
+
+  if (sessionUser.role !== "admin") {
+    return data<SettingsActionData>(
+      { error: "Ação não permitida." },
+      { status: 403 },
+    );
+  }
+
+  if (intent === "update-profile") {
+    const name = String(formData.get("name") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const phone = String(formData.get("phone") || "").trim();
+
+    if (!name || !email) {
+      return data<SettingsActionData>(
+        { error: "Nome e email são obrigatórios." },
+        { status: 400 },
+      );
+    }
+
+    await backendRequest(`/users/${sessionUser.id}`, {
+      method: "PUT",
+      token,
+      body: {
+        name,
+        email,
+        phone: unformatPhoneNumber(phone),
+      },
+    });
+
+    const updatedUser = await backendCurrentUser(token);
+    const sessionCookie = await commitUserSession({
+      request,
+      token,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+      },
+    });
+
+    return data<SettingsActionData>(
+      {
+        ok: true,
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          phone: updatedUser.phone,
+        },
+      },
+      {
+        headers: {
+          "Set-Cookie": sessionCookie,
+        },
+      },
+    );
+  }
+
+  if (intent === "update-password") {
+    const password = String(formData.get("password") || "");
+
+    if (password.length < 6) {
+      return data<SettingsActionData>(
+        { error: "Senha deve ter no mínimo 6 caracteres." },
+        { status: 400 },
+      );
+    }
+
+    await backendRequest(`/users/${sessionUser.id}`, {
+      method: "PUT",
+      token,
+      body: {
+        password,
+      },
+    });
+
+    return data<SettingsActionData>({ ok: true });
+  }
+
+  return data<SettingsActionData>({ error: "Ação inválida." }, { status: 400 });
 }
 
 const tabs = [
@@ -30,8 +140,9 @@ const tabs = [
 ];
 
 export default function SettingsPage() {
+  const { user } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAuth();
+  const isAdmin = user.role === "admin";
   const [hasSelectedProducts, setHasSelectedProducts] = useState(false);
 
   useEffect(() => {
@@ -51,22 +162,6 @@ export default function SettingsPage() {
 
     return true;
   });
-
-  if (loading) {
-    return (
-      <div
-        className={`container mx-auto py-8 px-4 sm:mt-[82px] ${
-          hasSelectedProducts ? "mt-[122px]" : "mt-[74px]"
-        }`}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Configurações</h1>
-          <Button onClick={() => navigate("/")}>Voltar</Button>
-        </div>
-        <LoadingState />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -100,7 +195,9 @@ export default function SettingsPage() {
             value={tab.value}
             className="h-full w-full md:px-10 overflow-x-hidden"
           >
-            {tab.value === "profile" ? <ProfileForm /> : null}
+            {tab.value === "profile" ? (
+              <ProfileForm currentUser={user} isAdmin={isAdmin} />
+            ) : null}
             {tab.value === "manage-users" ? <UsersTable /> : null}
           </TabsContent>
         ))}

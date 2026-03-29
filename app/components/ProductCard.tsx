@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatPrice, getProductImage } from "~/lib/utils";
+import { formatPrice, getProductImage, normalizeImageUrl } from "~/lib/utils";
 import { ProductModal } from "./product-modal/ProductModal";
 import { Checkbox } from "./ui/checkbox";
 import { Badge } from "./ui/badge";
@@ -11,13 +11,7 @@ import {
 } from "./ui/dialog";
 
 import type { Product, Variation } from "~/types/index";
-
-interface ProductCardProps {
-  product: Product;
-  onSelect?: (product: Product, variation: Variation) => void;
-  selectedVariations?: string[];
-  onProductUpdate?: (updatedProduct: Product) => void;
-}
+import type { ProductCardProps } from "~/types/components";
 export function ProductCard({
   product,
   onSelect,
@@ -90,6 +84,10 @@ export function ProductCard({
               src={imageSrc}
               alt={product.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/logo-santomimo.png";
+              }}
             />
           </div>
           <div
@@ -158,11 +156,11 @@ export function ProductCard({
                 }}
               >
                 <img
-                  src={
+                  src={normalizeImageUrl(
                     Array.isArray(v.images?.[0])
                       ? v.images[0][0] || "/logo-santomimo.png"
-                      : v.images?.[0] || "/logo-santomimo.png"
-                  }
+                      : v.images?.[0] || "/logo-santomimo.png",
+                  )}
                   alt={v.name || product.name}
                   className="size-20 object-cover rounded-md flex-shrink-0"
                   onError={(e) => {

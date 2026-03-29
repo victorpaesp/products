@@ -20,6 +20,8 @@ export type User = {
   updated_at: string;
 };
 
+export type AuthUser = Pick<User, "id" | "name" | "email" | "role">;
+
 export type LoginResponse = {
   token: string;
   token_type: string;

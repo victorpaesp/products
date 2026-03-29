@@ -5,10 +5,26 @@
 
 html,
 body {
-  /* @apply bg-white dark:bg-gray-950; */
   @apply bg-white;
+}
 
-  /* @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  } */
+@keyframes routeProgressSlide {
+  0% {
+    transform: translateX(-55%);
+    width: 22%;
+  }
+  45% {
+    transform: translateX(30%);
+    width: 35%;
+  }
+  100% {
+    transform: translateX(160%);
+    width: 28%;
+  }
+}
+
+.route-progress-indicator {
+  background: linear-gradient(90deg, #111827 0%, #374151 100%);
+  animation: routeProgressSlide 1.05s ease-in-out infinite;
+  will-change: transform, width;
 }

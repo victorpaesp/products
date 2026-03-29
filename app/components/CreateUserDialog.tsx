@@ -17,15 +17,9 @@ import {
 } from "~/components/ui/select";
 import { PasswordInput } from "~/components/ui/password-input";
 import { PasswordChecklist } from "./PasswordChecklist";
-import { api } from "~/lib/axios";
 import toast from "~/components/ui/toast-client";
 import { unformatPhoneNumber } from "~/lib/utils";
-
-interface CreateUserDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-}
+import type { CreateUserDialogProps } from "~/types/components";
 
 export function CreateUserDialog({
   open,
@@ -64,7 +58,19 @@ export function CreateUserDialog({
     };
 
     try {
-      await api.post("/users", userData);
+      const res = await fetch("/api/users", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao criar usuário");
+      }
+
       setFormData({
         name: "",
         email: "",

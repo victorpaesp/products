@@ -1,50 +1,40 @@
 import { type LoaderFunctionArgs } from "@remix-run/node";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const url = new URL(request.url);
-  const imageUrl = url.searchParams.get("url");
-  
-  if (!imageUrl) {
+  const requestUrl = new URL(request.url);
+  const imageUrlParam = requestUrl.searchParams.get("url");
+
+  if (!imageUrlParam) {
     return new Response("URL da imagem é obrigatória", { status: 400 });
   }
 
   try {
-    // Faz a requisição para a imagem externa
-    const imageResponse = await fetch(imageUrl);
-    
+    const parsedImageUrl = new URL(imageUrlParam);
+    if (
+      parsedImageUrl.protocol !== "http:" &&
+      parsedImageUrl.protocol !== "https:"
+    ) {
+      return new Response("URL da imagem inválida", { status: 400 });
+    }
+
+    const imageResponse = await fetch(parsedImageUrl.toString(), {
+      signal: AbortSignal.timeout(8000),
+    });
+
     if (!imageResponse.ok) {
       throw new Error(`Erro ao buscar imagem: ${imageResponse.status}`);
     }
 
-    // Obtém o blob da imagem
-    const imageBlob = await imageResponse.blob();
-    
-    // Retorna a imagem com os headers apropriados
-    return new Response(imageBlob, {
+    return new Response(imageResponse.body, {
       status: 200,
       headers: {
-        "Content-Type": imageResponse.headers.get("Content-Type") || "image/jpeg",
-        "Cache-Control": "public, max-age=3600", // Cache por 1 hora
-        "Access-Control-Allow-Origin": "*",
+        "Content-Type":
+          imageResponse.headers.get("Content-Type") || "image/jpeg",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   } catch (error) {
     console.error("Erro no proxy de imagem:", error);
-    
-    // Retorna uma imagem placeholder em caso de erro
-    try {
-      const placeholderResponse = await fetch("https://via.placeholder.com/300x200/cccccc/000000?text=Erro+ao+Carregar");
-      const placeholderBlob = await placeholderResponse.blob();
-      
-      return new Response(placeholderBlob, {
-        status: 200,
-        headers: {
-          "Content-Type": "image/png",
-          "Cache-Control": "public, max-age=300", // Cache menor para placeholders
-        },
-      });
-    } catch (placeholderError) {
-      return new Response("Erro ao carregar imagem", { status: 500 });
-    }
+    return new Response("Erro ao carregar imagem", { status: 502 });
   }
 }

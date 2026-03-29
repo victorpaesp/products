@@ -14,17 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-
-
-interface ProductsPaginationProps {
-  page: number;
-  perPage: number;
-  data: { total: number } | null;
-  searchParams: URLSearchParams;
-  setSearchParams: (params: URLSearchParams) => void;
-  setData: (data: import("../types").ApiResponse | null) => void;
-  className?: string;
-}
+import type { ProductsPaginationProps } from "~/types/components";
 
 export function ProductsPagination({
   page,
@@ -32,7 +22,6 @@ export function ProductsPagination({
   data,
   searchParams,
   setSearchParams,
-  setData,
   className,
 }: ProductsPaginationProps) {
   const pageCount = data?.total ? Math.ceil(data.total / perPage) : 1;
@@ -43,11 +32,9 @@ export function ProductsPagination({
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set("page", String(newPage));
     setSearchParams(newSearchParams);
-    setData(null);
   };
 
   const handlePerPageChange = (value: string) => {
-    setData(null);
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set("per_page", value);
     newSearchParams.set("page", "1");
@@ -56,7 +43,9 @@ export function ProductsPagination({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-center gap-4 ${className || ""}`}
+      className={`flex flex-col sm:flex-row items-center justify-center gap-4 ${
+        className || ""
+      }`}
     >
       <Pagination className="w-auto mx-0">
         <PaginationContent>

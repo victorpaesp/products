@@ -8,14 +8,10 @@ import { ExportToast } from "./ExportToast";
 import { ExportProposalModal } from "./ExportProposalModal";
 import { QuantityInput } from "~/components/shared/QuantityInput";
 import { Input } from "~/components/ui/input";
-
-interface SelectedProductsDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  selectedProducts: SelectedProduct[];
-  onRemoveProduct: (product_cod: string, variation_cod: string) => void;
-  onClearProducts?: () => void;
-}
+import type {
+  ExportProposalData,
+  SelectedProductsDrawerProps,
+} from "~/types/components";
 
 export function SelectedProductsDrawer({
   isOpen,
@@ -36,11 +32,7 @@ export function SelectedProductsDrawer({
     setExportModalOpen(true);
   };
 
-  const handleExportSubmit = async (formData: {
-    seller: string;
-    company: string;
-    contact: string;
-  }) => {
+  const handleExportSubmit = async (formData: ExportProposalData) => {
     const productsToExport = selectedProducts.map(({ product, variation }) => {
       const isSingleVariation =
         product.variations && product.variations.length === 1;
@@ -156,7 +148,7 @@ export function SelectedProductsDrawer({
                     className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-shadow bg-white dark:bg-gray-950"
                   >
                     <img
-                      src={`/api/image-proxy?url=${encodeURIComponent(image)}`}
+                      src={image}
                       alt={name}
                       className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                       onError={(e) => {

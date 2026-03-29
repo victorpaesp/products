@@ -1,147 +1,142 @@
-import { useAuth } from "~/hooks/useAuth";
 import { Input } from "~/components/ui/input";
 import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
 import { useState, useEffect, useRef } from "react";
-import { api } from "~/lib/axios";
+import { useFetcher, useSubmit } from "@remix-run/react";
 import { PasswordChecklist } from "./PasswordChecklist";
 import { PasswordInput } from "~/components/ui/password-input";
 import toast from "~/components/ui/toast-client";
-import { formatPhoneNumber, unformatPhoneNumber } from "~/lib/utils";
+import { formatPhoneNumber } from "~/lib/utils";
+import type { ProfileFormProps } from "~/types/components";
+import type { SettingsActionData } from "~/types/routes";
 
-export function ProfileForm() {
-  const { logout, isAdmin } = useAuth();
-  const [logoutTimer, setLogoutTimer] = useState<number>(10);
+export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
+  const submit = useSubmit();
+  const profileFetcher = useFetcher<SettingsActionData>();
+  const passwordFetcher = useFetcher<SettingsActionData>();
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    name: currentUser.name,
+    email: currentUser.email,
+    phone: formatPhoneNumber(currentUser.phone || ""),
   });
-  const [saving, setSaving] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [isPasswordValid, setIsPasswordValid] = useState(false);
 
-  useEffect(() => {
-    const cachedUser = localStorage.getItem("user");
-    if (cachedUser) {
-      try {
-        const data = JSON.parse(cachedUser);
-        setForm({
-          name: data.name || "",
-          email: data.email || "",
-          phone: formatPhoneNumber(data.phone || ""),
-        });
-        return;
-      } catch (e) {
-        console.error("Erro", e);
-      }
-    }
-    async function fetchMe() {
-      try {
-        const res = await api.get("/me");
-        const data = res.data;
-        setForm({
-          name: data.name || "",
-          email: data.email || "",
-          phone: formatPhoneNumber(data.phone || ""),
-        });
-        localStorage.setItem("user", JSON.stringify(data));
-      } catch (error) {
-        console.error("Erro ao buscar perfil:", error);
-      }
-    }
-    fetchMe();
-  }, []);
+  const saving = profileFetcher.state !== "idle";
+  const changingPassword = passwordFetcher.state !== "idle";
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleLogout = () => {
+    sessionStorage.clear();
+    submit(null, { method: "post", action: "/logout" });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const currentUser = await api.get("/me");
-      const userId = currentUser.data.id;
-      const payload = {
-        ...form,
-        phone: unformatPhoneNumber(form.phone),
-      };
-      await api.put(`/users/${userId}`, payload);
-      const res = await api.get("/me");
-      const data = res.data;
-      setForm({
-        name: data.name || "",
-        email: data.email || "",
-        phone: formatPhoneNumber(data.phone || ""),
+  useEffect(() => {
+    setForm({
+      name: currentUser.name,
+      email: currentUser.email,
+      phone: formatPhoneNumber(currentUser.phone || ""),
+    });
+  }, [currentUser.email, currentUser.name, currentUser.phone]);
+
+  useEffect(() => {
+    if (profileFetcher.state !== "idle" || !profileFetcher.data) return;
+
+    if (profileFetcher.data.error) {
+      toast.error("Erro ao atualizar perfil.", {
+        description: profileFetcher.data.error,
       });
-      localStorage.setItem("user", JSON.stringify(data));
+      return;
+    }
+
+    if (profileFetcher.data.ok && profileFetcher.data.user) {
+      setForm({
+        name: profileFetcher.data.user.name,
+        email: profileFetcher.data.user.email,
+        phone: formatPhoneNumber(profileFetcher.data.user.phone || ""),
+      });
       Object.keys(sessionStorage).forEach((key) => {
         if (key.startsWith("users-table-page")) {
           sessionStorage.removeItem(key);
         }
       });
       toast.success("Perfil atualizado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      toast.error("Erro ao atualizar perfil.", {
-        description: "Algo deu errado. Tente novamente mais tarde.",
-      });
-    } finally {
-      setSaving(false);
     }
+  }, [profileFetcher.data, profileFetcher.state]);
+
+  useEffect(() => {
+    if (passwordFetcher.state !== "idle" || !passwordFetcher.data) return;
+
+    if (passwordFetcher.data.error) {
+      toast.error("Erro ao alterar senha.", {
+        description: passwordFetcher.data.error,
+      });
+      setPasswordError(passwordFetcher.data.error);
+      return;
+    }
+
+    if (!passwordFetcher.data.ok) return;
+
+    setNewPassword("");
+    setConfirmPassword("");
+    setIsPasswordValid(false);
+    setPasswordError("");
+    const toastId = "logout-timer";
+    let seconds = 10;
+    const updateToast = () => {
+      toast.success("Senha alterada com sucesso!", {
+        description: `Você será deslogado para autenticação com a nova senha em ${seconds} segundos.`,
+        id: toastId,
+      });
+    };
+    updateToast();
+    if (logoutTimeoutRef.current) clearInterval(logoutTimeoutRef.current);
+    logoutTimeoutRef.current = setInterval(() => {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(logoutTimeoutRef.current!);
+        handleLogout();
+      } else {
+        updateToast();
+      }
+    }, 1000);
+  }, [passwordFetcher.data, passwordFetcher.state]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    profileFetcher.submit(
+      {
+        intent: "update-profile",
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+      },
+      { method: "post", action: "/settings" },
+    );
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setChangingPassword(true);
     setPasswordError("");
     if (!isPasswordValid) {
       setPasswordError("A senha não atende todos os requisitos.");
-      setChangingPassword(false);
       return;
     }
-    try {
-      const currentUser = await api.get("/me");
-      const userId = currentUser.data.id;
-      await api.put(`/users/${userId}`, { password: newPassword });
-      setNewPassword("");
-      setConfirmPassword("");
-      setIsPasswordValid(false);
-      setPasswordError("");
-      setLogoutTimer(10);
-      const toastId = "logout-timer";
-      let seconds = 10;
-      const updateToast = () => {
-        toast.success("Senha alterada com sucesso!", {
-          description: `Você será deslogado para autenticação com a nova senha em ${seconds} segundos.`,
-          id: toastId,
-        });
-      };
-      updateToast();
-      if (logoutTimeoutRef.current) clearInterval(logoutTimeoutRef.current);
-      logoutTimeoutRef.current = setInterval(() => {
-        seconds--;
-        if (seconds <= 0) {
-          clearInterval(logoutTimeoutRef.current!);
-          logout();
-        } else {
-          updateToast();
-        }
-      }, 1000);
-    } catch (err) {
-      toast.error("Erro ao alterar senha.", {
-        description: `Algo deu errado ao alterar senha, tente novamente mais tarde.`,
-      });
-      setPasswordError("Erro ao alterar senha.");
-    }
-    setChangingPassword(false);
+    passwordFetcher.submit(
+      {
+        intent: "update-password",
+        password: newPassword,
+      },
+      { method: "post", action: "/settings" },
+    );
   };
 
   return (
@@ -242,7 +237,7 @@ export function ProfileForm() {
         </div>
       )}
       <div className="my-8 border-t" />
-      <Button variant="destructive" className="" onClick={logout}>
+      <Button variant="destructive" className="" onClick={handleLogout}>
         Sair
       </Button>
     </div>

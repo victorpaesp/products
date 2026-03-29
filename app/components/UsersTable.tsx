@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { api } from "~/lib/axios";
-import type { User } from "./users-columns";
 import { DataTable } from "./DataTable";
 import { columns } from "./users-columns";
 import { Button } from "~/components/ui/button";
@@ -18,19 +16,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
+import type { UsersTableUser } from "~/types/components";
 
 export function UsersTable() {
   const [filter, setFilter] = useState("");
   const [debouncedFilter, setDebouncedFilter] = useState("");
   const [page, setPage] = useState(1);
   const per_page = 2;
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UsersTableUser[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UsersTableUser | null>(null);
   const [openEdit, setOpenEdit] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UsersTableUser | null>(null);
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
 
   useEffect(() => {
@@ -56,22 +55,33 @@ export function UsersTable() {
       }
     }
     try {
-      const res = await api.get("/users", {
-        params: {
-          page,
-          per_page,
-          search: debouncedFilter || undefined,
-        },
+      const query = new URLSearchParams({
+        page: String(page),
+        per_page: String(per_page),
       });
-      setUsers(res.data.data || []);
-      setTotalPages(res.data.last_page || 1);
+      if (debouncedFilter) {
+        query.set("search", debouncedFilter);
+      }
+
+      const res = await fetch(`/api/users?${query.toString()}`, {
+        method: "GET",
+        credentials: "same-origin",
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao buscar usuários");
+      }
+
+      const payload = await res.json();
+      setUsers(payload.data || []);
+      setTotalPages(payload.last_page || 1);
       if (!debouncedFilter) {
         sessionStorage.setItem(
           cacheKey,
           JSON.stringify({
-            users: res.data.data || [],
-            totalPages: res.data.last_page || 1,
-          })
+            users: payload.data || [],
+            totalPages: payload.last_page || 1,
+          }),
         );
       }
     } catch (error) {
@@ -94,7 +104,15 @@ export function UsersTable() {
 
   const handleDelete = async (userId: string | number) => {
     try {
-      await api.delete(`/users/${userId}`);
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao remover usuário");
+      }
+
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       const cacheKey = `users-table-page-${page}-filter-${debouncedFilter}`;
       sessionStorage.removeItem(cacheKey);
@@ -151,7 +169,7 @@ export function UsersTable() {
             );
           },
         }
-      : col
+      : col,
   );
 
   return (

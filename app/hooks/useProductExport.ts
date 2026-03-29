@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Product } from "~/types";
+import type { ExportProduct, ExportToastState } from "~/types/hooks";
 import {
   Document,
   Header,
@@ -15,19 +16,44 @@ import {
   ExternalHyperlink,
   Footer,
 } from "docx";
-import { loadImageWithCORS } from "~/lib/document-utils";
 import { formatPrice, getProductImage } from "~/lib/utils";
 
-interface ExportToastState {
-  isVisible: boolean;
-  status: "processing" | "success" | "error";
-  message?: string;
+function buildImageFetchUrl(imageUrl: string): string {
+  if (!imageUrl) return imageUrl;
+
+  try {
+    const parsed = new URL(imageUrl);
+    const isRemoteHttp =
+      parsed.protocol === "http:" || parsed.protocol === "https:";
+
+    if (isRemoteHttp && parsed.origin !== window.location.origin) {
+      return `/api/image-proxy?url=${encodeURIComponent(parsed.toString())}`;
+    }
+
+    return imageUrl;
+  } catch {
+    return imageUrl;
+  }
 }
 
-type ExportProduct = Product & {
-  images?: string[];
-  stock?: number;
-};
+async function loadImageArrayBuffer(
+  imageUrl: string,
+): Promise<ArrayBuffer | null> {
+  if (!imageUrl?.trim()) return null;
+
+  try {
+    const response = await fetch(buildImageFetchUrl(imageUrl), {
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!response.ok) return null;
+
+    const imageBlob = await response.blob();
+    return imageBlob.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
 
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
 
@@ -95,13 +121,13 @@ export function useProductExport() {
             imageUrl ||
             getProductImage(product) ||
             "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
-          let imageArrayBuffer = await loadImageWithCORS(imageUrl);
+          let imageArrayBuffer = await loadImageArrayBuffer(imageUrl);
 
           if (!imageArrayBuffer && imageUrl) {
             console.warn(
               `Falha ao carregar imagem para ${product.name}, usando placeholder`,
             );
-            imageArrayBuffer = await loadImageWithCORS(
+            imageArrayBuffer = await loadImageArrayBuffer(
               "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem",
             );
           }

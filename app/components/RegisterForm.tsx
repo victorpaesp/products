@@ -20,13 +20,7 @@ import {
 import { PasswordChecklist } from "./PasswordChecklist";
 import type { FormValues } from "~/types";
 import { unformatPhoneNumber } from "~/lib/utils";
-
-interface RegisterFormProps {
-  onSubmit: (values: FormValues) => void;
-  isPasswordValid: boolean;
-  setIsPasswordValid: (valid: boolean) => void;
-  form: UseFormReturn<FormValues>;
-}
+import type { RegisterFormProps } from "~/types/components";
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({
   onSubmit,

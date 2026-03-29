@@ -1,9 +1,13 @@
 import { Search, UserRound } from "lucide-react";
-import { useNavigate, useSearchParams, Link } from "@remix-run/react";
+import {
+  useNavigate,
+  useRouteLoaderData,
+  useSearchParams,
+  Link,
+  useSubmit,
+} from "@remix-run/react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { Product, SelectedProduct } from "~/types";
-import { useAuth } from "~/hooks/useAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,21 +15,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-
-interface SearchBarProps {
-  selectedProducts?: SelectedProduct[];
-  setSelectedProducts?: (products: SelectedProduct[]) => void;
-  onOpenDrawer?: () => void;
-}
+import type { loader as rootLoader } from "~/root";
+import type { SearchBarProps } from "~/types/components";
 
 export function SearchBar({
   selectedProducts = [],
   onOpenDrawer,
 }: SearchBarProps) {
   const navigate = useNavigate();
+  const submit = useSubmit();
+  const rootData = useRouteLoaderData<typeof rootLoader>("root");
   const [searchParams] = useSearchParams();
   const searchTerm = searchParams.get("q") || "";
-  const { user, logout } = useAuth();
+  const user = rootData?.user;
+
+  const handleLogout = () => {
+    sessionStorage.clear();
+    submit(null, { method: "post", action: "/logout" });
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -108,7 +115,7 @@ export function SearchBar({
                 Configurações
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>Sair</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Sair</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

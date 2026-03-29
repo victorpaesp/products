@@ -1,14 +1,13 @@
 import { Download, FileText, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { ExportToastProps } from "~/types/components";
 
-interface ExportToastProps {
-  isVisible: boolean;
-  onClose: () => void;
-  status: "processing" | "success" | "error";
-  message?: string;
-}
-
-export function ExportToast({ isVisible, onClose, status, message }: ExportToastProps) {
+export function ExportToast({
+  isVisible,
+  onClose,
+  status,
+  message,
+}: ExportToastProps) {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
@@ -63,9 +62,7 @@ export function ExportToast({ isVisible, onClose, status, message }: ExportToast
         className={`${config.bgColor} ${config.textColor} rounded-lg shadow-lg p-4 max-w-sm min-w-[300px]`}
       >
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            {config.icon}
-          </div>
+          <div className="flex-shrink-0 mt-0.5">{config.icon}</div>
           <div className="flex-1">
             <h4 className="font-semibold text-sm">{config.title}</h4>
             <p className="text-xs opacity-90 mt-1">{config.description}</p>
@@ -79,11 +76,14 @@ export function ExportToast({ isVisible, onClose, status, message }: ExportToast
             </button>
           )}
         </div>
-        
+
         {status === "processing" && (
           <div className="mt-3">
             <div className="w-full bg-black/20 rounded-full h-1.5">
-              <div className="bg-white h-1.5 rounded-full animate-pulse" style={{ width: "60%" }}></div>
+              <div
+                className="bg-white h-1.5 rounded-full animate-pulse"
+                style={{ width: "60%" }}
+              ></div>
             </div>
           </div>
         )}

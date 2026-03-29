@@ -9,16 +9,7 @@ import {
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Download } from "lucide-react";
-
-interface ExportProposalModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (data: {
-    seller: string;
-    company: string;
-    contact: string;
-  }) => void;
-}
+import type { ExportProposalModalProps } from "~/types/components";
 
 export const ExportProposalModal: React.FC<ExportProposalModalProps> = ({
   open,
