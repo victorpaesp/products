@@ -3,10 +3,11 @@ import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { useFetcher, useSubmit } from "@remix-run/react";
-import { PasswordChecklist } from "./PasswordChecklist";
+import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import { PasswordInput } from "~/components/ui/password-input";
 import toast from "~/components/ui/toast-client";
 import { formatPhoneNumber } from "~/lib/utils";
+import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
 import type { ProfileFormProps } from "~/types/components";
 import type { SettingsActionData } from "~/types/routes";
 
@@ -23,7 +24,10 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const { allValid: isPasswordValid } = usePasswordValidation(
+    newPassword,
+    confirmPassword,
+  );
 
   const saving = profileFetcher.state !== "idle";
   const changingPassword = passwordFetcher.state !== "idle";
@@ -81,7 +85,6 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
 
     setNewPassword("");
     setConfirmPassword("");
-    setIsPasswordValid(false);
     setPasswordError("");
     const toastId = "logout-timer";
     let seconds = 10;
@@ -220,7 +223,6 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
               <PasswordChecklist
                 password={newPassword}
                 confirmPassword={confirmPassword}
-                onValidChange={setIsPasswordValid}
               />
               {passwordError && (
                 <div className="text-red-500 text-sm">{passwordError}</div>

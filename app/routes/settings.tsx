@@ -1,7 +1,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import { ProfileForm } from "~/components/ProfileForm";
-import { UsersTable } from "~/components/UsersTable";
+import { ProfileForm } from "~/components/features/settings/ProfileForm";
+import { UsersTable } from "~/components/features/users/UsersTable";
 import { Button } from "~/components/ui/button";
 import { Settings, User } from "lucide-react";
 import { useState, useEffect } from "react";

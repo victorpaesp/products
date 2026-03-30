@@ -103,18 +103,22 @@ export type RegisterFormProps = {
   form: UseFormReturn<FormValues>;
 };
 
-export type SearchBarProps = {
+export type AppHeaderProps = {
   selectedProducts?: SelectedProduct[];
   onOpenDrawer?: () => void;
 };
 
-export type SelectedProductsDrawerProps = {
+export type SearchBarProps = AppHeaderProps;
+
+export type ProductsDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
   selectedProducts: SelectedProduct[];
   onRemoveProduct: (product_cod: string, variation_cod: string) => void;
   onClearProducts?: () => void;
 };
+
+export type SelectedProductsDrawerProps = ProductsDrawerProps;
 
 export type ProductModalProps = {
   product: Product;

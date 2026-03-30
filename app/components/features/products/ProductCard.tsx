@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { formatPrice, getProductImage, normalizeImageUrl } from "~/lib/utils";
-import { ProductModal } from "./product-modal/ProductModal";
-import { Checkbox } from "./ui/checkbox";
-import { Badge } from "./ui/badge";
+import { ProductModal } from "~/components/features/products/modal/ProductModal";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Badge } from "~/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from "./ui/dialog";
+} from "~/components/ui/dialog";
 
 import type { Product, Variation } from "~/types/index";
 import type { ProductCardProps } from "~/types/components";

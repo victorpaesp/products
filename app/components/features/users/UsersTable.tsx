@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { DataTable } from "./DataTable";
-import { columns } from "./users-columns";
+import { DataTable } from "~/components/DataTable";
+import { columns } from "./columns";
 import { Button } from "~/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
 import { CreateUserDialog } from "./CreateUserDialog";
@@ -97,7 +97,7 @@ export function UsersTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, debouncedFilter]);
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: UsersTableUser) => {
     setSelectedUser(user);
     setOpenEdit(true);
   };
@@ -124,7 +124,7 @@ export function UsersTable() {
     }
   };
 
-  const openDeleteConfirmation = (user: User) => {
+  const openDeleteConfirmation = (user: UsersTableUser) => {
     setUserToDelete(user);
     setOpenDeleteAlert(true);
   };
@@ -145,7 +145,7 @@ export function UsersTable() {
     col.id === "actions"
       ? {
           ...col,
-          cell: ({ row }: { row: { original: User } }) => {
+          cell: ({ row }: { row: { original: UsersTableUser } }) => {
             const user = row.original;
             return (
               <div className="flex justify-end gap-2">

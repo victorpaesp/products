@@ -1,39 +1,17 @@
 import React, { useEffect } from "react";
 import { Check, X } from "lucide-react";
 import type { PasswordChecklistProps } from "~/types/components";
-
-const passwordRules = [
-  {
-    label: "Mínimo de 8 caracteres",
-    validate: (pw: string) => pw.length >= 8,
-  },
-  {
-    label: "Pelo menos uma letra maiúscula",
-    validate: (pw: string) => /[A-Z]/.test(pw),
-  },
-  {
-    label: "Pelo menos uma letra minúscula",
-    validate: (pw: string) => /[a-z]/.test(pw),
-  },
-  {
-    label: "Pelo menos um número",
-    validate: (pw: string) => /[0-9]/.test(pw),
-  },
-  {
-    label: "Pelo menos um caractere especial",
-    validate: (pw: string) => /[^A-Za-z0-9]/.test(pw),
-  },
-];
+import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
 
 export const PasswordChecklist: React.FC<PasswordChecklistProps> = ({
   password,
   confirmPassword,
   onValidChange,
 }) => {
-  const allValid =
-    passwordRules.every((rule) => rule.validate(password)) &&
-    (confirmPassword === undefined ||
-      (password === confirmPassword && password.length > 0));
+  const { allValid, validations, passwordsMatch } = usePasswordValidation(
+    password,
+    confirmPassword,
+  );
 
   useEffect(() => {
     if (onValidChange) onValidChange(allValid);
@@ -41,8 +19,8 @@ export const PasswordChecklist: React.FC<PasswordChecklistProps> = ({
 
   return (
     <ul className="text-sm grid grid-cols-2 gap-3">
-      {passwordRules.map((rule) => {
-        const valid = rule.validate(password);
+      {validations.map((rule) => {
+        const valid = rule.valid;
         return (
           <li
             key={rule.label}
@@ -58,14 +36,8 @@ export const PasswordChecklist: React.FC<PasswordChecklistProps> = ({
         );
       })}
       {confirmPassword !== undefined && (
-        <li
-          className={
-            password === confirmPassword && password
-              ? "text-green-600"
-              : "text-red-600"
-          }
-        >
-          {password === confirmPassword && password ? (
+        <li className={passwordsMatch ? "text-green-600" : "text-red-600"}>
+          {passwordsMatch ? (
             <Check size={16} className="inline mr-1" />
           ) : (
             <X size={16} className="inline mr-1" />

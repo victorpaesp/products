@@ -10,16 +10,16 @@ import { QuantityInput } from "~/components/shared/QuantityInput";
 import { Input } from "~/components/ui/input";
 import type {
   ExportProposalData,
-  SelectedProductsDrawerProps,
+  ProductsDrawerProps,
 } from "~/types/components";
 
-export function SelectedProductsDrawer({
+export function ProductsDrawer({
   isOpen,
   onClose,
   selectedProducts,
   onRemoveProduct,
   onClearProducts,
-}: SelectedProductsDrawerProps) {
+}: ProductsDrawerProps) {
   const { exportToast, exportProducts, resetExportState } = useProductExport();
   const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [productQuantities, setproductQuantities] = useState<

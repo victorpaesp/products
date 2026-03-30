@@ -8,7 +8,7 @@ import {
 import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { useEffect, useMemo, useState } from "react";
 import type { ApiResponse, Product, SelectedProduct } from "~/types";
-import { ProductCard } from "~/components/ProductCard";
+import { ProductCard } from "~/components/features/products/ProductCard";
 
 import {
   Select,
@@ -19,7 +19,7 @@ import {
 } from "~/components/ui/select";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { ProductsPagination } from "../components/ProductsPagination";
+import { ProductsPagination } from "~/components/features/products/ProductsPagination";
 import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
 import { EmptyState } from "~/components/shared/EmptyState";
 import { ErrorState } from "~/components/shared/ErrorState";

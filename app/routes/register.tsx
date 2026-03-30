@@ -19,7 +19,8 @@ import {
   FormControl,
   FormMessage,
 } from "~/components/ui/form";
-import { PasswordChecklist } from "../components/PasswordChecklist";
+import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
+import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
 import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
 import { unformatPhoneNumber } from "~/lib/utils";
 import {
@@ -124,7 +125,6 @@ export default function Register() {
   const submit = useSubmit();
   const [registerError, setRegisterError] = React.useState<string | null>(null);
   const [isPageLoading, setIsPageLoading] = React.useState(true);
-  const [isPasswordValid, setIsPasswordValid] = React.useState(false);
 
   const isSubmitting = navigation.state === "submitting";
 
@@ -148,6 +148,11 @@ export default function Register() {
       repeatPassword: "",
     },
   });
+
+  const { allValid: isPasswordValid } = usePasswordValidation(
+    form.watch("password"),
+    form.watch("repeatPassword"),
+  );
 
   async function onSubmit(values: RegisterFormValues) {
     setRegisterError(null);
@@ -279,7 +284,6 @@ export default function Register() {
             <PasswordChecklist
               password={form.watch("password")}
               confirmPassword={form.watch("repeatPassword")}
-              onValidChange={setIsPasswordValid}
             />
 
             {(registerError || actionData?.error) && (

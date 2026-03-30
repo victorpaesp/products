@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { PasswordChecklist } from "./PasswordChecklist";
+import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import type { FormValues } from "~/types";
 import { unformatPhoneNumber } from "~/lib/utils";
 import type { RegisterFormProps } from "~/types/components";

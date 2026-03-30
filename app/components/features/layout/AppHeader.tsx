@@ -16,12 +16,12 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import type { loader as rootLoader } from "~/root";
-import type { SearchBarProps } from "~/types/components";
+import type { AppHeaderProps } from "~/types/components";
 
-export function SearchBar({
+export function AppHeader({
   selectedProducts = [],
   onOpenDrawer,
-}: SearchBarProps) {
+}: AppHeaderProps) {
   const navigate = useNavigate();
   const submit = useSubmit();
   const rootData = useRouteLoaderData<typeof rootLoader>("root");

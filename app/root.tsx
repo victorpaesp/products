@@ -6,9 +6,9 @@ import {
   ScrollRestoration,
   useNavigation,
 } from "@remix-run/react";
-import { ThemeProvider } from "~/components/theme-provider";
-import { SearchBar } from "~/components/SearchBar";
-import { SelectedProductsDrawer } from "~/components/SelectedProductsDrawer";
+import { ThemeProvider } from "~/lib/theme-provider";
+import { AppHeader } from "~/components/features/layout/AppHeader";
+import { ProductsDrawer } from "~/components/features/products/ProductsDrawer";
 import { useEffect, useState } from "react";
 import { useLocation } from "@remix-run/react";
 import { Toaster } from "~/components/ui/sonner";
@@ -70,8 +70,8 @@ export default function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const hideSearchBarRoutes = ["/login", "/register", "/reset-password"];
-  const shouldShowSearchBar = !hideSearchBarRoutes.includes(location.pathname);
+  const hideHeaderRoutes = ["/login", "/register", "/reset-password"];
+  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
 
   useEffect(() => {
     if (!isNavigating) {
@@ -97,8 +97,8 @@ export default function App() {
           </div>
         </div>
       )}
-      {shouldShowSearchBar && (
-        <SearchBar
+      {shouldShowHeader && (
+        <AppHeader
           selectedProducts={selectedProducts}
           onOpenDrawer={() => setIsDrawerOpen(true)}
         />
@@ -111,7 +111,7 @@ export default function App() {
           setIsDrawerOpen,
         }}
       />
-      <SelectedProductsDrawer
+      <ProductsDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         selectedProducts={selectedProducts}

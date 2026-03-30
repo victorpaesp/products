@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "~/types/index";
 import { X } from "lucide-react";
-import { ImageCarousel } from "./atoms/ImageCarousel";
-import { ProductDetails } from "./atoms/ProductDetails";
+import { ImageCarousel } from "./ImageCarousel";
+import { ProductDetails } from "./ProductDetails";
 import { getProductImage } from "~/lib/utils";
 import type { ProductModalProps } from "~/types/components";
 

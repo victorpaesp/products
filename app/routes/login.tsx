@@ -18,7 +18,7 @@ import {
   FormControl,
   FormMessage,
 } from "~/components/ui/form";
-import { ForgotPasswordForm } from "../components/ForgotPasswordForm";
+import { ForgotPasswordForm } from "~/components/features/auth/ForgotPasswordForm";
 import type { FormValues } from "../types";
 import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
 import {

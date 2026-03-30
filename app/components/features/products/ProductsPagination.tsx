@@ -6,14 +6,14 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
-} from "./ui/pagination";
+} from "~/components/ui/pagination";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "~/components/ui/select";
 import type { ProductsPaginationProps } from "~/types/components";
 
 export function ProductsPagination({

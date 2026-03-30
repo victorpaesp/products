@@ -19,7 +19,8 @@ import {
   FormControl,
   FormMessage,
 } from "../components/ui/form";
-import { PasswordChecklist } from "../components/PasswordChecklist";
+import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
+import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
 import { toast } from "sonner";
 import { ActionFunctionArgs, data } from "@remix-run/node";
 import { backendResetPassword, BackendApiError } from "~/lib/backend.server";
@@ -127,8 +128,10 @@ export default function ResetPassword() {
       password_confirmation: "",
     },
   });
-
-  const [checklistSatisfied, setChecklistSatisfied] = useState(false);
+  const { allValid: checklistSatisfied } = usePasswordValidation(
+    form.watch("password"),
+    form.watch("password_confirmation"),
+  );
 
   async function onSubmit(values: FormValues) {
     submit(
@@ -197,7 +200,6 @@ export default function ResetPassword() {
                 <PasswordChecklist
                   password={form.watch("password")}
                   confirmPassword={form.watch("password_confirmation")}
-                  onValidChange={setChecklistSatisfied}
                 />
                 <Button
                   type="submit"
