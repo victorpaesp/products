@@ -2,19 +2,26 @@ import { Input } from "~/components/ui/input";
 import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
 import { useState, useEffect, useRef } from "react";
-import { useFetcher, useSubmit } from "@remix-run/react";
+import { useRevalidator, useSubmit } from "@remix-run/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import { PasswordInput } from "~/components/ui/password-input";
 import toast from "~/components/ui/toast-client";
 import { formatPhoneNumber } from "~/lib/utils";
 import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
 import type { ProfileFormProps } from "~/types/components";
-import type { SettingsActionData } from "~/types/routes";
+import {
+  useUpdatePasswordMutation,
+  useUpdateProfileMutation,
+} from "~/hooks/useSettings";
+import { usersQueryKeys } from "~/hooks/useUsers";
 
 export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
   const submit = useSubmit();
-  const profileFetcher = useFetcher<SettingsActionData>();
-  const passwordFetcher = useFetcher<SettingsActionData>();
+  const revalidator = useRevalidator();
+  const queryClient = useQueryClient();
+  const profileMutation = useUpdateProfileMutation();
+  const passwordMutation = useUpdatePasswordMutation();
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [form, setForm] = useState({
     name: currentUser.name,
@@ -29,8 +36,8 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
     confirmPassword,
   );
 
-  const saving = profileFetcher.state !== "idle";
-  const changingPassword = passwordFetcher.state !== "idle";
+  const saving = profileMutation.isPending;
+  const changingPassword = passwordMutation.isPending;
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -45,68 +52,6 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
     });
   }, [currentUser.email, currentUser.name, currentUser.phone]);
 
-  useEffect(() => {
-    if (profileFetcher.state !== "idle" || !profileFetcher.data) return;
-
-    if (profileFetcher.data.error) {
-      toast.error("Erro ao atualizar perfil.", {
-        description: profileFetcher.data.error,
-      });
-      return;
-    }
-
-    if (profileFetcher.data.ok && profileFetcher.data.user) {
-      setForm({
-        name: profileFetcher.data.user.name,
-        email: profileFetcher.data.user.email,
-        phone: formatPhoneNumber(profileFetcher.data.user.phone || ""),
-      });
-      Object.keys(sessionStorage).forEach((key) => {
-        if (key.startsWith("users-table-page")) {
-          sessionStorage.removeItem(key);
-        }
-      });
-      toast.success("Perfil atualizado com sucesso!");
-    }
-  }, [profileFetcher.data, profileFetcher.state]);
-
-  useEffect(() => {
-    if (passwordFetcher.state !== "idle" || !passwordFetcher.data) return;
-
-    if (passwordFetcher.data.error) {
-      toast.error("Erro ao alterar senha.", {
-        description: passwordFetcher.data.error,
-      });
-      setPasswordError(passwordFetcher.data.error);
-      return;
-    }
-
-    if (!passwordFetcher.data.ok) return;
-
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordError("");
-    const toastId = "logout-timer";
-    let seconds = 10;
-    const updateToast = () => {
-      toast.success("Senha alterada com sucesso!", {
-        description: `Você será deslogado para autenticação com a nova senha em ${seconds} segundos.`,
-        id: toastId,
-      });
-    };
-    updateToast();
-    if (logoutTimeoutRef.current) clearInterval(logoutTimeoutRef.current);
-    logoutTimeoutRef.current = setInterval(() => {
-      seconds--;
-      if (seconds <= 0) {
-        clearInterval(logoutTimeoutRef.current!);
-        handleLogout();
-      } else {
-        updateToast();
-      }
-    }, 1000);
-  }, [passwordFetcher.data, passwordFetcher.state]);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -115,15 +60,38 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    profileFetcher.submit(
-      {
-        intent: "update-profile",
+    try {
+      const response = await profileMutation.mutateAsync({
         name: form.name,
         email: form.email,
         phone: form.phone,
-      },
-      { method: "post", action: "/settings" },
-    );
+      });
+
+      if (response.user) {
+        setForm({
+          name: response.user.name,
+          email: response.user.email,
+          phone: formatPhoneNumber(response.user.phone || ""),
+        });
+      }
+
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith("users-table-page")) {
+          sessionStorage.removeItem(key);
+        }
+      });
+
+      void queryClient.invalidateQueries({ queryKey: usersQueryKeys.lists() });
+      revalidator.revalidate();
+
+      toast.success("Perfil atualizado com sucesso!");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao atualizar perfil.";
+      toast.error("Erro ao atualizar perfil.", {
+        description: message,
+      });
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -133,13 +101,42 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
       setPasswordError("A senha não atende todos os requisitos.");
       return;
     }
-    passwordFetcher.submit(
-      {
-        intent: "update-password",
+
+    try {
+      await passwordMutation.mutateAsync({
         password: newPassword,
-      },
-      { method: "post", action: "/settings" },
-    );
+      });
+
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordError("");
+      const toastId = "logout-timer";
+      let seconds = 10;
+      const updateToast = () => {
+        toast.success("Senha alterada com sucesso!", {
+          description: `Você será deslogado para autenticação com a nova senha em ${seconds} segundos.`,
+          id: toastId,
+        });
+      };
+      updateToast();
+      if (logoutTimeoutRef.current) clearInterval(logoutTimeoutRef.current);
+      logoutTimeoutRef.current = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(logoutTimeoutRef.current!);
+          handleLogout();
+        } else {
+          updateToast();
+        }
+      }, 1000);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao alterar senha.";
+      toast.error("Erro ao alterar senha.", {
+        description: message,
+      });
+      setPasswordError(message);
+    }
   };
 
   return (

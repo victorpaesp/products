@@ -17,7 +17,6 @@ export function ProductModal({
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Handle keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
 
@@ -51,25 +50,21 @@ export function ProductModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Handle mount/unmount and visibility
   useEffect(() => {
     if (isOpen) {
       setIsMounted(true);
-      // Small delay to allow the DOM to update before starting the animation
       requestAnimationFrame(() => {
         setIsVisible(true);
       });
     } else {
       setIsVisible(false);
-      // Wait for the fade-out animation to complete before unmounting
       const timer = setTimeout(() => {
         setIsMounted(false);
-      }, 300); // Match this with the transition duration in CSS
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Focus management
   useEffect(() => {
     if (isVisible) {
       closeButtonRef.current?.focus();
@@ -78,10 +73,9 @@ export function ProductModal({
 
   const handleClose = () => {
     setIsVisible(false);
-    // Wait for the fade-out animation to complete before calling onClose
     setTimeout(() => {
       onClose();
-    }, 300); // Match this with the transition duration in CSS
+    }, 300);
   };
 
   if (!isMounted) return null;

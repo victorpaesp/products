@@ -21,6 +21,7 @@ import { usePasswordValidation } from "~/components/features/auth/hooks/usePassw
 import toast from "~/components/ui/toast-client";
 import { formatPhoneNumber, unformatPhoneNumber } from "~/lib/utils";
 import type { UsersTableUser } from "~/types/components";
+import { useCreateOrUpdateUserMutation } from "~/hooks/useUsers";
 
 type UserDialogMode = "create" | "edit";
 
@@ -59,6 +60,7 @@ export function UserDialogBase({
 }: UserDialogBaseProps) {
   const [formData, setFormData] = useState<UserFormState>(createInitialState());
   const isCreateMode = mode === "create";
+  const upsertUserMutation = useCreateOrUpdateUserMutation();
 
   const { allValid: isPasswordValid } = usePasswordValidation(
     formData.password,
@@ -122,9 +124,6 @@ export function UserDialogBase({
     if (!isCreateMode && !user?.id) return;
     if (isCreateMode && !isPasswordValid) return;
 
-    const endpoint = isCreateMode ? "/api/users" : `/api/users/${user?.id}`;
-    const method = isCreateMode ? "POST" : "PUT";
-
     const payload: Record<string, unknown> = {
       name: formData.name,
       email: formData.email,
@@ -138,20 +137,10 @@ export function UserDialogBase({
     }
 
     try {
-      const res = await fetch(endpoint, {
-        method,
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+      await upsertUserMutation.mutateAsync({
+        userId: isCreateMode ? undefined : user?.id,
+        body: payload,
       });
-
-      if (!res.ok) {
-        throw new Error(
-          isCreateMode ? "Erro ao criar usuário" : "Erro ao atualizar usuário",
-        );
-      }
 
       handleClose(false);
       onSuccess();
@@ -281,9 +270,15 @@ export function UserDialogBase({
           <Button
             type="submit"
             className="w-full"
-            disabled={isCreateMode && !isPasswordValid}
+            disabled={
+              (isCreateMode && !isPasswordValid) || upsertUserMutation.isPending
+            }
           >
-            {isCreateMode ? "Criar" : "Salvar"}
+            {upsertUserMutation.isPending
+              ? "Salvando..."
+              : isCreateMode
+              ? "Criar"
+              : "Salvar"}
           </Button>
         </form>
       </DialogContent>

@@ -14,11 +14,13 @@ import type {
   ForgotPasswordFormProps,
   ForgotPasswordFormValues,
 } from "~/types/components";
+import { useForgotPasswordMutation } from "~/hooks/useForgotPassword";
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   form,
   onBackToLogin,
 }) => {
+  const forgotPasswordMutation = useForgotPasswordMutation();
   const [emailSent, setEmailSent] = useState(false);
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -34,27 +36,9 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     }
   }, [emailSent, timer]);
 
-  const sendForgotPasswordRequest = async (email: string) => {
-    const payload = new FormData();
-    payload.set("email", email);
-
-    const response = await fetch("/api/password-forgot", {
-      method: "POST",
-      body: payload,
-      credentials: "same-origin",
-    });
-
-    if (!response.ok) {
-      const data = (await response.json().catch(() => null)) as {
-        error?: string;
-      } | null;
-      throw new Error(data?.error || "Erro ao enviar e-mail de recuperação.");
-    }
-  };
-
   const handleSubmit = async (values: ForgotPasswordFormValues) => {
     try {
-      await sendForgotPasswordRequest(values.email);
+      await forgotPasswordMutation.mutateAsync({ email: values.email });
       setEmailSent(true);
       setTimer(30);
       setCanResend(false);
@@ -69,7 +53,9 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
 
   const handleResend = async () => {
     try {
-      await sendForgotPasswordRequest(form.getValues().email);
+      await forgotPasswordMutation.mutateAsync({
+        email: form.getValues().email,
+      });
       setTimer(30);
       setCanResend(false);
     } catch (error) {
@@ -116,7 +102,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               )}
             />
             <Button type="submit" size="lg" className="bg-gray-900 text-white">
-              Enviar
+              {forgotPasswordMutation.isPending ? "Enviando..." : "Enviar"}
             </Button>
           </>
         ) : (
@@ -134,10 +120,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleResend}
-                disabled={!canResend}
+                disabled={!canResend || forgotPasswordMutation.isPending}
                 className="text-gray-900"
               >
-                Enviar novamente
+                {forgotPasswordMutation.isPending
+                  ? "Enviando..."
+                  : "Enviar novamente"}
               </Button>
               {!canResend && (
                 <span className="text-xs text-gray-500">({timer}s)</span>

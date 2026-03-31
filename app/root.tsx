@@ -20,6 +20,7 @@ import {
 } from "@remix-run/node";
 import type { SelectedProduct } from "~/types";
 import { getSessionUser } from "~/lib/auth.server";
+import { QueryProvider } from "~/components/providers/QueryProvider";
 
 import "./tailwind.css";
 
@@ -89,53 +90,55 @@ export default function App() {
   }, [isNavigating]);
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      {showGlobalProgress && (
-        <div className="fixed top-0 left-0 right-0 z-[70] route-progress-track">
-          <div className="h-1 w-full bg-gray-200/70 overflow-hidden">
-            <div className="route-progress-indicator h-full" />
+    <QueryProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        {showGlobalProgress && (
+          <div className="fixed top-0 left-0 right-0 z-[70] route-progress-track">
+            <div className="h-1 w-full bg-gray-200/70 overflow-hidden">
+              <div className="route-progress-indicator h-full" />
+            </div>
           </div>
-        </div>
-      )}
-      {shouldShowHeader && (
-        <AppHeader
-          selectedProducts={selectedProducts}
-          onOpenDrawer={() => setIsDrawerOpen(true)}
+        )}
+        {shouldShowHeader && (
+          <AppHeader
+            selectedProducts={selectedProducts}
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+          />
+        )}
+        <Outlet
+          context={{
+            selectedProducts,
+            setSelectedProducts,
+            isDrawerOpen,
+            setIsDrawerOpen,
+          }}
         />
-      )}
-      <Outlet
-        context={{
-          selectedProducts,
-          setSelectedProducts,
-          isDrawerOpen,
-          setIsDrawerOpen,
-        }}
-      />
-      <ProductsDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        selectedProducts={selectedProducts}
-        onRemoveProduct={(product_cod: string, variation_cod: string) => {
-          setSelectedProducts((prev) =>
-            prev.filter((item) => {
-              if (
-                item.product.variations.length === 1 &&
-                item.product.product_cod === product_cod
-              ) {
-                return false;
-              }
-              return !(
-                item.product.product_cod === product_cod &&
-                item.variation.product_cod === variation_cod
-              );
-            }),
-          );
-        }}
-        onClearProducts={() => {
-          setSelectedProducts([]);
-          setIsDrawerOpen(false);
-        }}
-      />
-    </ThemeProvider>
+        <ProductsDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          selectedProducts={selectedProducts}
+          onRemoveProduct={(product_cod: string, variation_cod: string) => {
+            setSelectedProducts((prev) =>
+              prev.filter((item) => {
+                if (
+                  item.product.variations.length === 1 &&
+                  item.product.product_cod === product_cod
+                ) {
+                  return false;
+                }
+                return !(
+                  item.product.product_cod === product_cod &&
+                  item.variation.product_cod === variation_cod
+                );
+              }),
+            );
+          }}
+          onClearProducts={() => {
+            setSelectedProducts([]);
+            setIsDrawerOpen(false);
+          }}
+        />
+      </ThemeProvider>
+    </QueryProvider>
   );
 }

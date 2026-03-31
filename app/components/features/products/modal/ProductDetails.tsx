@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useFetcher, useRouteLoaderData } from "@remix-run/react";
+import { useState } from "react";
+import { useRouteLoaderData } from "@remix-run/react";
 import type { Product } from "~/types/index";
 import { formatPrice } from "~/lib/utils";
 import { Textarea } from "~/components/ui/textarea";
@@ -7,10 +7,8 @@ import { Button } from "~/components/ui/button";
 import toast from "~/components/ui/toast-client";
 import { Pencil, RotateCcw, Save, X, Loader2 } from "lucide-react";
 import type { loader as rootLoader } from "~/root";
-import type {
-  DescriptionActionData,
-  ProductDetailsProps,
-} from "~/types/components";
+import type { ProductDetailsProps } from "~/types/components";
+import { useUpdateProductDescriptionMutation } from "~/hooks/useProductDescription";
 
 function getDisplayDescription(product: Product): string {
   if (product.description_override) {
@@ -30,13 +28,12 @@ export function ProductDetails({
   onProductUpdate,
 }: ProductDetailsProps) {
   const rootData = useRouteLoaderData<typeof rootLoader>("root");
-  const fetcher = useFetcher<DescriptionActionData>();
+  const updateDescriptionMutation = useUpdateProductDescriptionMutation();
   const isAdmin = rootData?.user?.role === "admin";
-  const handledResponseRef = useRef<DescriptionActionData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
 
-  const isSaving = fetcher.state !== "idle";
+  const isSaving = updateDescriptionMutation.isPending;
 
   const displayDescription = getDisplayDescription(product);
   const hasOverride = hasDescriptionOverride(product);
@@ -51,53 +48,41 @@ export function ProductDetails({
     setEditedDescription("");
   };
 
-  const submitDescription = (value: string | null) => {
+  const submitDescription = async (value: string | null) => {
     if (isSaving) return;
 
-    fetcher.submit(
-      {
-        description_override: value || "",
-      },
-      {
-        method: "post",
-        action: `/api/products/${product.id}/description`,
-      },
-    );
-  };
+    try {
+      const response = await updateDescriptionMutation.mutateAsync({
+        productId: product.id,
+        descriptionOverride: value,
+      });
 
-  const handleSave = async () => {
-    submitDescription(editedDescription.trim() || null);
-  };
-
-  const handleRestoreOriginal = async () => {
-    submitDescription(null);
-  };
-
-  useEffect(() => {
-    if (fetcher.state !== "idle" || !fetcher.data) return;
-    if (handledResponseRef.current === fetcher.data) return;
-
-    handledResponseRef.current = fetcher.data;
-
-    if (fetcher.data.error) {
-      toast.error(fetcher.data.error);
-      return;
-    }
-
-    if (fetcher.data.ok) {
       const updatedProduct: Product = {
         ...product,
-        description_override: fetcher.data.description_override || null,
+        description_override: response.description_override ?? value,
       };
+
       onProductUpdate?.(updatedProduct);
       setIsEditing(false);
       toast.success(
-        fetcher.data.description_override
+        response.description_override ?? value
           ? "Descrição atualizada com sucesso!"
           : "Descrição original restaurada!",
       );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao atualizar descrição.";
+      toast.error(message);
     }
-  }, [fetcher.data, fetcher.state, onProductUpdate, product]);
+  };
+
+  const handleSave = async () => {
+    await submitDescription(editedDescription.trim() || null);
+  };
+
+  const handleRestoreOriginal = async () => {
+    await submitDescription(null);
+  };
 
   return (
     <div className="space-y-4">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DataTable } from "~/components/DataTable";
 import { columns } from "./columns";
 import { Button } from "~/components/ui/button";
@@ -6,6 +6,7 @@ import { Pencil, Trash } from "lucide-react";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { EditUserDialog } from "./EditUserDialog";
 import toast from "~/components/ui/toast-client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,85 +18,44 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import type { UsersTableUser } from "~/types/components";
+import { useDeleteUserMutation, useUsersQuery } from "~/hooks/useUsers";
+import { useCacheStatus } from "~/hooks/useCacheStatus";
+import { CacheIndicator } from "~/components/shared/CacheIndicator";
 
 export function UsersTable() {
-  const [filter, setFilter] = useState("");
-  const [debouncedFilter, setDebouncedFilter] = useState("");
   const [page, setPage] = useState(1);
   const per_page = 2;
-  const [users, setUsers] = useState<UsersTableUser[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState<UsersTableUser | null>(null);
   const [openEdit, setOpenEdit] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UsersTableUser | null>(null);
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
+  const queryClient = useQueryClient();
+  const deleteUserMutation = useDeleteUserMutation();
+
+  const {
+    data: usersResponse,
+    isLoading,
+    isFetching,
+    isError,
+  } = useUsersQuery({
+    page,
+    perPage: per_page,
+  });
+
+  const cacheStatus = useCacheStatus({
+    data: usersResponse,
+    isLoading,
+    isFetching,
+  } as any);
+
+  const users = usersResponse?.data || [];
+  const totalPages = usersResponse?.last_page || 1;
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedFilter(filter);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [filter]);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    const cacheKey = `users-table-page-${page}-filter-${debouncedFilter}`;
-    if (!debouncedFilter) {
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          setUsers(parsed.users || []);
-          setTotalPages(parsed.totalPages || 1);
-          setLoading(false);
-          return;
-        } catch (e) {}
-      }
-    }
-    try {
-      const query = new URLSearchParams({
-        page: String(page),
-        per_page: String(per_page),
-      });
-      if (debouncedFilter) {
-        query.set("search", debouncedFilter);
-      }
-
-      const res = await fetch(`/api/users?${query.toString()}`, {
-        method: "GET",
-        credentials: "same-origin",
-      });
-
-      if (!res.ok) {
-        throw new Error("Erro ao buscar usuários");
-      }
-
-      const payload = await res.json();
-      setUsers(payload.data || []);
-      setTotalPages(payload.last_page || 1);
-      if (!debouncedFilter) {
-        sessionStorage.setItem(
-          cacheKey,
-          JSON.stringify({
-            users: payload.data || [],
-            totalPages: payload.last_page || 1,
-          }),
-        );
-      }
-    } catch (error) {
-      setUsers([]);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, debouncedFilter]);
+    if (!isError) return;
+    toast.error("Não foi possível carregar usuários.");
+  }, [isError]);
 
   const handleEdit = (user: UsersTableUser) => {
     setSelectedUser(user);
@@ -104,22 +64,11 @@ export function UsersTable() {
 
   const handleDelete = async (userId: string | number) => {
     try {
-      const res = await fetch(`/api/users/${userId}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-      });
-
-      if (!res.ok) {
-        throw new Error("Erro ao remover usuário");
-      }
-
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-      const cacheKey = `users-table-page-${page}-filter-${debouncedFilter}`;
-      sessionStorage.removeItem(cacheKey);
+      await deleteUserMutation.mutateAsync(userId);
       setOpenDeleteAlert(false);
       setUserToDelete(null);
       toast.success("Usuário removido com sucesso!");
-    } catch (error) {
+    } catch {
       toast.error("Não foi possível remover usuário.");
     }
   };
@@ -135,10 +84,7 @@ export function UsersTable() {
 
   const handleSuccess = () => {
     setPage(1);
-    setDebouncedFilter("");
-    const cacheKey = `users-table-page-${page}-filter-${debouncedFilter}`;
-    sessionStorage.removeItem(cacheKey);
-    fetchUsers();
+    void queryClient.invalidateQueries({ queryKey: ["users", "list"] });
   };
 
   const tableColumns = columns.map((col) =>
@@ -174,6 +120,7 @@ export function UsersTable() {
 
   return (
     <div className="w-full">
+      <CacheIndicator status={cacheStatus} />
       <div className="flex justify-between items-start mb-2">
         <div>
           <h2 className="text-2xl font-bold mb-1">Gerenciar Usuários</h2>
@@ -187,7 +134,7 @@ export function UsersTable() {
           Criar novo usuário
         </Button>
       </div>
-      {loading ? (
+      {isLoading ? (
         <div className="py-8 text-center">Carregando...</div>
       ) : (
         <div className="w-full">
@@ -205,6 +152,9 @@ export function UsersTable() {
           />
         </div>
       )}
+      {isFetching && !isLoading ? (
+        <p className="text-xs text-muted-foreground mt-2">Atualizando...</p>
+      ) : null}
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"

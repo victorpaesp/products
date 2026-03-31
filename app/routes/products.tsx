@@ -1,7 +1,5 @@
 import {
   useLoaderData,
-  useLocation,
-  useNavigation,
   useOutletContext,
   useSearchParams,
 } from "@remix-run/react";
@@ -25,68 +23,47 @@ import { EmptyState } from "~/components/shared/EmptyState";
 import { ErrorState } from "~/components/shared/ErrorState";
 import { LoadingState } from "~/components/shared/LoadingState";
 import { MetaFunction } from "@remix-run/node";
-import { removeHtmlTags } from "~/lib/utils";
 import { requireAuth } from "~/lib/auth.server";
-import { BackendApiError, backendListProducts } from "~/lib/backend.server";
+import { useQueryClient } from "@tanstack/react-query";
+import { createQueryClient } from "~/lib/query-client";
+import { fetchProductsForRequest } from "~/lib/products.server";
 import type {
   ProductsLoaderData,
   ProductsOutletContextType,
 } from "~/types/routes";
-
-function buildProductsParams(url: URL) {
-  const searchParams = url.searchParams;
-  const page = Number(searchParams.get("page")) || 1;
-  const perPage = Number(searchParams.get("per_page")) || 48;
-
-  const params = new URLSearchParams();
-  params.set("page", String(page));
-  params.set("per_page", String(perPage));
-
-  const search = searchParams.get("q")?.trim();
-  if (search) {
-    params.set("search", search);
-  }
-
-  const variationSearch = searchParams.get("variation_search")?.trim();
-  if (variationSearch) {
-    params.set("variation_search", variationSearch);
-  }
-
-  const sortName = searchParams.get("sort[name]");
-  const sortPrice = searchParams.get("sort[price]");
-
-  if (sortName === "asc" || sortName === "desc") {
-    params.set("sort[name]", sortName);
-  } else if (sortPrice === "asc" || sortPrice === "desc") {
-    params.set("sort[price]", sortPrice);
-  } else {
-    params.set("sort[name]", "asc");
-  }
-
-  return params;
-}
+import {
+  getProductsQueryParams,
+  productsQueryKeys,
+  type ProductsQueryParams,
+  toProductsApiParams,
+} from "~/lib/products-query";
+import { fetchProductsQuery, useProductsQuery } from "~/hooks/useProducts";
+import { BackendApiError } from "~/lib/backend.server";
+import { useCacheStatus } from "~/hooks/useCacheStatus";
+import { CacheIndicator } from "~/components/shared/CacheIndicator";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireAuth(request);
   const url = new URL(request.url);
-  const params = buildProductsParams(url);
+  const queryParams = getProductsQueryParams(url.searchParams);
+  const params = toProductsApiParams(queryParams);
+  const queryClient = createQueryClient();
+  const queryKey = productsQueryKeys.list(queryParams);
 
   try {
-    const response = await backendListProducts({
-      token,
-      params,
+    await queryClient.prefetchQuery({
+      queryKey,
+      queryFn: () =>
+        fetchProductsForRequest({
+          token,
+          params,
+        }),
     });
 
-    const cleanData: ApiResponse = {
-      ...response,
-      data: response.data.map((product) => ({
-        ...product,
-        description: removeHtmlTags(product.description),
-      })),
-    };
+    const prefetchedData = queryClient.getQueryData<ApiResponse>(queryKey);
 
     return data<ProductsLoaderData>({
-      data: cleanData,
+      data: prefetchedData || null,
       error: null,
     });
   } catch (error) {
@@ -108,33 +85,35 @@ export const meta: MetaFunction = () => {
   return [{ title: "Santo Mimo" }];
 };
 
+export function shouldRevalidate() {
+  return false;
+}
+
 export default function Products() {
   const loaderData = useLoaderData<typeof loader>();
-  const location = useLocation();
-  const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const searchTermRaw = searchParams.get("q");
   const searchTerm = searchTermRaw ? searchTermRaw.trim() : "";
+  const queryParams = getProductsQueryParams(searchParams);
 
-  const data = loaderData.data;
-  const error = loaderData.error;
-  const isLoading = navigation.state !== "idle";
-  const isProductsRevalidatingRaw =
-    navigation.state !== "idle" &&
-    navigation.location?.pathname === location.pathname;
+  const { data, isLoading, isFetching, isError, error } =
+    useProductsQuery(queryParams);
+
+  const cacheStatus = useCacheStatus({ data, isLoading, isFetching } as any);
+
+  const errorMessage =
+    loaderData.error ||
+    (isError ? error.message || "Erro ao carregar os produtos." : null);
+
+  const isProductsRevalidatingRaw = isFetching && !isLoading;
   const [showProductsRevalidating, setShowProductsRevalidating] =
     useState(false);
   const variationSearch = searchParams.get("variation_search") || "";
   const [variationSearchInput, setVariationSearchInput] =
     useState(variationSearch);
 
-  const pendingSearchParams = useMemo(
-    () =>
-      navigation.location
-        ? new URLSearchParams(navigation.location.search)
-        : searchParams,
-    [navigation.location, searchParams],
-  );
+  const pendingSearchParams = useMemo(() => searchParams, [searchParams]);
 
   useEffect(() => {
     if (!variationSearch) setVariationSearchInput("");
@@ -154,6 +133,20 @@ export default function Products() {
       clearTimeout(showDelay);
     };
   }, [isProductsRevalidatingRaw]);
+
+  useEffect(() => {
+    if (!data?.pagination?.has_more_pages) return;
+
+    const nextParams: ProductsQueryParams = {
+      ...queryParams,
+      page: queryParams.page + 1,
+    };
+
+    void queryClient.prefetchQuery({
+      queryKey: productsQueryKeys.list(nextParams),
+      queryFn: () => fetchProductsQuery(nextParams),
+    });
+  }, [data?.pagination?.has_more_pages, queryClient, queryParams]);
 
   const page = Number(searchParams.get("page")) || 1;
   const {
@@ -245,6 +238,7 @@ export default function Products() {
 
   return (
     <div>
+      <CacheIndicator status={cacheStatus} />
       <div
         className={`container mx-auto px-4 py-8 sm:mt-[82px] ${
           selectedProducts.length > 0 ? "mt-[122px]" : "mt-[74px]"
@@ -355,17 +349,17 @@ export default function Products() {
             Atualizando resultados...
           </div>
         )}
-        {error && (
+        {errorMessage && (
           <div className="flex justify-center items-center h-64">
-            <ErrorState message="Erro ao carregar os produtos." />
+            <ErrorState message={errorMessage} />
           </div>
         )}
-        {!error && data && data.data.length === 0 && (
+        {!errorMessage && data && data.data.length === 0 && (
           <div className="flex justify-center items-center h-64">
             <EmptyState message="Nenhum produto encontrado" />
           </div>
         )}
-        {!error && data && data.data.length > 0 && (
+        {!errorMessage && data && data.data.length > 0 && (
           <>
             <ProductsPagination
               page={page}
