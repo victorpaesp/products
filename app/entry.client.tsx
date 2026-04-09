@@ -7,12 +7,15 @@
 import { RemixBrowser } from "@remix-run/react";
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
+import { ChunkErrorBoundary } from "~/components/ChunkErrorBoundary";
 
 startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <RemixBrowser />
-    </StrictMode>
+      <ChunkErrorBoundary>
+        <RemixBrowser />
+      </ChunkErrorBoundary>
+    </StrictMode>,
   );
 });
