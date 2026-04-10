@@ -371,7 +371,7 @@ export default function Products() {
             />
             <div className="relative">
               <div
-                className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 transition-opacity ${
+                className={`grid grid-cols-2 lg:grid-cols-4 sm:gap-10 gap-4 transition-opacity ${
                   showProductsRevalidating ? "opacity-50" : "opacity-100"
                 }`}
               >

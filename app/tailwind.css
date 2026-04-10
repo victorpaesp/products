@@ -24,7 +24,7 @@ body {
 }
 
 .route-progress-indicator {
-  background: linear-gradient(90deg, #111827 0%, #374151 100%);
+  background: linear-gradient(90deg, #424242 0%, transparent 100%);
   animation: routeProgressSlide 1.05s ease-in-out infinite;
   will-change: transform, width;
 }

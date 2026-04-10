@@ -7,7 +7,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          "Inter",
+          "Poppins",
           "ui-sans-serif",
           "system-ui",
           "sans-serif",
@@ -29,6 +29,7 @@ export default {
           700: "#616161",
           800: "#424242",
           900: "#212121",
+          950: "#030303",
         },
         border: "var(--border)",
         input: "var(--input)",
@@ -42,6 +43,10 @@ export default {
         secondary: {
           DEFAULT: "var(--secondary)",
           foreground: "var(--secondary-foreground)",
+        },
+        contrast: {
+          DEFAULT: "var(--contrast)",
+          foreground: "var(--contrast-foreground)",
         },
         destructive: {
           DEFAULT: "var(--destructive)",

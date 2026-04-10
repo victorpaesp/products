@@ -64,7 +64,7 @@ export function ProductCard({
   return (
     <>
       <div
-        className={`bg-white flex flex-col rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative border-2 ${
+        className={`flex flex-col rounded-lg overflow-hidden relative gap-1 ${
           hasAnySelected ? "border-[#556B2F]" : "border-surface-200"
         }`}
         role="group"
@@ -83,7 +83,7 @@ export function ProductCard({
             <img
               src={imageSrc}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-xl border border-gray-300 hover:shadow-md transition-shadow bg-white"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/logo-santomimo.png";
@@ -104,22 +104,25 @@ export function ProductCard({
               className="size-8 md:size-6 rounded border border-gray-400 bg-white shadow-md data-[state=checked]:bg-[#556B2F] data-[state=checked]:border-[#556B2F] data-[state=checked]:text-white"
             />
           </div>
-        </div>
-        <div className="p-4 h-full flex flex-col gap-2">
           {product.variations.length > 1 && (
-            <Badge variant="secondary" className="w-fit">
+            <Badge
+              variant="contrast"
+              className="w-fit absolute bottom-2 left-2"
+            >
               {product.variations.length} variações
             </Badge>
           )}
-          <h2 className="text-lg text-gray-900 font-semibold line-clamp-1">
-            {product.product_cod} - {product.name}
-          </h2>
-          <p className="text-gray-900 text-sm line-clamp-2">
-            {product.description_override ||
-              product.description_original ||
-              product.description}
-          </p>
-          <p className="text-lg font-bold text-gray-900 mt-auto">
+        </div>
+        <div className="p-1 h-full flex flex-col sm:flex-row gap-2 sm:gap-6 justify-between items-start sm:items-center">
+          <div className="flex flex-col">
+            <h2 className="text-gray-900 font-medium line-clamp-1 text-sm sm:text-base">
+              {product.name}
+            </h2>
+            <span className="text-[10px] sm:text-sm text-gray-500 font-medium line-clamp-1">
+              {product.product_cod}
+            </span>
+          </div>
+          <p className="font-semibold sm:text-lg text-gray-900">
             {formatPrice(product.price)}
           </p>
         </div>

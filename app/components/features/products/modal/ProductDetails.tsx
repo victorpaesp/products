@@ -23,6 +23,10 @@ function hasDescriptionOverride(product: Product): boolean {
   );
 }
 
+function hasNonZeroNumber(value: string): boolean {
+  return /[1-9]/.test(value);
+}
+
 export function ProductDetails({
   product,
   onProductUpdate,
@@ -85,9 +89,12 @@ export function ProductDetails({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="w-full sm:w-1/2 flex flex-col gap-3 h-full sm:max-h-[600px] overflow-auto">
+      <span className="text-sm text-gray-500 font-medium">
+        {product.product_cod}
+      </span>
       <h2 id="modal-title" className="text-2xl font-bold text-gray-900">
-        {product.product_cod} - {product.name}
+        {product.name}
       </h2>
 
       <div className="text-gray-600">
@@ -141,7 +148,7 @@ export function ProductDetails({
             </div>
           ) : (
             <div className="group relative">
-              <p className="pr-8">{displayDescription}</p>
+              <p className="pr-8 text-sm">{displayDescription}</p>
               {isAdmin && hasOverride && (
                 <span className="inline-block mt-1 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
                   Descrição editada
@@ -188,7 +195,7 @@ export function ProductDetails({
           )}
         </div>
 
-        {product.variations && product.variations.length > 0 && (
+        {product.variations && product.variations.length > 1 && (
           <div className="mt-4">
             <p className="text-sm text-gray-500 mb-2">Variações</p>
             <div className="flex flex-wrap gap-2">
@@ -205,16 +212,17 @@ export function ProductDetails({
           </div>
         )}
 
-        {product.product_mention && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-500 mb-2">Menção</p>
-            <p className="text-gray-900">{product.product_mention}</p>
-          </div>
-        )}
+        {product.product_mention &&
+          hasNonZeroNumber(product.product_mention) && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-500 mb-2">Dimensões do produto</p>
+              <p className="text-gray-900">{product.product_mention}</p>
+            </div>
+          )}
 
-        {product.box_mention && (
+        {product.box_mention && hasNonZeroNumber(product.box_mention) && (
           <div className="mt-4">
-            <p className="text-sm text-gray-500 mb-2">Menção da Caixa</p>
+            <p className="text-sm text-gray-500 mb-2">Dimensões da caixa</p>
             <p className="text-gray-900">{product.box_mention}</p>
           </div>
         )}

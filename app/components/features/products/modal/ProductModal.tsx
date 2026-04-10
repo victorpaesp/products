@@ -5,6 +5,7 @@ import { ImageCarousel } from "./ImageCarousel";
 import { ProductDetails } from "./ProductDetails";
 import { getProductImage } from "~/lib/utils";
 import type { ProductModalProps } from "~/types/components";
+import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 
 export function ProductModal({
   product,
@@ -14,8 +15,11 @@ export function ProductModal({
 }: ProductModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+
+  useBodyOverflow(isMounted);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,6 +56,7 @@ export function ProductModal({
 
   useEffect(() => {
     if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement;
       setIsMounted(true);
       requestAnimationFrame(() => {
         setIsVisible(true);
@@ -68,8 +73,10 @@ export function ProductModal({
   useEffect(() => {
     if (isVisible) {
       closeButtonRef.current?.focus();
+    } else if (!isMounted) {
+      triggerElementRef.current?.focus();
     }
-  }, [isVisible]);
+  }, [isMounted, isVisible]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -87,7 +94,7 @@ export function ProductModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-stretch justify-center sm:items-center"
     >
       {/* Backdrop */}
       <div
@@ -101,21 +108,29 @@ export function ProductModal({
       {/* Modal */}
       <div
         ref={modalRef}
-        className={`relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto transition-all duration-300 transform ${
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        className={`bg-white w-screen h-screen rounded-none shadow-xl flex flex-col overflow-hidden transition-all duration-300 transform sm:w-full sm:max-w-5xl sm:max-h-[90vh] sm:h-auto sm:rounded-lg sm:mx-4 ${
+          isVisible
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4 sm:translate-y-4"
         }`}
       >
-        {/* Close button */}
-        <button
-          ref={closeButtonRef}
-          onClick={handleClose}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 bg-black text-white z-10"
-          aria-label="Fechar modal"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="p-4 sm:p-6 flex items-center sticky top-0 bg-white z-10 border-b border-gray-100">
+          {/* Title */}
+          <h1 id="modal-title" className="text-lg font-semibold">
+            Detalhes do Produto
+          </h1>
+          {/* Close button */}
+          <button
+            ref={closeButtonRef}
+            onClick={handleClose}
+            className="p-2 rounded-xl hover:bg-gray-200 text-gray-700 z-10 ml-auto"
+            aria-label="Fechar modal"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6 flex-1 overflow-y-auto flex flex-col sm:flex-row gap-6 sm:gap-8">
           <ImageCarousel images={allImages} productName={product.name} />
           <ProductDetails product={product} onProductUpdate={onProductUpdate} />
         </div>
