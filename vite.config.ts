@@ -9,7 +9,11 @@ declare module "@remix-run/node" {
 }
 
 export default defineConfig({
+  resolve: {
+    dedupe: ["react", "react-dom"],
+  },
   optimizeDeps: {
+    include: ["react", "react-dom", "react/jsx-runtime"],
     exclude: ["docx", "file-saver", "axios", "lucide-react"],
   },
   plugins: [

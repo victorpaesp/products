@@ -1,4 +1,4 @@
-import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { BackendApiError } from "~/lib/backend.server";
 import { requireAuth } from "~/lib/auth.server";
 import { fetchProductsForRequest } from "~/lib/products.server";
@@ -18,12 +18,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
       params: toProductsApiParams(queryParams),
     });
 
-    return data(products);
+    return Response.json(products);
   } catch (error) {
     if (error instanceof BackendApiError && error.status === 401) {
       throw redirect("/login");
     }
 
-    return data({ error: "Erro ao carregar os produtos." }, { status: 500 });
+    return Response.json(
+      { error: "Erro ao carregar os produtos." },
+      { status: 500 },
+    );
   }
 }

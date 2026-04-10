@@ -7,7 +7,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireSessionUser(request);
 
   if (user.role !== "admin") {
-    return data({ error: "Ação não permitida." }, { status: 403 });
+    return Response.json({ error: "Ação não permitida." }, { status: 403 });
   }
 
   const url = new URL(request.url);
@@ -28,7 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     token,
   });
 
-  return data(response);
+  return Response.json(response);
 }
 
 export async function action({ request }: ActionFunctionArgs) {
