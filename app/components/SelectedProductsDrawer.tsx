@@ -6,8 +6,6 @@ import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
 import { ExportProposalModal } from "./ExportProposalModal";
-import { QuantityInput } from "~/components/shared/QuantityInput";
-import { Input } from "~/components/ui/input";
 
 interface SelectedProductsDrawerProps {
   isOpen: boolean;
@@ -26,9 +24,6 @@ export function SelectedProductsDrawer({
 }: SelectedProductsDrawerProps) {
   const { exportToast, exportProducts, resetExportState } = useProductExport();
   const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [productQuantities, setproductQuantities] = useState<
-    Record<string, number>
-  >({});
 
   useBodyOverflow(isOpen);
 
@@ -80,12 +75,10 @@ export function SelectedProductsDrawer({
     await exportProducts(
       productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
-      productQuantities,
       formData.contact,
       formData.company,
       formData.description,
     );
-    setproductQuantities({});
     setExportModalOpen(false);
   };
   return (
@@ -148,8 +141,6 @@ export function SelectedProductsDrawer({
                     : variation.images?.[0] || getProductImage(product);
                   stock = variation.stock ?? 0;
                 }
-                const quantity = productQuantities[code] ?? 1;
-                const isQuantityExceeded = quantity > stock;
                 return (
                   <div
                     key={product.product_cod + "-" + variation.product_cod}
@@ -175,26 +166,9 @@ export function SelectedProductsDrawer({
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
-                        <QuantityInput
-                          value={quantity}
-                          onChange={(val) =>
-                            setproductQuantities((q) => ({
-                              ...q,
-                              [code]: val,
-                            }))
-                          }
-                          min={1}
-                        />
                         <p className="text-gray-900 dark:text-white mt-1">
                           {formatPrice(price)}
                         </p>
-                      </div>
-                      <div className="mt-2">
-                        {isQuantityExceeded && (
-                          <span className="text-red-500 font-semibold text-sm block">
-                            Estoque do produto excedido
-                          </span>
-                        )}
                       </div>
                     </div>
 

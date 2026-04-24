@@ -72,10 +72,7 @@ export function useProductExport() {
   });
 
   const generateProductParagraphs = useCallback(
-    async (
-      products: ExportProduct[],
-      productQuantities: Record<string, number>,
-    ) => {
+    async (products: ExportProduct[]) => {
       const paragraphs = await Promise.all(
         products.map(async (product, index) => {
           let imageUrl: string | undefined;
@@ -105,10 +102,6 @@ export function useProductExport() {
               "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem",
             );
           }
-
-          const quantity = productQuantities?.[product.product_cod] ?? 1;
-          const stock = getEffectiveStock(product);
-          const isQuantityExceeded = quantity > stock;
 
           const descriptionBlock = [
             new Paragraph({
@@ -142,31 +135,6 @@ export function useProductExport() {
               ],
               spacing: { after: 60 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Quantidade: " + quantity,
-                  size: 23,
-                  bold: true,
-                }),
-              ],
-              spacing: { after: 60 },
-            }),
-            ...(isQuantityExceeded
-              ? [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: "Estoque do produto excedido",
-                        size: 23,
-                        bold: true,
-                        color: "FF0000",
-                      }),
-                    ],
-                    spacing: { after: 60 },
-                  }),
-                ]
-              : []),
           ];
 
           const imageCell = new TableCell({
@@ -247,7 +215,6 @@ export function useProductExport() {
     async (
       products: ExportProduct[],
       setSelectedProducts?: (products: Product[]) => void,
-      productQuantities?: Record<string, number>,
       contact?: string,
       company?: string,
       description?: string,
@@ -264,10 +231,7 @@ export function useProductExport() {
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
-        const productParagraphs = await generateProductParagraphs(
-          products,
-          productQuantities ?? {},
-        );
+        const productParagraphs = await generateProductParagraphs(products);
 
         const doc = new Document({
           styles: {
