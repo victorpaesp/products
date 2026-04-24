@@ -248,9 +248,9 @@ export function useProductExport() {
       products: ExportProduct[],
       setSelectedProducts?: (products: Product[]) => void,
       productQuantities?: Record<string, number>,
-      seller?: string,
-      company?: string,
       contact?: string,
+      company?: string,
+      description?: string,
     ) => {
       if (!products || products.length === 0) return;
 
@@ -317,12 +317,12 @@ export function useProductExport() {
                 new Paragraph({
                   children: [new TextRun({ text: "", size: 24 })],
                 }),
-                ...(seller
+                ...(contact
                   ? [
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: seller,
+                            text: contact,
                             size: 24,
                           }),
                         ],
@@ -341,12 +341,12 @@ export function useProductExport() {
                       }),
                     ]
                   : []),
-                ...(contact
+                ...(description
                   ? [
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: contact,
+                            text: description,
                             size: 24,
                           }),
                         ],

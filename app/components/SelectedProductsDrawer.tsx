@@ -37,9 +37,9 @@ export function SelectedProductsDrawer({
   };
 
   const handleExportSubmit = async (formData: {
-    seller: string;
-    company: string;
     contact: string;
+    company: string;
+    description: string;
   }) => {
     const productsToExport = selectedProducts.map(({ product, variation }) => {
       const isSingleVariation =
@@ -81,9 +81,9 @@ export function SelectedProductsDrawer({
       productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
       productQuantities,
-      formData.seller,
-      formData.company,
       formData.contact,
+      formData.company,
+      formData.description,
     );
     setproductQuantities({});
     setExportModalOpen(false);
