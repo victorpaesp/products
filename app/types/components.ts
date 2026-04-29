@@ -40,9 +40,9 @@ export type EditUserDialogProps = {
 };
 
 export type ExportProposalData = {
-  seller: string;
-  company: string;
   contact: string;
+  company: string;
+  description: string;
 };
 
 export type ExportProposalModalProps = {

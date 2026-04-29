@@ -16,13 +16,13 @@ export const ExportProposalModal: React.FC<ExportProposalModalProps> = ({
   onOpenChange,
   onSubmit,
 }) => {
-  const [seller, setSeller] = useState("");
-  const [company, setCompany] = useState("");
   const [contact, setContact] = useState("");
+  const [company, setCompany] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ company, seller, contact });
+    onSubmit({ company, contact, description });
   };
 
   return (
@@ -39,16 +39,16 @@ export const ExportProposalModal: React.FC<ExportProposalModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="seller"
+              htmlFor="contact"
               className="block text-sm font-medium mb-1 dark:text-white text-black"
             >
-              Vendedor <span className="text-xs text-gray-400">(opcional)</span>
+              Contato <span className="text-xs text-gray-400">(opcional)</span>
             </label>
             <Input
-              id="seller"
-              placeholder="Digite o nome do vendedor"
-              value={seller}
-              onChange={(e) => setSeller(e.target.value)}
+              id="contact"
+              placeholder="Digite o contato"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
               className="dark:bg-neutral-800 dark:text-white bg-white text-black"
             />
           </div>
@@ -69,16 +69,17 @@ export const ExportProposalModal: React.FC<ExportProposalModalProps> = ({
           </div>
           <div>
             <label
-              htmlFor="contact"
+              htmlFor="description"
               className="block text-sm font-medium mb-1 dark:text-white text-black"
             >
-              Contato <span className="text-xs text-gray-400">(opcional)</span>
+              Descrição{" "}
+              <span className="text-xs text-gray-400">(opcional)</span>
             </label>
             <Input
-              id="contact"
-              placeholder="Digite o contato"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
+              id="description"
+              placeholder="Digite a descrição"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="dark:bg-neutral-800 dark:text-white bg-white text-black"
             />
           </div>

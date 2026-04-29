@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
-import { Product, SelectedProduct } from "~/types";
 import { formatPrice, getProductImage } from "~/lib/utils";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
 import { ExportProposalModal } from "./ExportProposalModal";
-import { QuantityInput } from "~/components/shared/QuantityInput";
-import { Input } from "~/components/ui/input";
+
 import type {
   ExportProposalData,
   ProductsDrawerProps,
@@ -22,9 +20,6 @@ export function ProductsDrawer({
 }: ProductsDrawerProps) {
   const { exportToast, exportProducts, resetExportState } = useProductExport();
   const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [productQuantities, setproductQuantities] = useState<
-    Record<string, number>
-  >({});
 
   useBodyOverflow(isOpen);
 
@@ -69,15 +64,15 @@ export function ProductsDrawer({
         };
       }
     });
+
     await exportProducts(
       productsToExport,
       onClearProducts ? () => onClearProducts() : undefined,
-      productQuantities,
-      formData.seller,
-      formData.company,
       formData.contact,
+      formData.company,
+      formData.description,
     );
-    setproductQuantities({});
+    
     setExportModalOpen(false);
   };
   return (
@@ -140,8 +135,6 @@ export function ProductsDrawer({
                     : variation.images?.[0] || getProductImage(product);
                   stock = variation.stock ?? 0;
                 }
-                const quantity = productQuantities[code] ?? 1;
-                const isQuantityExceeded = quantity > stock;
                 return (
                   <div
                     key={product.product_cod + "-" + variation.product_cod}
@@ -167,26 +160,9 @@ export function ProductsDrawer({
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
-                        <QuantityInput
-                          value={quantity}
-                          onChange={(val) =>
-                            setproductQuantities((q) => ({
-                              ...q,
-                              [code]: val,
-                            }))
-                          }
-                          min={1}
-                        />
                         <p className="text-gray-900 dark:text-white mt-1">
                           {formatPrice(price)}
                         </p>
-                      </div>
-                      <div className="mt-2">
-                        {isQuantityExceeded && (
-                          <span className="text-red-500 font-semibold text-sm block">
-                            Estoque do produto excedido
-                          </span>
-                        )}
                       </div>
                     </div>
 

@@ -1,6 +1,4 @@
 import { useState, useCallback } from "react";
-import { Product } from "~/types";
-import type { ExportProduct, ExportToastState } from "~/types/hooks";
 import {
   Document,
   Header,
@@ -17,6 +15,9 @@ import {
   Footer,
 } from "docx";
 import { formatPrice, getProductImage } from "~/lib/utils";
+
+import { Product } from "~/types";
+import type { ExportProduct, ExportToastState } from "~/types/hooks";
 
 function buildImageFetchUrl(imageUrl: string): string {
   if (!imageUrl) return imageUrl;
@@ -98,10 +99,7 @@ export function useProductExport() {
   });
 
   const generateProductParagraphs = useCallback(
-    async (
-      products: ExportProduct[],
-      productQuantities: Record<string, number>,
-    ) => {
+    async (products: ExportProduct[]) => {
       const paragraphs = await Promise.all(
         products.map(async (product, index) => {
           let imageUrl: string | undefined;
@@ -131,10 +129,6 @@ export function useProductExport() {
               "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem",
             );
           }
-
-          const quantity = productQuantities?.[product.product_cod] ?? 1;
-          const stock = getEffectiveStock(product);
-          const isQuantityExceeded = quantity > stock;
 
           const descriptionBlock = [
             new Paragraph({
@@ -168,31 +162,6 @@ export function useProductExport() {
               ],
               spacing: { after: 60 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Quantidade: " + quantity,
-                  size: 23,
-                  bold: true,
-                }),
-              ],
-              spacing: { after: 60 },
-            }),
-            ...(isQuantityExceeded
-              ? [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: "Estoque do produto excedido",
-                        size: 23,
-                        bold: true,
-                        color: "FF0000",
-                      }),
-                    ],
-                    spacing: { after: 60 },
-                  }),
-                ]
-              : []),
           ];
 
           const imageCell = new TableCell({
@@ -273,10 +242,9 @@ export function useProductExport() {
     async (
       products: ExportProduct[],
       setSelectedProducts?: (products: Product[]) => void,
-      productQuantities?: Record<string, number>,
-      seller?: string,
-      company?: string,
       contact?: string,
+      company?: string,
+      description?: string,
     ) => {
       if (!products || products.length === 0) return;
 
@@ -290,10 +258,7 @@ export function useProductExport() {
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
-        const productParagraphs = await generateProductParagraphs(
-          products,
-          productQuantities ?? {},
-        );
+        const productParagraphs = await generateProductParagraphs(products);
 
         const doc = new Document({
           styles: {
@@ -343,12 +308,12 @@ export function useProductExport() {
                 new Paragraph({
                   children: [new TextRun({ text: "", size: 24 })],
                 }),
-                ...(seller
+                ...(contact
                   ? [
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: seller,
+                            text: contact,
                             size: 24,
                           }),
                         ],
@@ -367,12 +332,12 @@ export function useProductExport() {
                       }),
                     ]
                   : []),
-                ...(contact
+                ...(description
                   ? [
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: contact,
+                            text: description,
                             size: 24,
                           }),
                         ],
