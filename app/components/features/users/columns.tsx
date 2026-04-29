@@ -35,7 +35,7 @@ export const columns: ColumnDef<UsersTableUser>[] = [
       return (
         <Badge
           variant="default"
-          className={role === "admin" ? "bg-blue-500" : "bg-gray-500"}
+          className={role === "admin" ? "bg-primary" : "bg-neutral-300"}
         >
           {role === "admin" ? "Administrador" : "Padrão"}
         </Badge>
@@ -47,7 +47,7 @@ export const columns: ColumnDef<UsersTableUser>[] = [
     cell: ({ row }) => {
       const user = row.original;
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Abrir menu</span>

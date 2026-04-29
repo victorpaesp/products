@@ -1,0 +1,17 @@
+packages:
+  - "packages/*"
+allowBuilds:
+  esbuild: true
+  unrs-resolver: false
+
+overrides:
+  esbuild: ">=0.25.0"
+  esbuild@<=0.24.2: ">=0.25.0"
+  estree-util-value-to-estree@<3.3.3: ">=3.3.3"
+  tar@<7.5.7: ">=7.5.7"
+  tar@<7.5.8: ">=7.5.8"
+  tar@<=7.5.10: ">=7.5.11"
+  tar@<=7.5.2: ">=7.5.3"
+  tar@<=7.5.3: ">=7.5.4"
+  tar@<=7.5.9: ">=7.5.10"
+  vite@<=6.4.1: ">=6.4.2"

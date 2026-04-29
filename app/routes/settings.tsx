@@ -164,28 +164,28 @@ export default function SettingsPage() {
   });
 
   return (
-    <div
-      className={`container mx-auto py-8 px-4 sm:mt-[82px] ${
+    <section
+      className={`sm-container ${
         hasSelectedProducts ? "mt-[122px]" : "mt-[74px]"
       }`}
     >
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Configurações</h1>
         <Button onClick={() => navigate("/")}>Voltar</Button>
       </div>
       <Tabs
         orientation="horizontal"
         defaultValue={visibleTabs[0].value}
-        className="w-full flex flex-col md:flex-row items-start gap-6 justify-center"
+        className="flex w-full flex-col items-start justify-center gap-6 md:flex-row"
       >
-        <TabsList className="w-full md:w-auto shrink-0 grid grid-cols-1 gap-1 p-0 bg-background">
+        <TabsList className="bg-background grid w-full shrink-0 grid-cols-1 gap-1 p-0 md:w-auto">
           {visibleTabs.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start px-3 py-1.5"
             >
-              <tab.icon className="h-5 w-5 me-2" /> {tab.name}
+              <tab.icon className="me-2 h-5 w-5" /> {tab.name}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
           <TabsContent
             key={tab.value}
             value={tab.value}
-            className="h-full w-full md:px-10 overflow-x-hidden"
+            className="h-full w-full overflow-x-hidden md:px-10"
           >
             {tab.value === "profile" ? (
               <ProfileForm currentUser={user} isAdmin={isAdmin} />
@@ -202,6 +202,6 @@ export default function SettingsPage() {
           </TabsContent>
         ))}
       </Tabs>
-    </div>
+    </section>
   );
 }

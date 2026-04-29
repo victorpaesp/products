@@ -10,6 +10,7 @@ import {
 } from "@remix-run/react";
 import { ThemeProvider } from "~/lib/theme-provider";
 import { AppHeader } from "~/components/features/layout/AppHeader";
+import { AppFooter } from "~/components/features/layout/AppFooter";
 import { ProductsDrawer } from "~/components/features/products/ProductsDrawer";
 import { useEffect, useState } from "react";
 import { useLocation } from "@remix-run/react";
@@ -59,7 +60,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-50">
+      <body className="flex min-h-screen flex-col">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -101,8 +102,8 @@ export default function App() {
     <QueryProvider>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         {showGlobalProgress && (
-          <div className="fixed top-0 left-0 right-0 z-[70] route-progress-track">
-            <div className="h-1 w-full bg-gray-200/70 overflow-hidden">
+          <div className="route-progress-track fixed top-0 right-0 left-0 z-70">
+            <div className="h-1 w-full overflow-hidden bg-neutral-200/70">
               <div className="route-progress-indicator h-full" />
             </div>
           </div>
@@ -113,14 +114,17 @@ export default function App() {
             onOpenDrawer={() => setIsDrawerOpen(true)}
           />
         )}
-        <Outlet
-          context={{
-            selectedProducts,
-            setSelectedProducts,
-            isDrawerOpen,
-            setIsDrawerOpen,
-          }}
-        />
+        <div className="flex-1">
+          <Outlet
+            context={{
+              selectedProducts,
+              setSelectedProducts,
+              isDrawerOpen,
+              setIsDrawerOpen,
+            }}
+          />
+        </div>
+        {shouldShowHeader && <AppFooter />}
         <ProductsDrawer
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
@@ -202,9 +206,9 @@ export function ErrorBoundary() {
           <Links />
         </head>
         <body>
-          <div className="flex min-h-screen items-center justify-center bg-background px-4">
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-5 py-4 text-card-foreground shadow-sm">
-              <span className="h-3 w-3 animate-pulse rounded-full bg-primary" />
+          <div className="bg-background flex min-h-screen items-center justify-center px-4">
+            <div className="border-border bg-card text-card-foreground flex items-center gap-3 rounded-lg border px-5 py-4 shadow-xs">
+              <span className="bg-primary h-3 w-3 animate-pulse rounded-full" />
               <p className="text-sm font-medium">Atualizando aplicação...</p>
             </div>
           </div>
@@ -222,28 +226,28 @@ export function ErrorBoundary() {
           <Links />
         </head>
         <body>
-          <div className="flex min-h-screen items-center justify-center bg-background px-4">
-            <div className="w-full text-center max-w-lg rounded-xl border border-border bg-card p-6 text-card-foreground shadow">
+          <div className="bg-background flex min-h-screen items-center justify-center px-4">
+            <div className="border-border bg-card text-card-foreground w-full max-w-lg rounded-xl border p-6 text-center shadow">
               <h1 className="text-lg font-semibold">
                 Ops! <br />
                 Tivemos um problema ao carregar esta página.
               </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-2 text-sm">
                 A conexão pode ter oscilado ou a página foi atualizada. Você
                 pode tentar novamente ou retornar ao início.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2 w-full">
+              <div className="mt-4 flex w-full flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={handleRetry}
-                  className="inline-flex flex-1 h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+                  className="bg-primary text-primary-foreground inline-flex h-10 flex-1 items-center justify-center rounded-md px-4 text-sm font-medium transition hover:opacity-90"
                 >
                   Tentar novamente
                 </button>
                 <button
                   type="button"
                   onClick={handleGoHome}
-                  className="inline-flex flex-1 h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition hover:bg-muted"
+                  className="border-border bg-background text-foreground hover:bg-muted inline-flex h-10 flex-1 items-center justify-center rounded-md border px-4 text-sm font-medium transition"
                 >
                   Voltar para tela inicial
                 </button>
@@ -273,10 +277,10 @@ export function ErrorBoundary() {
         <Links />
       </head>
       <body>
-        <div className="flex min-h-screen items-center justify-center bg-background px-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-card-foreground shadow">
+        <div className="bg-background flex min-h-screen items-center justify-center px-4">
+          <div className="border-border bg-card text-card-foreground w-full max-w-md rounded-xl border p-6 shadow">
             <h1 className="text-lg font-semibold">{title}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+            <p className="text-muted-foreground mt-2 text-sm">{message}</p>
           </div>
         </div>
         <Scripts />

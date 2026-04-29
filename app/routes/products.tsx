@@ -100,7 +100,7 @@ export default function Products() {
   const { data, isLoading, isFetching, isError, error } =
     useProductsQuery(queryParams);
 
-  const cacheStatus = useCacheStatus({ data, isLoading, isFetching } as any);
+  const cacheStatus = useCacheStatus({ data, isLoading, isFetching });
 
   const errorMessage =
     loaderData.error ||
@@ -136,6 +136,7 @@ export default function Products() {
 
   useEffect(() => {
     if (!data?.pagination?.has_more_pages) return;
+    if (data?.pagination?.current_page !== queryParams.page) return;
 
     const nextParams: ProductsQueryParams = {
       ...queryParams,
@@ -146,7 +147,12 @@ export default function Products() {
       queryKey: productsQueryKeys.list(nextParams),
       queryFn: () => fetchProductsQuery(nextParams),
     });
-  }, [data?.pagination?.has_more_pages, queryClient, queryParams]);
+  }, [
+    data?.pagination?.has_more_pages,
+    data?.pagination?.current_page,
+    queryClient,
+    queryParams,
+  ]);
 
   const page = Number(searchParams.get("page")) || 1;
   const {
@@ -213,9 +219,9 @@ export default function Products() {
       return (
         <>
           {value.endsWith("asc") ? (
-            <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+            <ArrowDownAZ className="mr-2 inline h-4 w-4" />
           ) : (
-            <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+            <ArrowUpAZ className="mr-2 inline h-4 w-4" />
           )}
           Nome
         </>
@@ -225,9 +231,9 @@ export default function Products() {
       return (
         <>
           {value.endsWith("asc") ? (
-            <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+            <ArrowDown01 className="mr-2 inline h-4 w-4" />
           ) : (
-            <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+            <ArrowUp01 className="mr-2 inline h-4 w-4" />
           )}
           Preço
         </>
@@ -237,27 +243,27 @@ export default function Products() {
   }
 
   return (
-    <div>
+    <section
+      className={`sm-container ${
+        selectedProducts.length > 0 ? "mt-[122px]" : "mt-[74px]"
+      }`}
+    >
       <CacheIndicator status={cacheStatus} />
-      <div
-        className={`container mx-auto px-4 py-8 sm:mt-[82px] ${
-          selectedProducts.length > 0 ? "mt-[122px]" : "mt-[74px]"
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-betweenm mb-14 gap-4">
+      <div>
+        <div className="sm:justify-betweenm mb-14 flex flex-col gap-4 sm:flex-row sm:items-center">
           {searchTerm && (
             <h1 className="text-2xl font-bold">
               Resultados para: {searchTerm}
             </h1>
           )}
           {data && data.data.length > 0 && (
-            <div className="flex flex-col sm:flex-row ml-auto items-stretch sm:items-center gap-4 w-full sm:w-auto">
+            <div className="ml-auto flex w-full flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center">
               <div className="flex gap-4">
                 {/* Ordenar por */}
-                <div className="flex flex-col items-stretch gap-2 w-full sm:w-auto">
+                <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
                   <label
                     htmlFor="sort-select"
-                    className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                    className="mb-1 text-sm whitespace-nowrap sm:mb-0"
                   >
                     Ordenar por:
                   </label>
@@ -284,19 +290,19 @@ export default function Products() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="name-asc">
-                        <ArrowDownAZ className="mr-2 h-4 w-4 inline" />
+                        <ArrowDownAZ className="mr-2 inline h-4 w-4" />
                         Nome: A-Z
                       </SelectItem>
                       <SelectItem value="name-desc">
-                        <ArrowUpAZ className="mr-2 h-4 w-4 inline" />
+                        <ArrowUpAZ className="mr-2 inline h-4 w-4" />
                         Nome: Z-A
                       </SelectItem>
                       <SelectItem value="price-asc">
-                        <ArrowDown01 className="mr-2 h-4 w-4 inline" />
+                        <ArrowDown01 className="mr-2 inline h-4 w-4" />
                         Preço: Menor ao maior
                       </SelectItem>
                       <SelectItem value="price-desc">
-                        <ArrowUp01 className="mr-2 h-4 w-4 inline" />
+                        <ArrowUp01 className="mr-2 inline h-4 w-4" />
                         Preço: Maior ao menor
                       </SelectItem>
                     </SelectContent>
@@ -304,10 +310,10 @@ export default function Products() {
                 </div>
               </div>
               {/* Campo de pesquisa para variação */}
-              <div className="flex flex-col items-stretch gap-2 w-full">
+              <div className="flex w-full flex-col items-stretch gap-2">
                 <label
                   htmlFor="variation-search"
-                  className="text-sm whitespace-nowrap mb-1 sm:mb-0"
+                  className="mb-1 text-sm whitespace-nowrap sm:mb-0"
                 >
                   Pesquisar variação:
                 </label>
@@ -350,12 +356,12 @@ export default function Products() {
           </div>
         )}
         {errorMessage && (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex h-64 items-center justify-center">
             <ErrorState message={errorMessage} />
           </div>
         )}
         {!errorMessage && data && data.data.length === 0 && (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex h-64 items-center justify-center">
             <EmptyState message="Nenhum produto encontrado" />
           </div>
         )}
@@ -371,7 +377,7 @@ export default function Products() {
             />
             <div className="relative">
               <div
-                className={`grid grid-cols-2 lg:grid-cols-4 sm:gap-10 gap-4 transition-opacity ${
+                className={`grid grid-cols-2 gap-4 transition-opacity lg:grid-cols-4 ${
                   showProductsRevalidating ? "opacity-50" : "opacity-100"
                 }`}
               >
@@ -384,7 +390,7 @@ export default function Products() {
                   return (
                     <div
                       key={`product.product_cod-${product.product_cod}-${index}-${product.name}`}
-                      className="h-full flex"
+                      className="flex h-full"
                     >
                       <ProductCard
                         product={product}
@@ -415,6 +421,6 @@ export default function Products() {
         )}
         {isLoading && !data && <LoadingState />}
       </div>
-    </div>
+    </section>
   );
 }

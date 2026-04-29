@@ -170,25 +170,25 @@ export default function Register() {
 
   return (
     <div className="relative flex min-h-screen bg-transparent">
-      <div className="relative z-10 w-full md:w-[50%] mr-auto flex items-center justify-center bg-[#f7f7f7] rounded-none md:rounded-e-3xl">
+      <div className="relative z-10 mr-auto flex w-full items-center justify-center rounded-none bg-[#f7f7f7] md:w-[50%] md:rounded-e-3xl">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full max-w-md flex flex-col gap-4 p-12"
+            className="flex w-full max-w-md flex-col gap-4 p-12"
             autoComplete="off"
           >
             <div className="flex flex-col">
-              <div className="flex justify-center mb-14">
+              <div className="mb-14 flex justify-center">
                 <img
                   src="/logo-santomimo.png"
                   alt="Logo"
-                  className="rounded-lg max-w-40"
+                  className="max-w-40 rounded-lg"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
                 <h2 className="text-2xl text-gray-900">Criar conta</h2>
-                <p className="text-xs text-gray-600 max-w-xs">
+                <p className="max-w-xs text-xs text-gray-600">
                   Preencha os dados para criar sua conta
                 </p>
               </div>
@@ -287,7 +287,7 @@ export default function Register() {
             />
 
             {(registerError || actionData?.error) && (
-              <div className="text-red-600 text-sm mb-2">
+              <div className="mb-2 text-sm text-red-600">
                 {registerError || actionData?.error}
               </div>
             )}
@@ -295,7 +295,6 @@ export default function Register() {
             <Button
               type="submit"
               size={"lg"}
-              className={`bg-gray-900 text-white`}
               disabled={!isPasswordValid || isSubmitting || isPageLoading}
             >
               {isSubmitting ? "Criando conta..." : "Criar conta"}
@@ -305,7 +304,7 @@ export default function Register() {
               Já tem uma conta?{" "}
               <Link
                 to="/login"
-                className="text-gray-900 font-medium hover:underline"
+                className="font-medium text-gray-900 hover:underline"
               >
                 Fazer login
               </Link>
@@ -314,11 +313,11 @@ export default function Register() {
         </Form>
       </div>
 
-      <div className="absolute right-0 top-0 h-full w-[55%] z-0 hidden md:block">
+      <div className="absolute top-0 right-0 z-0 hidden h-full w-[55%] md:block">
         <img
           src="/william-koo-J-n31HMBjYE-unsplash.jpg"
           alt="Fundo"
-          className="object-cover h-full w-full"
+          className="h-full w-full object-cover"
         />
       </div>
     </div>

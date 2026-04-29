@@ -7,7 +7,7 @@ export function LoadingState({ compact = false }: LoadingStateProps) {
       <div className="flex items-center gap-2">
         <LoaderCircle
           strokeWidth={1}
-          className="animate-spin size-5 text-gray-500"
+          className="size-5 animate-spin text-gray-500"
         />
         <span className="text-sm text-gray-600">Carregando...</span>
       </div>
@@ -15,10 +15,10 @@ export function LoadingState({ compact = false }: LoadingStateProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-64">
+    <div className="flex min-h-64 flex-col items-center justify-center">
       <LoaderCircle
         strokeWidth={0.75}
-        className="animate-spin size-20 text-gray-400 mb-4"
+        className="mb-4 size-20 animate-spin text-gray-400"
       />
       <span className="text-lg text-gray-500">Carregando...</span>
     </div>

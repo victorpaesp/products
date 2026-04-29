@@ -54,23 +54,23 @@ export function ExportToast({
 
   return (
     <div
-      className={`fixed bottom-4 right-4 z-50 transition-all duration-300 transform ${
+      className={`fixed right-4 bottom-4 z-50 transform transition-all duration-300 ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       }`}
     >
       <div
-        className={`${config.bgColor} ${config.textColor} rounded-lg shadow-lg p-4 max-w-sm min-w-[300px]`}
+        className={`${config.bgColor} ${config.textColor} max-w-sm min-w-[300px] rounded-lg p-4 shadow-lg`}
       >
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">{config.icon}</div>
+          <div className="mt-0.5 shrink-0">{config.icon}</div>
           <div className="flex-1">
-            <h4 className="font-semibold text-sm">{config.title}</h4>
-            <p className="text-xs opacity-90 mt-1">{config.description}</p>
+            <h4 className="text-sm font-semibold">{config.title}</h4>
+            <p className="mt-1 text-xs opacity-90">{config.description}</p>
           </div>
           {status !== "processing" && (
             <button
               onClick={onClose}
-              className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+              className="shrink-0 opacity-70 transition-opacity hover:opacity-100"
             >
               <X className="h-4 w-4" />
             </button>
@@ -79,9 +79,9 @@ export function ExportToast({
 
         {status === "processing" && (
           <div className="mt-3">
-            <div className="w-full bg-black/20 rounded-full h-1.5">
+            <div className="h-1.5 w-full rounded-full bg-black/20">
               <div
-                className="bg-white h-1.5 rounded-full animate-pulse"
+                className="h-1.5 animate-pulse rounded-full bg-white"
                 style={{ width: "60%" }}
               ></div>
             </div>

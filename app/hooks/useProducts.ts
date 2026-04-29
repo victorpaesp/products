@@ -36,7 +36,5 @@ export function useProductsQuery(params: ProductsQueryParams) {
     queryKey: productsQueryKeys.list(params),
     queryFn: () => fetchProductsQuery(params),
     placeholderData: keepPreviousData,
-    staleTime: 5 * 60_000,
-    refetchOnMount: false,
   });
 }

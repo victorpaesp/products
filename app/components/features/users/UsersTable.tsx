@@ -47,7 +47,7 @@ export function UsersTable() {
     data: usersResponse,
     isLoading,
     isFetching,
-  } as any);
+  });
 
   const users = usersResponse?.data || [];
   const totalPages = usersResponse?.last_page || 1;
@@ -121,15 +121,15 @@ export function UsersTable() {
   return (
     <div className="w-full">
       <CacheIndicator status={cacheStatus} />
-      <div className="flex justify-between items-start mb-2">
+      <div className="mb-2 flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Gerenciar Usuários</h2>
-          <p className="text-sm text-muted-foreground mb-4">
+          <h2 className="mb-1 text-2xl font-bold">Gerenciar Usuários</h2>
+          <p className="text-muted-foreground mb-4 text-sm">
             Gerencie usuários, edite dados e mantenha o controle do sistema.
           </p>
         </div>
       </div>
-      <div className="flex items-center py-2 gap-2">
+      <div className="flex items-center gap-2 py-2">
         <Button variant="default" onClick={handleCreate}>
           Criar novo usuário
         </Button>
@@ -153,7 +153,7 @@ export function UsersTable() {
         </div>
       )}
       {isFetching && !isLoading ? (
-        <p className="text-xs text-muted-foreground mt-2">Atualizando...</p>
+        <p className="text-muted-foreground mt-2 text-xs">Atualizando...</p>
       ) : null}
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { formatPrice, getProductImage } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
 import { ExportToast } from "./ExportToast";
@@ -72,14 +73,14 @@ export function ProductsDrawer({
       formData.company,
       formData.description,
     );
-    
+
     setExportModalOpen(false);
   };
   return (
     <>
       <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
         onKeyDown={(e) => {
@@ -93,25 +94,27 @@ export function ProductsDrawer({
       />
 
       <div
-        className={`fixed right-0 top-0 h-full w-full sm:w-[425px] bg-white dark:bg-gray-900 shadow-xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`fixed top-0 right-0 z-50 flex h-full w-full transform flex-col bg-white shadow-xl transition-transform duration-300 ease-in-out sm:w-[425px] dark:bg-gray-900 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-800">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Produtos selecionados
           </h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            className="rounded-full"
           >
             <X className="h-5 w-5 dark:text-white" />
-          </button>
+          </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 min-h-0">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
           {selectedProducts.length === 0 ? (
-            <div className="text-center text-gray-500 dark:text-gray-400 mt-10">
+            <div className="mt-10 text-center text-gray-500 dark:text-gray-400">
               <p>Nenhum produto selecionado</p>
             </div>
           ) : (
@@ -138,43 +141,45 @@ export function ProductsDrawer({
                 return (
                   <div
                     key={product.product_cod + "-" + variation.product_cod}
-                    className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-md transition-shadow bg-white dark:bg-gray-950"
+                    className="flex items-start gap-3 rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-800 dark:bg-gray-950"
                   >
                     <img
                       src={image}
                       alt={name}
-                      className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                      className="h-16 w-16 shrink-0 rounded-md object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/logo-santomimo.png";
                       }}
                     />
 
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
+                        <h3 className="line-clamp-2 text-sm font-medium text-gray-900 dark:text-white">
                           {name}
                         </h3>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                           Cod: {code} - Estoque: {stock}
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-3 items-center justify-between mt-2">
-                        <p className="text-gray-900 dark:text-white mt-1">
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                        <p className="mt-1 text-gray-900 dark:text-white">
                           {formatPrice(price)}
                         </p>
                       </div>
                     </div>
 
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => {
                         onRemoveProduct(product.product_cod, code);
                       }}
-                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-gray-900 rounded-full transition-colors flex-shrink-0"
+                      className="shrink-0 rounded-full text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-gray-900"
                       title="Remover produto"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 );
               })}
@@ -183,14 +188,10 @@ export function ProductsDrawer({
         </div>
 
         {selectedProducts.length > 0 && (
-          <div className="flex-shrink-0 flex flex-col gap-3 p-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
-            <button
-              onClick={handleExportClick}
-              className={`w-full flex items-center justify-center gap-2 font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 
-                  bg-black hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-900 text-white`}
-            >
+          <div className="flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-950">
+            <Button onClick={handleExportClick}>
               Continuar para exportação
-            </button>
+            </Button>
             <ExportProposalModal
               open={isExportModalOpen}
               onOpenChange={setExportModalOpen}

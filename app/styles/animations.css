@@ -1,0 +1,398 @@
+/**
+ * ANIMATIONS
+ * ==========
+ * Keyframes e animações customizadas do projeto.
+ */
+
+/* ========================================
+   ROUTE PROGRESS (Barra de progresso de navegação)
+   ======================================== */
+@keyframes route-progress-slide {
+  0% {
+    transform: translateX(-55%);
+    width: 22%;
+  }
+  45% {
+    transform: translateX(30%);
+    width: 35%;
+  }
+  100% {
+    transform: translateX(160%);
+    width: 28%;
+  }
+}
+
+.animate-route-progress {
+  animation: route-progress-slide 1.05s var(--ease-in-out) infinite;
+  will-change: transform, width;
+}
+
+/* ========================================
+   SHADCN/UI ANIMATIONS
+   ======================================== */
+
+/* Fade In/Out */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--duration-normal) var(--ease-out);
+}
+
+.animate-fade-out {
+  animation: fade-out var(--duration-normal) var(--ease-in);
+}
+
+/* Zoom In/Out (Dialog, Popover) */
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.animate-zoom-in {
+  animation: zoom-in var(--duration-fast) var(--ease-spring);
+}
+
+.animate-zoom-out {
+  animation: zoom-out var(--duration-fast) var(--ease-in);
+}
+
+/* Slide In/Out (Drawer, Sheet) */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-in-top {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-out-top {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes slide-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-out-bottom {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--duration-slow) var(--ease-out);
+}
+
+.animate-slide-out-right {
+  animation: slide-out-right var(--duration-slow) var(--ease-in);
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left var(--duration-slow) var(--ease-out);
+}
+
+.animate-slide-out-left {
+  animation: slide-out-left var(--duration-slow) var(--ease-in);
+}
+
+.animate-slide-in-top {
+  animation: slide-in-top var(--duration-slow) var(--ease-out);
+}
+
+.animate-slide-out-top {
+  animation: slide-out-top var(--duration-slow) var(--ease-in);
+}
+
+.animate-slide-in-bottom {
+  animation: slide-in-bottom var(--duration-slow) var(--ease-out);
+}
+
+.animate-slide-out-bottom {
+  animation: slide-out-bottom var(--duration-slow) var(--ease-in);
+}
+
+/* Collapsible / Accordion */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down var(--duration-normal) var(--ease-out);
+}
+
+.animate-accordion-up {
+  animation: accordion-up var(--duration-normal) var(--ease-out);
+}
+
+/* ========================================
+   UTILITY ANIMATIONS
+   ======================================== */
+
+/* Spin */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Ping (notification indicator) */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Pulse */
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Bounce */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+/* Shake (error states) */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake var(--duration-slow) var(--ease-in-out);
+}
+
+/* ========================================
+   RADIX UI STATE ANIMATIONS
+   ======================================== */
+
+/* Dropdown Menu / Context Menu */
+[data-state="open"] {
+  animation: zoom-in var(--duration-fast) var(--ease-spring);
+}
+
+[data-state="closed"] {
+  animation: zoom-out var(--duration-fast) var(--ease-in);
+}
+
+/* Dialog Overlay */
+@keyframes overlay-show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-hide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+[data-state="open"].dialog-overlay {
+  animation: overlay-show var(--duration-fast) var(--ease-out);
+}
+
+[data-state="closed"].dialog-overlay {
+  animation: overlay-hide var(--duration-fast) var(--ease-in);
+}
+
+/* ========================================
+   TRANSITION UTILITIES
+   ======================================== */
+
+.transition-base {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: var(--ease-in-out);
+  transition-duration: var(--duration-normal);
+}
+
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: var(--ease-in-out);
+  transition-duration: var(--duration-normal);
+}
+
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: var(--ease-out);
+  transition-duration: var(--duration-normal);
+}
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: var(--ease-in-out);
+  transition-duration: var(--duration-normal);
+}
+
+.transition-shadow {
+  transition-property: box-shadow;
+  transition-timing-function: var(--ease-out);
+  transition-duration: var(--duration-normal);
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .animate-route-progress,
+  .animate-fade-in,
+  .animate-fade-out,
+  .animate-zoom-in,
+  .animate-zoom-out,
+  .animate-slide-in-right,
+  .animate-slide-out-right,
+  .animate-slide-in-left,
+  .animate-slide-out-left,
+  .animate-slide-in-top,
+  .animate-slide-out-top,
+  .animate-slide-in-bottom,
+  .animate-slide-out-bottom,
+  .animate-accordion-down,
+  .animate-accordion-up,
+  .animate-spin,
+  .animate-ping,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-shake,
+  [data-state="open"],
+  [data-state="closed"] {
+    animation: none !important;
+    transition: none !important;
+  }
+}

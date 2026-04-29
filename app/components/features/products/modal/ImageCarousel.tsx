@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { FreeMode, Mousewheel, Navigation, Thumbs } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
@@ -114,8 +115,8 @@ export function ImageCarousel({
   };
 
   return (
-    <div className="w-full sm:w-1/2 min-w-0 flex flex-col gap-2">
-      <div className="relative w-full rounded-lg flex items-center justify-center">
+    <div className="flex w-full min-w-0 flex-col gap-2 sm:w-1/2">
+      <div className="relative flex w-full items-center justify-center rounded-lg">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
@@ -135,7 +136,7 @@ export function ImageCarousel({
               thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
             autoScrollOffset: 1,
           }}
-          className="w-full h-full"
+          className="h-full w-full"
         >
           {validImages.map((imageUrl, index) => (
             <SwiperSlide key={imageUrl + index}>
@@ -145,7 +146,7 @@ export function ImageCarousel({
                 onError={() =>
                   setImageErrors((prev) => ({ ...prev, [index]: true }))
                 }
-                className={`w-full h-full object-contain rounded-lg ${
+                className={`h-full w-full rounded-lg object-contain ${
                   isLoading && index === currentImageIndex
                     ? "opacity-0"
                     : "opacity-100"
@@ -157,22 +158,26 @@ export function ImageCarousel({
 
         {validImages.length > 1 && (
           <>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="icon-sm"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-xl bg-white p-2 text-gray-700 hover:bg-gray-200"
+              className="absolute top-1/2 left-2 z-20 -translate-y-1/2 rounded-xl"
               aria-label="Imagem anterior"
             >
               <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="icon-sm"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-xl bg-white p-2 text-gray-700 hover:bg-gray-200"
+              className="absolute top-1/2 right-2 z-20 -translate-y-1/2 rounded-xl"
               aria-label="Próxima imagem"
             >
               <ChevronRight className="h-5 w-5" />
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -191,14 +196,15 @@ export function ImageCarousel({
             className="h-12 w-full max-w-[328px]"
           >
             {validImages.map((imageUrl, index) => (
-              <SwiperSlide key={imageUrl + index} className="!w-12">
-                <button
+              <SwiperSlide key={imageUrl + index} className="w-12!">
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     if (!mainSwiper || index === currentImageIndex) return;
                     mainSwiper.slideToLoop(index);
                   }}
-                  className={`w-12 h-12 overflow-hidden rounded-md border transition-all ${
+                  className={`h-12 w-12 overflow-hidden rounded-md border p-0 transition-all ${
                     index === currentImageIndex
                       ? "border-black"
                       : "border-gray-300 hover:border-gray-500"
@@ -211,9 +217,9 @@ export function ImageCarousel({
                     onError={() =>
                       setImageErrors((prev) => ({ ...prev, [index]: true }))
                     }
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
-                </button>
+                </Button>
               </SwiperSlide>
             ))}
           </Swiper>

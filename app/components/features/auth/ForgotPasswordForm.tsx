@@ -71,20 +71,20 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="w-full flex flex-col gap-4 pt-12 px-8 pb-0"
+        className="flex w-full flex-col gap-4 px-8 pt-12 pb-0"
       >
-        <div className="flex flex-col items-center mb-10">
+        <div className="mb-10 flex flex-col items-center">
           <img
             src="/logo-santomimo.png"
             alt="Logo"
-            className="rounded-lg max-w-40"
+            className="max-w-40 rounded-lg"
           />
         </div>
         {!emailSent ? (
           <>
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl text-gray-900">Esqueceu sua senha?</h2>
-              <p className="text-xs text-gray-600 max-w-xs">
+              <p className="max-w-xs text-xs text-gray-600">
                 Digite seu e-mail abaixo para que sejam enviadas as intruções
                 para redefinição de sua senha.
               </p>
@@ -101,13 +101,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                 </FormItem>
               )}
             />
-            <Button type="submit" size="lg" className="bg-gray-900 text-white">
+            <Button type="submit" size="lg">
               {forgotPasswordMutation.isPending ? "Enviando..." : "Enviar"}
             </Button>
           </>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <p className="text-sm text-gray-900 text-center max-w-xs">
+            <p className="max-w-xs text-center text-sm text-gray-900">
               Um link foi enviado para seu e-mail caso ele esteja cadastrado.
               Siga as instruções para redefinir sua senha.
             </p>
@@ -136,7 +136,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         <Button
           type="button"
           variant="ghost"
-          className="flex items-center gap-2 justify-center text-gray-900"
+          className="flex items-center justify-center gap-2 text-gray-900"
           onClick={onBackToLogin}
         >
           <ArrowLeft size={18} />
