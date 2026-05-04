@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "https://searchm.shop/api",
+  baseURL: "https://search-m.on-forge.com/api",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
