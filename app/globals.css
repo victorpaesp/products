@@ -110,19 +110,6 @@ input:-webkit-autofill:active {
 }
 
 /* ========================================
-   SELECTION STYLING
-   ======================================== */
-::selection {
-  background-color: var(--color-brand-200);
-  color: var(--color-brand-900);
-}
-
-.dark ::selection {
-  background-color: var(--color-brand-800);
-  color: var(--color-brand-100);
-}
-
-/* ========================================
    FOCUS VISIBLE (accessibility)
    ======================================== */
 /* :focus-visible {

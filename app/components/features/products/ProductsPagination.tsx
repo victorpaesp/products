@@ -149,69 +149,75 @@ export function ProductsPagination({
             />
           </div>
 
-          <div className="flex flex-1 items-center justify-center gap-4">
-            <Pagination className="mx-0 w-auto">
-              <PaginationContent>
-                {start > 1 && (
-                  <PaginationItem key={1}>
-                    <PaginationLink
-                      href="#"
-                      isActive={page === 1}
-                      onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                        e.preventDefault();
-                        handlePageChange(1);
-                      }}
-                    >
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                {start > 2 && (
-                  <PaginationItem key="start-ellipsis">
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-                {Array.from({ length: end - start + 1 }, (_, i) => {
-                  const p = start + i;
-                  return (
-                    <PaginationItem key={p}>
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 sm:flex-row">
+            <div className="hidden sm:block">
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  {start > 1 && (
+                    <PaginationItem key={1}>
                       <PaginationLink
                         href="#"
-                        isActive={page === p}
+                        isActive={page === 1}
                         onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                           e.preventDefault();
-                          handlePageChange(p);
+                          handlePageChange(1);
                         }}
                       >
-                        {p}
+                        1
                       </PaginationLink>
                     </PaginationItem>
-                  );
-                })}
-                {end < pageCount - 1 && (
-                  <PaginationItem key="end-ellipsis">
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-                {end < pageCount && (
-                  <PaginationItem key={pageCount}>
-                    <PaginationLink
-                      href="#"
-                      isActive={page === pageCount}
-                      onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                        e.preventDefault();
-                        handlePageChange(pageCount);
-                      }}
-                    >
-                      {pageCount}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-              </PaginationContent>
-            </Pagination>
+                  )}
+                  {start > 2 && (
+                    <PaginationItem key="start-ellipsis">
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+                  {Array.from({ length: end - start + 1 }, (_, i) => {
+                    const p = start + i;
+                    return (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === p}
+                          onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                            e.preventDefault();
+                            handlePageChange(p);
+                          }}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  {end < pageCount - 1 && (
+                    <PaginationItem key="end-ellipsis">
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+                  {end < pageCount && (
+                    <PaginationItem key={pageCount}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === pageCount}
+                        onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                          e.preventDefault();
+                          handlePageChange(pageCount);
+                        }}
+                      >
+                        {pageCount}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )}
+                </PaginationContent>
+              </Pagination>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-neutral-700 sm:hidden">
+              Página {page} de {pageCount}
+            </div>
 
             <Select value={String(perPage)} onValueChange={handlePerPageChange}>
-              <SelectTrigger id="per-page-select" className="w-20">
+              <SelectTrigger id="per-page-select" className="w-20 sm:w-24">
                 <SelectValue>{perPage}</SelectValue>
               </SelectTrigger>
               <SelectContent>

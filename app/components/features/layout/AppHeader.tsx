@@ -64,19 +64,24 @@ export function AppHeader({
   };
 
   return (
-    <div className="mx-auto flex w-full flex-col items-center rounded-b-lg bg-[#363636] px-10">
-      <div className="flex w-full items-center justify-between gap-3">
+    <div className="mx-auto flex w-full flex-col items-center rounded-b-lg bg-[#363636] p-2 md:px-10 md:py-0">
+      <div className="flex w-full items-center justify-between gap-3 p-2 pl-0">
         <div className="flex items-center sm:basis-1/4">
           <Link to="/">
             <img
+              src="/logo-santomimo-h2-white.png"
+              alt="logo"
+              className="w-52 cursor-pointer rounded-md sm:hidden md:p-2"
+            />
+            <img
               src="/logo-santomimo-h-white.png"
               alt="logo"
-              className="w-56 cursor-pointer rounded-md p-2"
+              className="hidden w-56 cursor-pointer rounded-md sm:block md:p-2"
             />
           </Link>
         </div>
 
-        <div className="mx-auto flex min-w-0 flex-1 basis-full justify-center sm:basis-2/4">
+        <div className="mx-auto hidden min-w-0 flex-1 basis-full justify-center sm:flex">
           <form onSubmit={handleSubmit} className="w-full max-w-xl">
             <ButtonGroup className="w-full">
               <Input
@@ -99,11 +104,11 @@ export function AppHeader({
           </form>
         </div>
 
-        <div className="flex items-center justify-end gap-8 sm:basis-1/4">
+        <div className="flex items-center justify-end gap-4 sm:basis-1/4 sm:gap-8">
           {selectedProducts.length > 0 && (
             <Button
               onClick={onOpenDrawer}
-              className="relative hidden p-0 sm:flex"
+              className="relative p-0"
               aria-label="Produtos Selecionados"
             >
               <span className="inline">
@@ -147,16 +152,28 @@ export function AppHeader({
         </div>
       </div>
 
-      {selectedProducts.length > 0 && (
-        <div className="w-full px-4 pb-2 sm:hidden">
-          <Button onClick={onOpenDrawer} className="relative w-full">
-            <span className="inline">Produtos selecionados</span>
-            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-              {selectedProducts.length}
-            </span>
-          </Button>
-        </div>
-      )}
+      <div className="w-full p-2 sm:hidden">
+        <form onSubmit={handleSubmit} className="w-full">
+          <ButtonGroup className="w-full">
+            <Input
+              name="search"
+              type="search"
+              placeholder="Buscar produtos..."
+              className="h-10 w-full rounded-full p-4"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <Button
+              variant="outline"
+              className="rounded-full p-4!"
+              aria-label="Search"
+              size="lg"
+            >
+              <SearchIcon className="size-4.5 text-neutral-500" />
+            </Button>
+          </ButtonGroup>
+        </form>
+      </div>
     </div>
   );
 }
