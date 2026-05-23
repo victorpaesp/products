@@ -112,7 +112,7 @@ export function AppHeader({
               aria-label="Produtos Selecionados"
             >
               <span className="inline">
-                <ShoppingBag className="size-7 text-white" />
+                <ShoppingBag className="size-7 text-white" strokeWidth={1.5} />
               </span>
               <span className="absolute -top-2.5 -right-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
                 {selectedProducts.length}
