@@ -41,6 +41,7 @@ import { fetchProductsQuery, useProductsQuery } from "~/hooks/useProducts";
 import { BackendApiError } from "~/lib/backend.server";
 import { useCacheStatus } from "~/hooks/useCacheStatus";
 import { CacheIndicator } from "~/components/shared/CacheIndicator";
+import { BackToTopButton } from "~/components/shared/BackToTopButton";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireAuth(request);
@@ -418,6 +419,7 @@ export default function Products() {
         )}
         {isLoading && !data && <LoadingState />}
       </div>
+      <BackToTopButton />
     </section>
   );
 }
