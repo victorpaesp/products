@@ -2,7 +2,7 @@ import type { ApiResponse, LoginResponse, RegisterData, User } from "~/types";
 import type { RequestOptions } from "~/types/server";
 
 const API_BASE_URL =
-  process.env.BACKEND_API_URL ?? "https://hmg-searchm.on-forge.com/";
+  process.env.BACKEND_API_URL ?? "https://hmg-searchm.on-forge.com/api";
 
 export class BackendApiError extends Error {
   status: number;
