@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useRouteLoaderData } from "@remix-run/react";
 import type { Product } from "~/types/index";
-import { formatPrice } from "~/lib/utils";
+import {
+  formatPrice,
+  parseDimensions,
+  formatNumberWithoutUnnecessaryDecimals,
+} from "~/lib/utils";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
 import toast from "~/components/ui/toast-client";
@@ -204,56 +208,118 @@ export function ProductDetails({
           >
             <AccordionTrigger>Especificações</AccordionTrigger>
             <AccordionContent>
-              <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {product.product_weight && (
-                    <div>
-                      <p className="text-sm text-neutral-500">Peso</p>
-                      <p className="text-base font-bold text-neutral-900">
-                        {product.product_weight}
-                      </p>
-                    </div>
-                  )}
-
-                  {product.quantity_box && (
-                    <div>
-                      <p className="text-sm text-neutral-500">
-                        Quantidade por Caixa
-                      </p>
-                      <p className="text-base font-bold text-neutral-900">
-                        {product.quantity_box}
-                      </p>
-                    </div>
-                  )}
-
-                  {product.product_mention &&
-                    hasNonZeroNumber(product.product_mention) && (
+              <div className="flex flex-col gap-6">
+                {(product.fiscal_classification_type ||
+                  product.fiscal_classification_code) && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {product.fiscal_classification_type && (
                       <div>
-                        <p className="text-sm text-neutral-500">
-                          Dimensões do produto
+                        <p className="text-xs text-neutral-500">
+                          Tipo de Classificação Fiscal
                         </p>
-                        <p className="text-base font-bold text-neutral-900">
-                          {product.product_mention}
+                        <p className="text-base font-semibold text-neutral-900">
+                          {product.fiscal_classification_type}
                         </p>
                       </div>
                     )}
 
-                  {product.box_mention &&
-                    hasNonZeroNumber(product.box_mention) && (
+                    {product.fiscal_classification_code && (
                       <div>
-                        <p className="text-sm text-neutral-500">
-                          Dimensões da caixa
+                        <p className="text-xs text-neutral-500">
+                          Código de Classificação Fiscal
                         </p>
-                        <p className="text-base font-bold text-neutral-900">
-                          {product.box_mention}
+                        <p className="text-base font-semibold text-neutral-900">
+                          {product.fiscal_classification_code}
                         </p>
                       </div>
                     )}
-                </div>
+                  </div>
+                )}
+
+                {(product.product_weight || product.product_mention) && (
+                  <div className="flex flex-col gap-3">
+                    <div className="border-b border-neutral-200 pb-2">
+                      <p className="text-base font-semibold text-neutral-900">
+                        Produto
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      {product.product_weight && (
+                        <div>
+                          <p className="text-xs text-neutral-500">Peso</p>
+                          <p className="text-base font-semibold text-neutral-900">
+                            {formatNumberWithoutUnnecessaryDecimals(
+                              product.product_weight,
+                            )}
+                            g
+                          </p>
+                        </div>
+                      )}
+
+                      {product.product_mention &&
+                        hasNonZeroNumber(product.product_mention) && (
+                          <>
+                            {parseDimensions(product.product_mention).map(
+                              (dim) => (
+                                <div key={`product-${dim.label}`}>
+                                  <p className="text-xs text-neutral-500">
+                                    {dim.label}
+                                  </p>
+                                  <p className="text-base font-semibold text-neutral-900">
+                                    {dim.value}
+                                  </p>
+                                </div>
+                              ),
+                            )}
+                          </>
+                        )}
+                    </div>
+                  </div>
+                )}
+
+                {(product.quantity_box || product.box_mention) && (
+                  <div className="flex flex-col gap-3">
+                    <div className="border-b border-neutral-200 pb-2">
+                      <p className="text-base font-semibold text-neutral-900">
+                        Caixa
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      {product.quantity_box && (
+                        <div>
+                          <p className="text-xs text-neutral-500">
+                            Quantidade por Caixa
+                          </p>
+                          <p className="text-base font-semibold text-neutral-900">
+                            {formatNumberWithoutUnnecessaryDecimals(
+                              product.quantity_box,
+                            )}
+                          </p>
+                        </div>
+                      )}
+
+                      {product.box_mention &&
+                        hasNonZeroNumber(product.box_mention) && (
+                          <>
+                            {parseDimensions(product.box_mention).map((dim) => (
+                              <div key={`box-${dim.label}`}>
+                                <p className="text-xs text-neutral-500">
+                                  {dim.label}
+                                </p>
+                                <p className="text-base font-semibold text-neutral-900">
+                                  {dim.value}
+                                </p>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                    </div>
+                  </div>
+                )}
 
                 {product.variations && product.variations.length > 1 && (
                   <div>
-                    <p className="mb-2 text-sm text-neutral-500">Variações</p>
+                    <p className="mb-2 text-xs text-neutral-500">Variações</p>
                     <div className="flex flex-wrap gap-2">
                       {product.variations.map((variation, index) => (
                         <span

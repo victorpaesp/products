@@ -52,6 +52,19 @@ export const unformatPhoneNumber = (value: string): string => {
   return value.replace(/\D/g, "");
 };
 
+export const formatNumberWithoutUnnecessaryDecimals = (
+  value: string | number,
+): string => {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return String(value);
+
+  if (num % 1 === 0) {
+    return Math.floor(num).toString();
+  }
+
+  return num.toFixed(2);
+};
+
 const DEFAULT_PRODUCT_PLACEHOLDER = "/logo-santomimo.png";
 
 export const normalizeImageUrl = (
@@ -121,4 +134,59 @@ export const getProductImage = (product: {
   }
 
   return DEFAULT_PRODUCT_PLACEHOLDER;
+};
+
+/**
+ * Faz o parse de uma string de dimensões no formato "41.00x36.50x0.00", "41.00x36.50" ou "41.00"
+ * Detecta automaticamente a unidade (mm ou cm)
+ * Se for mm, converte para cm
+ * Sempre exibe em cm
+ * Valores zerados são filtrados
+ * Se o decimal for .00, exibe apenas o número inteiro
+ * @param dimensionString String com dimensões separadas por "x" (ex: "41.00x36.50x0.00" ou "41.00x36.50" ou "41.00")
+ * @returns Array de objetos com label e valor formatado em cm (ex: [{label: "Altura", value: "41 cm"}])
+ */
+export const parseDimensions = (
+  dimensionString: string,
+): Array<{ label: string; value: string }> => {
+  if (!dimensionString || typeof dimensionString !== "string") {
+    return [];
+  }
+
+  // Detectar unidade (mm ou cm)
+  const hasMillimeters = /mm/i.test(dimensionString);
+
+  // Remover "mm" da string para fazer o parse
+  const cleanString = dimensionString.replace(/mm/i, "");
+
+  // Dividir por 'x' (case-insensitive) e remover espaços
+  const parts = cleanString.split(/x/i).map((p) => p.trim());
+
+  const labels = ["Altura", "Largura", "Profundidade"];
+  const result: Array<{ label: string; value: string }> = [];
+
+  parts.forEach((part, index) => {
+    if (index < 3) {
+      let value = parseFloat(part);
+
+      // Converter de mm para cm se necessário
+      if (hasMillimeters) {
+        value = value / 10;
+      }
+
+      // Só incluir se não for NaN e não for zero
+      if (!isNaN(value) && value !== 0) {
+        // Formatar: se for .00, exibir apenas o inteiro
+        const formatted =
+          value % 1 === 0 ? Math.floor(value).toString() : value.toFixed(2);
+
+        result.push({
+          label: labels[index],
+          value: `${formatted} cm`,
+        });
+      }
+    }
+  });
+
+  return result;
 };

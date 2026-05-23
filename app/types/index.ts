@@ -76,6 +76,8 @@ export type Product = {
   created_at: string;
   updated_at: string;
   variations: Variation[];
+  fiscal_classification_type: string;
+  fiscal_classification_code: string | number;
 };
 
 export type Variation = {
