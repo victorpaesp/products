@@ -38,19 +38,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   return (
     <form
       onSubmit={form.handleSubmit(handleSubmit)}
-      className="w-full flex flex-col gap-4 pt-12 px-8 pb-0"
+      className="flex w-full flex-col gap-4 px-8 pt-12 pb-0"
     >
       <div className="flex flex-col">
-        <div className="flex justify-center mb-14">
+        <div className="mb-14 flex justify-center">
           <img
             src="/logo-santomimo.png"
             alt="Logo"
-            className="rounded-lg max-w-40"
+            className="max-w-40 rounded-lg"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl text-gray-900">Registrar</h2>
-          <p className="text-xs text-gray-600 max-w-xs">
+          <h2 className="text-2xl text-neutral-900">Registrar</h2>
+          <p className="max-w-xs text-xs text-neutral-600">
             Crie sua conta para começar a usar a plataforma
           </p>
         </div>
@@ -158,7 +158,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       <Button
         type="submit"
         size={"lg"}
-        className={`bg-gray-900 text-white`}
+        className={`bg-neutral-900 text-white`}
         disabled={!isPasswordValid}
       >
         Registrar

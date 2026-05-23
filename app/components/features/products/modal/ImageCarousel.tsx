@@ -119,7 +119,7 @@ export function ImageCarousel({
       <div className="relative flex w-full items-center justify-center rounded-lg">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
           </div>
         )}
         <Swiper
@@ -146,7 +146,7 @@ export function ImageCarousel({
                 onError={() =>
                   setImageErrors((prev) => ({ ...prev, [index]: true }))
                 }
-                className={`h-full w-full rounded-lg object-contain ${
+                className={`h-full w-full rounded-lg border border-neutral-200 object-contain ${
                   isLoading && index === currentImageIndex
                     ? "opacity-0"
                     : "opacity-100"
@@ -207,7 +207,7 @@ export function ImageCarousel({
                   className={`h-12 w-12 overflow-hidden rounded-md border p-0 transition-all ${
                     index === currentImageIndex
                       ? "border-black"
-                      : "border-gray-300 hover:border-gray-500"
+                      : "border-neutral-300 hover:border-neutral-500"
                   }`}
                   aria-label={`Ir para imagem ${index + 1}`}
                 >

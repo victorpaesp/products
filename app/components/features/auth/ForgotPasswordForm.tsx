@@ -83,8 +83,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         {!emailSent ? (
           <>
             <div className="flex flex-col gap-1">
-              <h2 className="text-2xl text-gray-900">Esqueceu sua senha?</h2>
-              <p className="max-w-xs text-xs text-gray-600">
+              <h2 className="text-2xl text-neutral-900">Esqueceu sua senha?</h2>
+              <p className="max-w-xs text-xs text-neutral-600">
                 Digite seu e-mail abaixo para que sejam enviadas as intruções
                 para redefinição de sua senha.
               </p>
@@ -107,12 +107,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           </>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <p className="max-w-xs text-center text-sm text-gray-900">
+            <p className="max-w-xs text-center text-sm text-neutral-900">
               Um link foi enviado para seu e-mail caso ele esteja cadastrado.
               Siga as instruções para redefinir sua senha.
             </p>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-600">
+              <span className="text-xs text-neutral-600">
                 Não recebeu o e-mail?
               </span>
               <Button
@@ -121,14 +121,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                 size="sm"
                 onClick={handleResend}
                 disabled={!canResend || forgotPasswordMutation.isPending}
-                className="text-gray-900"
+                className="text-neutral-900"
               >
                 {forgotPasswordMutation.isPending
                   ? "Enviando..."
                   : "Enviar novamente"}
               </Button>
               {!canResend && (
-                <span className="text-xs text-gray-500">({timer}s)</span>
+                <span className="text-xs text-neutral-500">({timer}s)</span>
               )}
             </div>
           </div>
@@ -136,7 +136,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         <Button
           type="button"
           variant="ghost"
-          className="flex items-center justify-center gap-2 text-gray-900"
+          className="flex items-center justify-center gap-2 text-neutral-900"
           onClick={onBackToLogin}
         >
           <ArrowLeft size={18} />

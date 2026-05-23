@@ -187,8 +187,8 @@ export default function Register() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <h2 className="text-2xl text-gray-900">Criar conta</h2>
-                <p className="max-w-xs text-xs text-gray-600">
+                <h2 className="text-2xl text-neutral-900">Criar conta</h2>
+                <p className="max-w-xs text-xs text-neutral-600">
                   Preencha os dados para criar sua conta
                 </p>
               </div>
@@ -300,11 +300,11 @@ export default function Register() {
               {isSubmitting ? "Criando conta..." : "Criar conta"}
             </Button>
 
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-neutral-600">
               Já tem uma conta?{" "}
               <Link
                 to="/login"
-                className="font-medium text-gray-900 hover:underline"
+                className="font-medium text-neutral-900 hover:underline"
               >
                 Fazer login
               </Link>

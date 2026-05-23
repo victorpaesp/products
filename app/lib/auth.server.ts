@@ -4,6 +4,7 @@ import {
   type Session,
 } from "@remix-run/node";
 import type { SessionData, SessionUser } from "~/types/server";
+import { backendCurrentUser } from "~/lib/backend.server";
 
 const SESSION_SECRET =
   process.env.SESSION_SECRET || "development-session-secret";
@@ -112,8 +113,15 @@ export async function redirectIfAuthenticated(
   redirectTo = "/products",
 ) {
   const token = await getSessionToken(request);
-  if (token) {
+  if (!token) {
+    return;
+  }
+
+  try {
+    await backendCurrentUser(token);
     throw redirect(redirectTo);
+  } catch {
+    return;
   }
 }
 

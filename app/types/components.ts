@@ -89,6 +89,7 @@ export type ProductsPaginationProps = {
   searchParams: URLSearchParams;
   setSearchParams: (params: URLSearchParams) => void;
   className?: string;
+  top?: boolean;
 };
 
 export type ProfileFormProps = {

@@ -119,62 +119,62 @@ export function UsersTable() {
   );
 
   return (
-    <div className="w-full">
+    <div className="flex w-full flex-col gap-6">
       <CacheIndicator status={cacheStatus} />
-      <div className="mb-2 flex items-start justify-between">
-        <div>
-          <h2 className="mb-1 text-2xl font-bold">Gerenciar Usuários</h2>
-          <p className="text-muted-foreground mb-4 text-sm">
-            Gerencie usuários, edite dados e mantenha o controle do sistema.
-          </p>
-        </div>
+      <div>
+        <h2 className="mb-1 text-2xl font-bold">Gerenciar Usuários</h2>
+        <p className="text-muted-foreground text-sm">
+          Gerencie usuários, edite dados e mantenha o controle do sistema.
+        </p>
       </div>
-      <div className="flex items-center gap-2 py-2">
-        <Button variant="default" onClick={handleCreate}>
-          Criar novo usuário
-        </Button>
-      </div>
-      {isLoading ? (
-        <div className="py-8 text-center">Carregando...</div>
-      ) : (
-        <div className="w-full">
-          <DataTable
-            columns={tableColumns}
-            data={users}
-            globalFilterFn={(row, filterValue) => {
-              const searchValue = filterValue.toLowerCase();
-              return (
-                row.name.toLowerCase().includes(searchValue) ||
-                row.email.toLowerCase().includes(searchValue)
-              );
-            }}
-            filterPlaceholder="Procurar..."
-          />
+      <div className="rounded-lg bg-white px-8 py-6">
+        <div className="flex items-center gap-2 py-2">
+          <Button variant="default" onClick={handleCreate}>
+            Criar novo usuário
+          </Button>
         </div>
-      )}
-      {isFetching && !isLoading ? (
-        <p className="text-muted-foreground mt-2 text-xs">Atualizando...</p>
-      ) : null}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1}
-        >
-          Anterior
-        </Button>
-        <span className="text-sm">
-          Página {page} de {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          disabled={page === totalPages}
-        >
-          Próxima
-        </Button>
+        {isLoading ? (
+          <div className="py-8 text-center">Carregando...</div>
+        ) : (
+          <div className="w-full">
+            <DataTable
+              columns={tableColumns}
+              data={users}
+              globalFilterFn={(row, filterValue) => {
+                const searchValue = filterValue.toLowerCase();
+                return (
+                  row.name.toLowerCase().includes(searchValue) ||
+                  row.email.toLowerCase().includes(searchValue)
+                );
+              }}
+              filterPlaceholder="Procurar..."
+            />
+          </div>
+        )}
+        {isFetching && !isLoading ? (
+          <p className="text-muted-foreground mt-2 text-xs">Atualizando...</p>
+        ) : null}
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm">
+            Página {page} de {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Próxima
+          </Button>
+        </div>
       </div>
 
       <CreateUserDialog

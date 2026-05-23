@@ -243,11 +243,7 @@ export default function Products() {
   }
 
   return (
-    <section
-      className={`sm-container ${
-        selectedProducts.length > 0 ? "mt-[122px]" : "mt-[74px]"
-      }`}
-    >
+    <section className="sm-container">
       <CacheIndicator status={cacheStatus} />
       <div>
         <div className="sm:justify-betweenm mb-14 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -350,8 +346,8 @@ export default function Products() {
           )}
         </div>
         {showProductsRevalidating && (
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-600">
-            <span className="inline-block size-2 animate-pulse rounded-full bg-gray-500" />
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1 text-sm text-neutral-600">
+            <span className="inline-block size-2 animate-pulse rounded-full bg-neutral-500" />
             Atualizando resultados...
           </div>
         )}
@@ -374,10 +370,11 @@ export default function Products() {
               searchParams={pendingSearchParams}
               setSearchParams={setSearchParams}
               className="mb-8"
+              top
             />
             <div className="relative">
               <div
-                className={`grid grid-cols-2 gap-4 transition-opacity lg:grid-cols-4 ${
+                className={`grid grid-cols-2 gap-8 transition-opacity lg:grid-cols-4 ${
                   showProductsRevalidating ? "opacity-50" : "opacity-100"
                 }`}
               >

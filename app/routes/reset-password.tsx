@@ -157,8 +157,8 @@ export default function ResetPassword() {
             </div>
             {!success && (
               <div className="flex flex-col gap-1">
-                <h2 className="text-2xl text-gray-900">Redefinir senha</h2>
-                <p className="max-w-xs text-xs text-gray-600">
+                <h2 className="text-2xl text-neutral-900">Redefinir senha</h2>
+                <p className="max-w-xs text-xs text-neutral-600">
                   Digite sua nova senha abaixo
                 </p>
               </div>
@@ -204,7 +204,6 @@ export default function ResetPassword() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="bg-gray-900 text-white"
                   disabled={!checklistSatisfied || isSubmitting}
                 >
                   {isSubmitting ? "Redefinindo..." : "Redefinir senha"}
@@ -214,11 +213,7 @@ export default function ResetPassword() {
           ) : (
             <div className="flex flex-col items-center gap-4">
               <h3 className="text-lg">Senha redefinida com sucesso!</h3>
-              <Button
-                size="lg"
-                className="bg-gray-900 text-white"
-                onClick={() => navigate("/login")}
-              >
+              <Button size="lg" onClick={() => navigate("/login")}>
                 Ir para o login
               </Button>
             </div>

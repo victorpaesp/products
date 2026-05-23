@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "@remix-run/react";
 import { formatPrice, getProductImage, normalizeImageUrl } from "~/lib/utils";
-import { ProductModal } from "~/components/features/products/modal/ProductModal";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,9 +18,8 @@ export function ProductCard({
   product,
   onSelect,
   selectedVariations,
-  onProductUpdate,
 }: ProductCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [showVariationModal, setShowVariationModal] = useState(false);
   const [pendingVariations, setPendingVariations] = useState<string[]>([]);
 
@@ -68,12 +67,21 @@ export function ProductCard({
   return (
     <>
       <div
-        className="hover:border-primary relative flex cursor-pointer flex-col gap-1 overflow-hidden rounded-[20px] border border-neutral-200 bg-white p-1 shadow transition-colors duration-200 sm:p-3"
-        onClick={() => setIsModalOpen(true)}
+        className="hover:border-primary relative flex transform cursor-pointer flex-col gap-1 overflow-hidden rounded-lg bg-white p-1 transition duration-300 ease-out hover:scale-[0.98] sm:p-3"
+        style={{
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+        }}
+        onClick={() =>
+          navigate(`/products/${product.product_cod}`, {
+            state: { product, from: window.location.href },
+          })
+        }
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
-            setIsModalOpen(true);
+            navigate(`/products/${product.product_cod}`, {
+              state: { product, from: window.location.href },
+            });
           }
         }}
         role="group"
@@ -83,7 +91,7 @@ export function ProductCard({
             <img
               src={imageSrc}
               alt={product.name}
-              className="h-full w-full rounded-lg object-cover"
+              className="h-full w-full rounded-[4px] object-cover"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/logo-santomimo.png";
@@ -96,18 +104,18 @@ export function ProductCard({
             </Badge>
           )}
         </div>
-        <div className="flex flex-col px-2 py-1">
+        <div className="flex flex-col px-1 py-2">
           <div className="flex h-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-6">
             <div className="flex flex-col">
               <h2
-                className="line-clamp-1 text-sm font-medium break-all text-gray-900 sm:text-base"
+                className="line-clamp-1 text-sm font-medium break-all text-neutral-900 sm:text-base"
                 title={product.name}
                 aria-label={product.name}
               >
                 {product.name}
               </h2>
               <span
-                className="line-clamp-1 text-[10px] font-medium break-all text-gray-500 sm:text-xs"
+                className="line-clamp-1 text-[10px] font-medium break-all text-neutral-500 sm:text-xs"
                 title={product.product_cod}
                 aria-label={product.product_cod}
               >
@@ -116,13 +124,13 @@ export function ProductCard({
             </div>
           </div>
           <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-            <p className="font-semibold text-gray-900 sm:text-lg">
+            <p className="font-semibold text-neutral-900 sm:text-lg">
               {formatPrice(product.price)}
             </p>
             <Button
-              variant={hasAnySelected ? "default" : "outline"}
+              variant={hasAnySelected ? "secondary" : "default"}
               size={"sm"}
-              className="w-full rounded-full sm:w-auto"
+              className="w-full sm:w-auto"
               onClick={(e) => {
                 e.stopPropagation();
                 handleCheckboxChange();
@@ -133,13 +141,6 @@ export function ProductCard({
           </div>
         </div>
       </div>
-      <ProductModal
-        product={product}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onProductUpdate={onProductUpdate}
-      />
-
       <Dialog
         open={showVariationModal}
         onOpenChange={(open) => {
@@ -153,7 +154,7 @@ export function ProductCard({
               <h3 className="text-lg font-bold">Selecione uma variação</h3>
             </DialogTitle>
           </div>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription className="text-sm text-neutral-500">
             Escolha uma das variações disponíveis do produto para continuar.
           </DialogDescription>
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -162,10 +163,10 @@ export function ProductCard({
                 <button
                   key={v.product_cod || idx}
                   type="button"
-                  className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-left transition-colors hover:bg-gray-50 ${
+                  className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-left transition-colors hover:bg-neutral-50 ${
                     pendingVariations.includes(v.product_cod)
                       ? "border-primary bg-primary/5"
-                      : "border-gray-200"
+                      : "border-neutral-200"
                   }`}
                   onClick={() => {
                     setPendingVariations((prev) =>
@@ -189,13 +190,13 @@ export function ProductCard({
                     }}
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="mb-1 line-clamp-1 font-medium text-gray-900">
+                    <div className="mb-1 line-clamp-1 font-medium text-neutral-900">
                       {v.name || product.name}
                     </div>
-                    <div className="mb-1 text-xs text-gray-500">
+                    <div className="mb-1 text-xs text-neutral-500">
                       Cod: {v.product_cod}
                     </div>
-                    <div className="mb-1 text-xs text-gray-500">
+                    <div className="mb-1 text-xs text-neutral-500">
                       Estoque: {v.stock ?? 0}
                     </div>
                   </div>

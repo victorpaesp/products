@@ -87,7 +87,7 @@ function getEffectiveStock(product: ExportProduct) {
     selectedVariationStock ??
     matchingVariationStock ??
     (product.variations && product.variations.length > 0
-      ? product.variations[0].stock ?? 0
+      ? (product.variations[0].stock ?? 0)
       : 9999)
   );
 }

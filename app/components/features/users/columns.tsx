@@ -35,7 +35,9 @@ export const columns: ColumnDef<UsersTableUser>[] = [
       return (
         <Badge
           variant="default"
-          className={role === "admin" ? "bg-primary" : "bg-neutral-300"}
+          className={
+            role === "admin" ? "bg-primary" : "bg-neutral-200 text-neutral-700"
+          }
         >
           {role === "admin" ? "Administrador" : "Padrão"}
         </Badge>

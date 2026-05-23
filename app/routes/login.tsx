@@ -156,8 +156,8 @@ export default function Login() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <h2 className="text-2xl text-gray-900">Iniciar sessão</h2>
-                  <p className="max-w-xs text-xs text-gray-600">
+                  <h2 className="text-2xl text-neutral-900">Iniciar sessão</h2>
+                  <p className="max-w-xs text-xs text-neutral-600">
                     Faça o login para acessar a plataforma
                   </p>
                 </div>
@@ -209,11 +209,11 @@ export default function Login() {
               >
                 {isSubmitting ? "Entrando..." : "Login"}
               </Button>
-              <div className="text-center text-sm text-gray-600">
+              <div className="text-center text-sm text-neutral-600">
                 Não tem uma conta ainda?{" "}
                 <Link
                   to="/register"
-                  className="font-medium text-gray-900 hover:underline"
+                  className="font-medium text-neutral-900 hover:underline"
                 >
                   Criar conta
                 </Link>

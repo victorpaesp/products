@@ -1,12 +1,14 @@
 import { Input } from "~/components/ui/input";
 import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
 import { useState, useEffect, useRef } from "react";
 import { useRevalidator, useSubmit } from "@remix-run/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import { PasswordInput } from "~/components/ui/password-input";
 import toast from "~/components/ui/toast-client";
+import { Pencil, Save } from "lucide-react";
 import { formatPhoneNumber } from "~/lib/utils";
 import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
 import type { ProfileFormProps } from "~/types/components";
@@ -23,6 +25,15 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
   const profileMutation = useUpdateProfileMutation();
   const passwordMutation = useUpdatePasswordMutation();
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [editing, setEditing] = useState(false);
+  const getUserInitials = (name?: string): string => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (
+      parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
+  };
   const [form, setForm] = useState({
     name: currentUser.name,
     email: currentUser.email,
@@ -139,102 +150,161 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
     }
   };
 
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setForm({
+      name: currentUser.name,
+      email: currentUser.email,
+      phone: formatPhoneNumber(currentUser.phone || ""),
+    });
+  };
+
   return (
     <div>
-      <div className="flex flex-col md:max-w-lg w-full gap-6">
+      <div className="flex w-full flex-col gap-6">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Meu Perfil</h2>
-          <p className="text-sm text-muted-foreground mb-4">
+          <h2 className="mb-1 text-2xl font-bold">Meu Perfil</h2>
+          <p className="text-muted-foreground text-sm">
             Gerencie e atualize seus dados de conta e informações de login.
           </p>
         </div>
-        <form
-          onSubmit={isAdmin ? handleSubmit : undefined}
-          className="flex flex-col gap-4"
-        >
-          <div>
-            <label className="block text-sm font-medium mb-1">Nome</label>
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              readOnly={!isAdmin}
-              disabled={!isAdmin}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <Input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              readOnly={!isAdmin}
-              disabled={!isAdmin}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Telefone</label>
-            <PhoneInput
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              readOnly={!isAdmin}
-              disabled={!isAdmin}
-            />
-          </div>
-          {isAdmin && (
-            <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? "Salvando..." : "Salvar"}
-            </Button>
-          )}
-        </form>
-      </div>
-      {isAdmin && (
-        <div>
-          <div className="my-8 border-t" />
-          <div className="flex flex-col md:max-w-lg w-full">
-            <form
-              onSubmit={handleChangePassword}
-              className="flex flex-col gap-4"
-            >
-              <h3 className="text-lg font-semibold mb-2">Redefinir Senha</h3>
-              <div>
-                <PasswordInput
-                  label="Nova senha"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
+        <div className="rounded-lg bg-white px-8 py-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-20 items-center justify-center rounded-full border border-neutral-200 bg-white text-3xl font-medium text-neutral-700">
+                {getUserInitials(currentUser?.name)}
               </div>
               <div>
-                <PasswordInput
-                  label="Repetir nova senha"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
+                <h3 className="text-lg font-medium">{form.name}</h3>
+                <p className="text-muted-foreground text-sm">{form.email}</p>
               </div>
-              <PasswordChecklist
-                password={newPassword}
-                confirmPassword={confirmPassword}
-              />
-              {passwordError && (
-                <div className="text-red-500 text-sm">{passwordError}</div>
-              )}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={changingPassword || !isPasswordValid}
-              >
-                {changingPassword ? "Salvando..." : "Salvar"}
-              </Button>
-            </form>
+            </div>
           </div>
         </div>
-      )}
+        <div className="relative flex flex-col gap-3 rounded-lg bg-white px-8 py-6">
+          <div className="flex w-full justify-between border-b border-neutral-200 pb-3">
+            <span className="text-lg font-medium text-neutral-900">
+              Informações básicas
+            </span>
+            <div>
+              {!editing ? (
+                <Button size="sm" onClick={() => setEditing(true)}>
+                  <Pencil className="h-4 w-4" />
+                  Editar
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" form="profile-form" type="submit">
+                    <Save className="h-4 w-4" />
+                    Salvar
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <form
+            id="profile-form"
+            onSubmit={editing ? handleSubmit : undefined}
+            className="grid grid-cols-1 gap-5 md:grid-cols-2"
+          >
+            <div className="flex flex-col gap-1">
+              <label className="block text-sm text-neutral-600">Nome</label>
+              {editing ? (
+                <Input
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                />
+              ) : (
+                <div className="font-medium text-neutral-900">{form.name}</div>
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="block text-sm text-neutral-600">Email</label>
+              {editing ? (
+                <Input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                />
+              ) : (
+                <div className="font-medium text-neutral-900">{form.email}</div>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="block text-sm text-neutral-600">Telefone</label>
+              {editing ? (
+                <PhoneInput
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                />
+              ) : (
+                <div className="font-medium text-neutral-900">{form.phone}</div>
+              )}
+            </div>
+            <div className="flex flex-col items-start gap-2">
+              <label className="block text-sm text-neutral-600">
+                Tipo do usuário
+              </label>
+              <Badge
+                variant="default"
+                className={
+                  currentUser.role === "admin" ? "bg-primary" : "bg-neutral-300"
+                }
+              >
+                {currentUser.role === "admin" ? "Administrador" : "Padrão"}
+              </Badge>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div>
+        <div className="my-8 border-t" />
+        <div className="rounded-lg bg-white px-8 py-6">
+          <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+            <h3 className="mb-2 text-lg font-semibold">Redefinir Senha</h3>
+            <div>
+              <PasswordInput
+                label="Nova senha"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <PasswordInput
+                label="Repetir nova senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+            <PasswordChecklist
+              password={newPassword}
+              confirmPassword={confirmPassword}
+            />
+            {passwordError && (
+              <div className="text-sm text-red-500">{passwordError}</div>
+            )}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={changingPassword || !isPasswordValid}
+            >
+              <Save className="h-4 w-4" />
+              {changingPassword ? "Salvando..." : "Salvar"}
+            </Button>
+          </form>
+        </div>
+      </div>
       <div className="my-8 border-t" />
       <Button variant="destructive" className="" onClick={handleLogout}>
         Sair

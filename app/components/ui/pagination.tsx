@@ -36,7 +36,7 @@ PaginationItem.displayName = "PaginationItem";
 
 type PaginationLinkProps = {
   isActive?: boolean;
-} & Pick<ButtonProps, "size"> &
+} & Partial<Pick<ButtonProps, "size">> &
   React.ComponentProps<"a">;
 
 const PaginationLink = ({
@@ -48,12 +48,14 @@ const PaginationLink = ({
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
+      "text-sm",
       buttonVariants({
         variant: isActive ? "outline" : "ghost",
         size,
+        className: isActive ? "bg-neutral-900 hover:bg-neutral-950" : "",
       }),
-      isActive && "text-black",
-      className
+      isActive && "text-white hover:text-white",
+      className,
     )}
     {...props}
   >
@@ -69,7 +71,10 @@ const PaginationPrevious = ({
   <PaginationLink
     aria-label="Página anterior"
     size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    className={cn(
+      "border-surface-200 gap-1 rounded-lg border pl-2.5 text-sm",
+      className,
+    )}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
@@ -85,7 +90,10 @@ const PaginationNext = ({
   <PaginationLink
     aria-label="Próxima página"
     size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    className={cn(
+      "border-surface-200 gap-1 rounded-lg border pr-2.5 text-sm",
+      className,
+    )}
     {...props}
   >
     <span className="hidden sm:inline">Próxima</span>

@@ -23,7 +23,7 @@ export function ProductModal({
         aria-describedby={undefined}
         className="flex h-screen w-screen max-w-none flex-col gap-0 rounded-none p-0 sm:h-auto sm:max-h-[90vh] sm:max-w-5xl sm:rounded-lg"
       >
-        <div className="flex items-center border-b border-gray-100 p-4 sm:p-6">
+        <div className="flex items-center border-b border-neutral-100 p-4 sm:p-6">
           <DialogTitle className="text-lg font-semibold">
             Detalhes do Produto
           </DialogTitle>

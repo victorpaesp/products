@@ -12,6 +12,7 @@ import {
   requireAuth,
   requireSessionUser,
 } from "~/lib/auth.server";
+import { ChevronLeft } from "lucide-react";
 import { backendCurrentUser, backendRequest } from "~/lib/backend.server";
 import { unformatPhoneNumber } from "~/lib/utils";
 import type { SettingsActionData } from "~/types/routes";
@@ -164,21 +165,25 @@ export default function SettingsPage() {
   });
 
   return (
-    <section
-      className={`sm-container ${
-        hasSelectedProducts ? "mt-[122px]" : "mt-[74px]"
-      }`}
-    >
+    <section className="sm-container">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Configurações</h1>
-        <Button onClick={() => navigate("/")}>Voltar</Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0 gap-1.5"
+          onClick={() => navigate("/")}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Voltar
+        </Button>
       </div>
       <Tabs
         orientation="horizontal"
         defaultValue={visibleTabs[0].value}
         className="flex w-full flex-col items-start justify-center gap-6 md:flex-row"
       >
-        <TabsList className="bg-background grid w-full shrink-0 grid-cols-1 gap-1 p-0 md:w-auto">
+        <TabsList className="bg-background grid w-full shrink-0 grid-cols-1 gap-1 p-1.5 md:w-auto">
           {visibleTabs.map((tab) => (
             <TabsTrigger
               key={tab.value}
@@ -193,7 +198,7 @@ export default function SettingsPage() {
           <TabsContent
             key={tab.value}
             value={tab.value}
-            className="h-full w-full overflow-x-hidden md:px-10"
+            className="h-full w-full overflow-x-hidden md:pl-10"
           >
             {tab.value === "profile" ? (
               <ProfileForm currentUser={user} isAdmin={isAdmin} />

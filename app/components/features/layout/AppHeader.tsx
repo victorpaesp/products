@@ -1,4 +1,4 @@
-import { Search, SearchIcon } from "lucide-react";
+import { Handbag, Search, SearchIcon, ShoppingBag } from "lucide-react";
 import {
   useNavigate,
   useRouteLoaderData,
@@ -64,40 +64,52 @@ export function AppHeader({
   };
 
   return (
-    <div className="fixed top-0 right-0 left-0 z-10 mx-auto flex w-full max-w-[1280px] flex-col items-center rounded-xl p-2">
-      <div className="mx-auto flex w-[1280px] items-center justify-between gap-3 rounded-xl bg-white px-4 py-2 shadow-md">
+    <div className="mx-auto flex w-full flex-col items-center rounded-b-lg bg-[#363636] px-10">
+      <div className="flex w-full items-center justify-between gap-3">
         <div className="flex items-center sm:basis-1/4">
           <Link to="/">
             <img
-              src="/logo-santomimo-h.png"
+              src="/logo-santomimo-h-white.png"
               alt="logo"
-              className="w-[225px] cursor-pointer rounded-md"
+              className="w-56 cursor-pointer rounded-md p-2"
             />
           </Link>
         </div>
 
-        <div className="min-w-0 flex-1 basis-full sm:basis-2/4">
-          <form onSubmit={handleSubmit} className="w-full max-w-2xl">
+        <div className="mx-auto flex min-w-0 flex-1 basis-full justify-center sm:basis-2/4">
+          <form onSubmit={handleSubmit} className="w-full max-w-xl">
             <ButtonGroup className="w-full">
               <Input
                 name="search"
                 type="search"
                 placeholder="Buscar produtos..."
+                className="h-10 rounded-full p-4"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
-              <Button variant="outline" aria-label="Search">
-                <SearchIcon className="text-gray-500" />
+              <Button
+                variant="outline"
+                className="rounded-full p-4!"
+                aria-label="Search"
+                size="lg"
+              >
+                <SearchIcon className="size-4.5 text-neutral-500" />
               </Button>
             </ButtonGroup>
           </form>
         </div>
 
-        <div className="flex items-center justify-end gap-3 sm:basis-1/4">
+        <div className="flex items-center justify-end gap-8 sm:basis-1/4">
           {selectedProducts.length > 0 && (
-            <Button onClick={onOpenDrawer} className="relative hidden sm:flex">
-              <span className="inline">Produtos selecionados</span>
-              <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+            <Button
+              onClick={onOpenDrawer}
+              className="relative hidden p-0 sm:flex"
+              aria-label="Produtos Selecionados"
+            >
+              <span className="inline">
+                <ShoppingBag className="size-7 text-white" />
+              </span>
+              <span className="absolute -top-2.5 -right-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
                 {selectedProducts.length}
               </span>
             </Button>
@@ -105,7 +117,7 @@ export function AppHeader({
 
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger>
-              <div className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-sm font-semibold text-gray-700">
+              <div className="flex size-10 cursor-pointer items-center justify-center rounded-full border border-neutral-200 bg-white text-lg font-medium text-neutral-700">
                 {getUserInitials(user?.name)}
               </div>
             </DropdownMenuTrigger>
@@ -114,10 +126,10 @@ export function AppHeader({
                 <>
                   <DropdownMenuItem disabled>
                     <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-neutral-800">
                         {user.name}
                       </span>
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs text-neutral-600">
                         {user.email}
                       </span>
                     </div>
