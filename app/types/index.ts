@@ -69,7 +69,8 @@ export type Product = {
   price: string;
   image: string;
   product_mention: string;
-  product_weight: number;
+  product_weight: string;
+  box_weight?: string;
   quantity_box: number;
   box_mention: string;
   gallery: string[];

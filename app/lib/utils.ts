@@ -65,6 +65,127 @@ export const formatNumberWithoutUnnecessaryDecimals = (
   return num.toFixed(2);
 };
 
+export const hasNonZeroNumber = (value?: string | null): boolean => {
+  if (!value || typeof value !== "string") return false;
+  return /[1-9]/.test(value);
+};
+
+const parseWeightValue = (value: string): number | null => {
+  const cleaned = value.trim().replace(/\s/g, "");
+  if (!cleaned) return null;
+
+  if (!/^[\d.,]+$/.test(cleaned)) return null;
+
+  if (/^\d{1,3}(\.\d{3})*,\d+$/.test(cleaned)) {
+    return Number(cleaned.replace(/\./g, "").replace(",", "."));
+  }
+
+  if (/^\d{1,3}(,\d{3})*\.\d+$/.test(cleaned)) {
+    return Number(cleaned.replace(/,/g, ""));
+  }
+
+  if (cleaned.includes(",") && cleaned.includes(".")) {
+    const lastComma = cleaned.lastIndexOf(",");
+    const lastDot = cleaned.lastIndexOf(".");
+
+    if (lastDot > lastComma) {
+      return Number(cleaned.replace(/,/g, ""));
+    }
+
+    return Number(cleaned.replace(/\./g, "").replace(/,/g, "."));
+  }
+
+  if (cleaned.includes(",")) {
+    const parts = cleaned.split(",");
+    if (parts.length === 2 && parts[1].length === 3) {
+      return Number(cleaned.replace(/,/g, ""));
+    }
+    return Number(cleaned.replace(/,/g, "."));
+  }
+
+  return Number(cleaned);
+};
+
+export const formatWeight = (value?: string | null): string | null => {
+  if (!value || typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const lower = trimmed.toLowerCase();
+  const isKg = /kg(?:s)?\b/.test(lower);
+  const isMg = /mg(?:s)?\b/.test(lower);
+  const numericPart = lower
+    .replace(/kg(?:s)?\b/, "")
+    .replace(/mg(?:s)?\b/, "")
+    .replace(/g(?:s)?\b/, "")
+    .trim();
+
+  const weight = parseWeightValue(numericPart);
+  if (weight === null || weight === 0) return null;
+
+  let grams = weight;
+  if (isKg) grams *= 1000;
+  if (isMg) grams /= 1000;
+
+  if (grams === 0) return null;
+
+  const formatted =
+    grams % 1 === 0
+      ? String(Math.floor(grams))
+      : String(Number(grams.toFixed(3))).replace(
+          /\.0+$|(?<=\.[0-9]*[1-9])0+$/,
+          "",
+        );
+
+  return `${formatted}g`;
+};
+
+const formatAsKilograms = (value: number): string => {
+  if (value % 1 === 0) {
+    return `${Math.floor(value)}kg`;
+  }
+
+  return `${String(Number(value.toFixed(3))).replace(/\.0+$|(?<=\.[0-9]*[1-9])0+$/, "")}kg`;
+};
+
+export const formatBoxWeight = (value?: string | null): string | null => {
+  if (!value || typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const lower = trimmed.toLowerCase();
+  const isKg = /kg(?:s)?\b/.test(lower);
+  const isMg = /mg(?:s)?\b/.test(lower);
+  const isG = /g(?:s)?\b/.test(lower) && !isKg && !isMg;
+
+  let numericPart = lower;
+  if (isKg) {
+    numericPart = numericPart.replace(/kg(?:s)?\b/, "");
+  } else if (isMg) {
+    numericPart = numericPart.replace(/mg(?:s)?\b/, "");
+  } else {
+    numericPart = numericPart.replace(/g(?:s)?\b/, "");
+  }
+
+  numericPart = numericPart.trim();
+  const weight = parseWeightValue(numericPart);
+  if (weight === null || weight === 0) return null;
+
+  let kilograms = weight;
+  if (isKg) {
+    kilograms = weight;
+  } else if (isMg) {
+    kilograms = weight / 1_000_000;
+  } else {
+    kilograms = weight / 1000;
+  }
+
+  if (kilograms === 0) return null;
+  return formatAsKilograms(kilograms);
+};
+
 const DEFAULT_PRODUCT_PLACEHOLDER = "/logo-santomimo.png";
 
 export const normalizeImageUrl = (
@@ -101,6 +222,34 @@ export const normalizeImageUrl = (
   }
 
   return fallback;
+};
+
+export const providerLogoMap: Record<string, string> = {
+  AsianImport: "/asiaimport-logo.png",
+  MinhaXBZ: "/xbz-logo.png",
+  SpotGifts: "/spotgifts-logo.png",
+};
+
+export const providerDisplayNameMap: Record<string, string> = {
+  AsianImport: "Asia Import",
+  MinhaXBZ: "XBZ Brindes",
+  SpotGifts: "SPOT",
+};
+
+export const getProviderLogoPath = (provider?: string): string => {
+  if (!provider || typeof provider !== "string") {
+    return "/logo-santomimo.png";
+  }
+
+  return providerLogoMap[provider] ?? "/logo-santomimo.png";
+};
+
+export const getProviderDisplayName = (provider?: string): string => {
+  if (!provider || typeof provider !== "string") {
+    return "";
+  }
+
+  return providerDisplayNameMap[provider] ?? provider;
 };
 
 /**

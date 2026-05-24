@@ -3,8 +3,12 @@ import { useRouteLoaderData } from "@remix-run/react";
 import type { Product } from "~/types/index";
 import {
   formatPrice,
+  formatWeight,
+  formatBoxWeight,
   parseDimensions,
   formatNumberWithoutUnnecessaryDecimals,
+  hasNonZeroNumber,
+  getProviderLogoPath,
 } from "~/lib/utils";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
@@ -33,10 +37,6 @@ function hasDescriptionOverride(product: Product): boolean {
   );
 }
 
-function hasNonZeroNumber(value: string): boolean {
-  return /[1-9]/.test(value);
-}
-
 export function ProductDetails({
   product,
   onProductUpdate,
@@ -51,6 +51,9 @@ export function ProductDetails({
 
   const displayDescription = getDisplayDescription(product);
   const hasOverride = hasDescriptionOverride(product);
+  const formattedProductWeight = formatWeight(product.product_weight);
+  const formattedBoxWeight = formatBoxWeight(product.box_weight);
+  const logoPath = getProviderLogoPath(product.provider);
 
   const handleStartEdit = () => {
     setEditedDescription(displayDescription);
@@ -111,6 +114,15 @@ export function ProductDetails({
       <span className="text-2xl font-bold text-neutral-900">
         {formatPrice(product.price)}
       </span>
+      {isAdmin && (
+        <span>
+          <img
+            src={logoPath}
+            alt={`${product.provider} logo`}
+            className="h-25 w-auto"
+          />
+        </span>
+      )}
 
       <div className="flex flex-col gap-2">
         <Accordion
@@ -244,14 +256,11 @@ export function ProductDetails({
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      {product.product_weight && (
+                      {formattedProductWeight && (
                         <div>
                           <p className="text-xs text-neutral-500">Peso</p>
                           <p className="text-base font-semibold text-neutral-900">
-                            {formatNumberWithoutUnnecessaryDecimals(
-                              product.product_weight,
-                            )}
-                            g
+                            {formattedProductWeight}
                           </p>
                         </div>
                       )}
@@ -294,6 +303,17 @@ export function ProductDetails({
                             {formatNumberWithoutUnnecessaryDecimals(
                               product.quantity_box,
                             )}
+                          </p>
+                        </div>
+                      )}
+
+                      {formattedBoxWeight && (
+                        <div>
+                          <p className="text-xs text-neutral-500">
+                            Peso da Caixa
+                          </p>
+                          <p className="text-base font-semibold text-neutral-900">
+                            {formattedBoxWeight}
                           </p>
                         </div>
                       )}

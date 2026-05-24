@@ -1,6 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "@remix-run/react";
-import { formatPrice, getProductImage, normalizeImageUrl } from "~/lib/utils";
+import { useNavigate, useRouteLoaderData } from "@remix-run/react";
+import {
+  formatPrice,
+  getProductImage,
+  getProviderDisplayName,
+  normalizeImageUrl,
+} from "~/lib/utils";
+import type { loader as rootLoader } from "~/root";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -20,6 +26,8 @@ export function ProductCard({
   selectedVariations,
 }: ProductCardProps) {
   const navigate = useNavigate();
+  const rootData = useRouteLoaderData<typeof rootLoader>("root");
+  const isAdmin = rootData?.user?.role === "admin";
   const [showVariationModal, setShowVariationModal] = useState(false);
   const [pendingVariations, setPendingVariations] = useState<string[]>([]);
 
@@ -120,6 +128,7 @@ export function ProductCard({
                 aria-label={product.product_cod}
               >
                 {product.product_cod}
+                {isAdmin && <> - {getProviderDisplayName(product.provider)}</>}
               </span>
             </div>
           </div>
@@ -148,7 +157,7 @@ export function ProductCard({
           if (!open) setPendingVariations([]);
         }}
       >
-        <DialogContent className="flex max-h-[555px] w-[90vw] max-w-[90vw] flex-col p-6 sm:w-full sm:max-w-md">
+        <DialogContent className="flex max-h-138.75 w-[90vw] max-w-[90vw] flex-col p-6 sm:w-full sm:max-w-md">
           <div className="flex items-center justify-between">
             <DialogTitle asChild>
               <h3 className="text-lg font-bold">Selecione uma variação</h3>
