@@ -70,6 +70,45 @@ export const hasNonZeroNumber = (value?: string | null): boolean => {
   return /[1-9]/.test(value);
 };
 
+export const getVariationDifference = (
+  productName: string,
+  variationName: string,
+): string => {
+  if (!productName || !variationName) return variationName;
+
+  if (productName === variationName) return variationName;
+
+  const productLower = productName.toLowerCase();
+  const variationLower = variationName.toLowerCase();
+
+  if (variationLower === productLower) return variationName;
+
+  const productIndex = variationLower.indexOf(productLower);
+  if (productIndex !== -1) {
+    const difference = variationName.substring(
+      productIndex + productName.length,
+    );
+    const trimmedDifference = difference.trim();
+
+    if (!trimmedDifference) return variationName;
+
+    return (
+      trimmedDifference.charAt(0).toUpperCase() + trimmedDifference.slice(1)
+    );
+  }
+
+  const productWords = productName.toLowerCase().split(/\s+/);
+  const variationWords = variationName.toLowerCase().split(/\s+/);
+
+  const difference = variationWords
+    .filter((word) => !productWords.includes(word))
+    .join(" ");
+
+  const result = difference || variationName;
+
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};
+
 const parseWeightValue = (value: string): number | null => {
   const cleaned = value.trim().replace(/\s/g, "");
   if (!cleaned) return null;

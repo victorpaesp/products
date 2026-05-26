@@ -9,6 +9,7 @@ import {
   formatNumberWithoutUnnecessaryDecimals,
   hasNonZeroNumber,
   getProviderLogoPath,
+  getVariationDifference,
 } from "~/lib/utils";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
@@ -220,7 +221,7 @@ export function ProductDetails({
           >
             <AccordionTrigger>Especificações</AccordionTrigger>
             <AccordionContent>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-10">
                 {(product.fiscal_classification_type ||
                   product.fiscal_classification_code) && (
                   <div className="grid grid-cols-2 gap-4">
@@ -338,17 +339,41 @@ export function ProductDetails({
                 )}
 
                 {product.variations && product.variations.length > 1 && (
-                  <div>
-                    <p className="mb-2 text-xs text-neutral-500">Variações</p>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-3">
+                    <div className="border-b border-neutral-200 pb-2">
+                      <p className="text-base font-semibold text-neutral-900">
+                        Variações
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2">
                       {product.variations.map((variation, index) => (
-                        <span
-                          key={index}
-                          className="rounded-full bg-neutral-100 px-3 py-1 text-sm"
-                        >
-                          {variation.name} - Estoque: {variation.stock} -{" "}
-                          {formatPrice(variation.price)}
-                        </span>
+                        <div key={index} className="grid grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-xs text-neutral-500">Variação</p>
+                            <p className="text-base font-semibold text-neutral-900">
+                              {getVariationDifference(
+                                product.name,
+                                variation.name,
+                              )}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-neutral-500">Estoque</p>
+                            <p className="text-base font-semibold text-neutral-900">
+                              {variation.stock}
+                            </p>
+                          </div>
+
+                          {product.quantity_box && (
+                            <div>
+                              <p className="text-xs text-neutral-500">Preço</p>
+                              <p className="text-base font-semibold text-neutral-900">
+                                {formatPrice(variation.price)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
