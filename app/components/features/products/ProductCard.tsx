@@ -29,7 +29,6 @@ export function ProductCard({
   const rootData = useRouteLoaderData<typeof rootLoader>("root");
   const isAdmin = rootData?.user?.role === "admin";
   const [showVariationModal, setShowVariationModal] = useState(false);
-  const [pendingVariations, setPendingVariations] = useState<string[]>([]);
 
   const imageSrc = getProductImage(product);
 
@@ -55,7 +54,6 @@ export function ProductCard({
 
   const handleCheckboxChange = () => {
     if (hasMultipleVariations) {
-      setPendingVariations(selectedVariations ?? []);
       setShowVariationModal(true);
     } else if (
       onSelect &&
@@ -150,13 +148,7 @@ export function ProductCard({
           </div>
         </div>
       </div>
-      <Dialog
-        open={showVariationModal}
-        onOpenChange={(open) => {
-          setShowVariationModal(open);
-          if (!open) setPendingVariations([]);
-        }}
-      >
+      <Dialog open={showVariationModal} onOpenChange={setShowVariationModal}>
         <DialogContent className="flex max-h-138.75 w-[90vw] max-w-[90vw] flex-col p-6 sm:w-full sm:max-w-md">
           <div className="flex items-center justify-between">
             <DialogTitle asChild>
@@ -168,90 +160,52 @@ export function ProductCard({
           </DialogDescription>
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="space-y-3 p-1">
-              {product.variations?.map((v, idx) => (
-                <button
-                  key={v.product_cod || idx}
-                  type="button"
-                  className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-left transition-colors hover:bg-neutral-50 ${
-                    pendingVariations.includes(v.product_cod)
-                      ? "border-primary bg-primary/5"
-                      : "border-neutral-200"
-                  }`}
-                  onClick={() => {
-                    setPendingVariations((prev) =>
-                      prev.includes(v.product_cod)
-                        ? prev.filter((cod) => cod !== v.product_cod)
-                        : [...prev, v.product_cod],
-                    );
-                  }}
-                >
-                  <img
-                    src={normalizeImageUrl(
-                      Array.isArray(v.images?.[0])
-                        ? v.images[0][0] || "/logo-santomimo.png"
-                        : v.images?.[0] || "/logo-santomimo.png",
-                    )}
-                    alt={v.name || product.name}
-                    className="size-20 shrink-0 rounded-md object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/logo-santomimo.png";
+              {product.variations?.map((v, idx) => {
+                const isSelected = selectedVariations?.includes(v.product_cod);
+                return (
+                  <button
+                    key={v.product_cod || idx}
+                    type="button"
+                    className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-left transition-colors hover:bg-neutral-50 ${
+                      isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-neutral-200"
+                    }`}
+                    onClick={() => {
+                      if (onSelect) {
+                        onSelect(product, v);
+                      }
                     }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 line-clamp-1 font-medium text-neutral-900">
-                      {v.name || product.name}
+                  >
+                    <img
+                      src={normalizeImageUrl(
+                        Array.isArray(v.images?.[0])
+                          ? v.images[0][0] || "/logo-santomimo.png"
+                          : v.images?.[0] || "/logo-santomimo.png",
+                      )}
+                      alt={v.name || product.name}
+                      className="size-20 shrink-0 rounded-md object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/logo-santomimo.png";
+                      }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 line-clamp-1 font-medium text-neutral-900">
+                        {v.name || product.name}
+                      </div>
+                      <div className="mb-1 text-xs text-neutral-500">
+                        Cod: {v.product_cod}
+                      </div>
+                      <div className="mb-1 text-xs text-neutral-500">
+                        Estoque: {v.stock ?? 0}
+                      </div>
                     </div>
-                    <div className="mb-1 text-xs text-neutral-500">
-                      Cod: {v.product_cod}
-                    </div>
-                    <div className="mb-1 text-xs text-neutral-500">
-                      Estoque: {v.stock ?? 0}
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
-
-          <DialogFooter className="sm:justify-start">
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setPendingVariations([]);
-                  setShowVariationModal(false);
-                }}
-              >
-                Cancelar
-              </Button>
-            </DialogClose>
-            <Button
-              className="flex-1"
-              onClick={() => {
-                if (onSelect) {
-                  const prev = selectedVariations ?? [];
-                  const toAdd = pendingVariations.filter(
-                    (cod) => !prev.includes(cod),
-                  );
-                  const toRemove = prev.filter(
-                    (cod) => !pendingVariations.includes(cod),
-                  );
-                  [...toAdd, ...toRemove].forEach((cod) => {
-                    const variation = product.variations.find(
-                      (v) => v.product_cod === cod,
-                    );
-                    if (variation) onSelect(product, variation);
-                  });
-                }
-                setPendingVariations([]);
-                setShowVariationModal(false);
-              }}
-            >
-              Confirmar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
