@@ -56,6 +56,11 @@ export function ProductDetails({
   const formattedBoxWeight = formatBoxWeight(product.box_weight);
   const logoPath = getProviderLogoPath(product.provider);
 
+  const displayedStock =
+    product.variations && product.variations.length === 1
+      ? product.variations[0].stock
+      : null;
+
   const handleStartEdit = () => {
     setEditedDescription(displayDescription);
     setIsEditing(true);
@@ -124,6 +129,19 @@ export function ProductDetails({
           />
         </span>
       )}
+
+      {displayedStock !== null ? (
+        <div className="mt-1 flex items-center gap-1">
+          <p className="text-xs text-neutral-500">Estoque:</p>
+          <p className="text-base font-semibold text-neutral-900">
+            {displayedStock}
+          </p>
+        </div>
+      ) : product.variations && product.variations.length > 1 ? (
+        <div className="mt-1 text-xs text-neutral-500">
+          Estoque individual por variação — consulte as especificações
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <Accordion
@@ -222,32 +240,34 @@ export function ProductDetails({
             <AccordionTrigger>Especificações</AccordionTrigger>
             <AccordionContent>
               <div className="flex flex-col gap-10">
-                {(product.fiscal_classification_type ||
-                  product.fiscal_classification_code) && (
-                  <div className="grid grid-cols-2 gap-4">
-                    {product.fiscal_classification_type && (
-                      <div>
-                        <p className="text-xs text-neutral-500">
-                          Tipo de Classificação Fiscal
-                        </p>
-                        <p className="text-base font-semibold text-neutral-900">
-                          {product.fiscal_classification_type}
-                        </p>
-                      </div>
-                    )}
+                <div className="flex flex-col gap-4">
+                  {(product.fiscal_classification_type ||
+                    product.fiscal_classification_code) && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {product.fiscal_classification_type && (
+                        <div>
+                          <p className="text-xs text-neutral-500">
+                            Tipo de Classificação Fiscal
+                          </p>
+                          <p className="text-base font-semibold text-neutral-900">
+                            {product.fiscal_classification_type}
+                          </p>
+                        </div>
+                      )}
 
-                    {product.fiscal_classification_code && (
-                      <div>
-                        <p className="text-xs text-neutral-500">
-                          Código de Classificação Fiscal
-                        </p>
-                        <p className="text-base font-semibold text-neutral-900">
-                          {product.fiscal_classification_code}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      {product.fiscal_classification_code && (
+                        <div>
+                          <p className="text-xs text-neutral-500">
+                            Código de Classificação Fiscal
+                          </p>
+                          <p className="text-base font-semibold text-neutral-900">
+                            {product.fiscal_classification_code}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {(product.product_weight || product.product_mention) && (
                   <div className="flex flex-col gap-3">
