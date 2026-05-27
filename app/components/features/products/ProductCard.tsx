@@ -110,7 +110,7 @@ export function ProductCard({
             </Badge>
           )}
         </div>
-        <div className="flex flex-col px-1 py-2">
+        <div className="flex flex-col gap-1.5 px-1 py-2">
           <div className="flex h-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-6">
             <div className="flex flex-col">
               <h2

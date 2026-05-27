@@ -57,7 +57,7 @@ export const links: LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" translate="no">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -204,7 +204,7 @@ export function ErrorBoundary() {
 
   if (isAssetError && isReloading) {
     return (
-      <html lang="en">
+      <html lang="en" translate="no">
         <head>
           <Meta />
           <Links />
@@ -224,7 +224,7 @@ export function ErrorBoundary() {
 
   if (isAssetError) {
     return (
-      <html lang="en">
+      <html lang="en" translate="no">
         <head>
           <Meta />
           <Links />
@@ -275,7 +275,7 @@ export function ErrorBoundary() {
   }
 
   return (
-    <html lang="en">
+    <html lang="en" translate="no">
       <head>
         <Meta />
         <Links />
