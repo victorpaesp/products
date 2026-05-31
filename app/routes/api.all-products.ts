@@ -1,10 +1,10 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { BackendApiError } from "~/lib/backend.server";
-import { requireAuth } from "~/lib/auth.server";
+import { resolveAuthToken } from "~/lib/auth.server";
 import { fetchProductsForRequest } from "~/lib/products.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const token = await requireAuth(request);
+  const token = await resolveAuthToken(request);
   const url = new URL(request.url);
 
   try {
@@ -19,9 +19,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
       throw redirect("/login");
     }
 
-    return Response.json(
-      { error: "Erro ao carregar os produtos." },
-      { status: 500 },
-    );
+    const message =
+      error instanceof BackendApiError
+        ? error.message
+        : "Erro ao carregar os produtos.";
+
+    return Response.json({ error: message }, { status: 500 });
   }
 }

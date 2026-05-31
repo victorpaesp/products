@@ -97,6 +97,18 @@ export async function requireAuth(request: Request): Promise<string> {
   return token;
 }
 
+export async function resolveAuthToken(request: Request): Promise<string> {
+  const authorization = request.headers.get("Authorization");
+  if (authorization?.startsWith("Bearer ")) {
+    const token = authorization.slice("Bearer ".length).trim();
+    if (token) {
+      return token;
+    }
+  }
+
+  return requireAuth(request);
+}
+
 export async function requireSessionUser(
   request: Request,
 ): Promise<SessionUser> {

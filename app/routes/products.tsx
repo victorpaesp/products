@@ -15,8 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "~/components/ui/combobox";
 import { ProductsPagination } from "~/components/features/products/ProductsPagination";
 import { ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from "lucide-react";
 import { EmptyState } from "~/components/shared/EmptyState";
@@ -38,6 +44,7 @@ import {
   toProductsApiParams,
 } from "~/lib/products-query";
 import { fetchProductsQuery, useProductsQuery } from "~/hooks/useProducts";
+import { useColorsQuery } from "~/hooks/useColors";
 import { BackendApiError } from "~/lib/backend.server";
 import { useCacheStatus } from "~/hooks/useCacheStatus";
 import { CacheIndicator } from "~/components/shared/CacheIndicator";
@@ -66,16 +73,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return data<ProductsLoaderData>({
       data: prefetchedData || null,
       error: null,
+      token,
     });
   } catch (error) {
     if (error instanceof BackendApiError && error.status === 401) {
       throw redirect("/login");
     }
 
+    const message =
+      error instanceof BackendApiError
+        ? error.message
+        : "Erro ao carregar os produtos.";
+
     return data<ProductsLoaderData>(
       {
         data: null,
-        error: "Erro ao carregar os produtos.",
+        error: message,
+        token,
       },
       { status: 500 },
     );
@@ -86,8 +100,14 @@ export const meta: MetaFunction = () => {
   return [{ title: "Santo Mimo" }];
 };
 
-export function shouldRevalidate() {
-  return false;
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+}: {
+  currentUrl: URL;
+  nextUrl: URL;
+}) {
+  return currentUrl.search !== nextUrl.search;
 }
 
 export default function Products() {
@@ -98,46 +118,66 @@ export default function Products() {
   const searchTerm = searchTermRaw ? searchTermRaw.trim() : "";
   const queryParams = getProductsQueryParams(searchParams);
 
-  const { data, isLoading, isFetching, isError, error } =
-    useProductsQuery(queryParams);
+  const { data, isLoading, isFetching, isError, error } = useProductsQuery(
+    queryParams,
+    { token: loaderData.token },
+  );
 
   const cacheStatus = useCacheStatus({ data, isLoading, isFetching });
 
-  const errorMessage =
-    loaderData.error ||
-    (isError ? error.message || "Erro ao carregar os produtos." : null);
+  const errorMessage = isError
+    ? error.message || "Erro ao carregar os produtos."
+    : !data
+      ? loaderData.error
+      : null;
 
-  const isProductsRevalidatingRaw = isFetching && !isLoading;
-  const [showProductsRevalidating, setShowProductsRevalidating] =
-    useState(false);
-  const variationSearch = searchParams.get("variation_search") || "";
-  const [variationSearchInput, setVariationSearchInput] =
-    useState(variationSearch);
+  const isProductsGridLoading = isFetching && !errorMessage;
+  const selectedColor = searchParams.get("color") || "";
+  const { data: colors = [] } = useColorsQuery(loaderData.token);
 
-  const pendingSearchParams = useMemo(() => searchParams, [searchParams]);
+  type ColorOption = { id: string; name: string };
+
+  const colorOptions = useMemo<ColorOption[]>(
+    () =>
+      colors.map((color) => ({
+        id: String(color.id),
+        name: color.name,
+      })),
+    [colors],
+  );
+
+  const [selectedColorOption, setSelectedColorOption] =
+    useState<ColorOption | null>(null);
 
   useEffect(() => {
-    if (!variationSearch) setVariationSearchInput("");
-  }, [variationSearch]);
-
-  useEffect(() => {
-    if (!isProductsRevalidatingRaw) {
-      setShowProductsRevalidating(false);
+    if (!selectedColor) {
+      setSelectedColorOption(null);
       return;
     }
 
-    const showDelay = setTimeout(() => {
-      setShowProductsRevalidating(true);
-    }, 120);
-
-    return () => {
-      clearTimeout(showDelay);
-    };
-  }, [isProductsRevalidatingRaw]);
+    setSelectedColorOption(
+      colorOptions.find((option) => option.id === selectedColor) ?? null,
+    );
+  }, [selectedColor]);
 
   useEffect(() => {
-    if (!data?.pagination?.has_more_pages) return;
-    if (data?.pagination?.current_page !== queryParams.page) return;
+    if (!selectedColor) return;
+
+    setSelectedColorOption((current) => {
+      if (current?.id === selectedColor) return current;
+      return (
+        colorOptions.find((option) => option.id === selectedColor) ?? current
+      );
+    });
+  }, [colorOptions, selectedColor]);
+
+  const pendingSearchParams = useMemo(() => searchParams, [searchParams]);
+
+  const hasNextPage = Boolean(data?.next_page_url);
+
+  useEffect(() => {
+    if (!hasNextPage) return;
+    if (data?.current_page !== queryParams.page) return;
 
     const nextParams: ProductsQueryParams = {
       ...queryParams,
@@ -146,23 +186,26 @@ export default function Products() {
 
     void queryClient.prefetchQuery({
       queryKey: productsQueryKeys.list(nextParams),
-      queryFn: () => fetchProductsQuery(nextParams),
+      queryFn: () => fetchProductsQuery(nextParams, loaderData.token),
     });
   }, [
-    data?.pagination?.has_more_pages,
-    data?.pagination?.current_page,
+    hasNextPage,
+    data?.current_page,
     queryClient,
     queryParams,
+    loaderData.token,
   ]);
 
   const page = Number(searchParams.get("page")) || 1;
+  const showProductsSection = Boolean(data || errorMessage);
   const {
     selectedProducts,
     setSelectedProducts,
     isDrawerOpen,
     setIsDrawerOpen,
   } = useOutletContext<ProductsOutletContextType>();
-  const perPage = Number(searchParams.get("per_page")) || 48;
+  const perPage =
+    data?.per_page ?? (Number(searchParams.get("per_page")) || 48);
 
   let sortType: "name" | "price" = "name";
   let sortOrder: "asc" | "desc" = "asc";
@@ -210,7 +253,10 @@ export default function Products() {
             ),
         );
       } else {
-        return [...prev, { product, variation }];
+        return [
+          ...prev,
+          { product, variation, colorFiltered: Boolean(queryParams.color) },
+        ];
       }
     });
   };
@@ -253,7 +299,7 @@ export default function Products() {
               Resultados para: {searchTerm}
             </h1>
           )}
-          {data && data.data.length > 0 && (
+          {showProductsSection && (
             <div className="ml-auto flex w-full flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center">
               <div className="flex gap-4">
                 {/* Ordenar por */}
@@ -306,79 +352,77 @@ export default function Products() {
                   </Select>
                 </div>
               </div>
-              {/* Campo de pesquisa para variação */}
-              <div className="flex w-full flex-col items-stretch gap-2">
+              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
                 <label
-                  htmlFor="variation-search"
+                  htmlFor="color-select"
                   className="mb-1 text-sm whitespace-nowrap sm:mb-0"
                 >
-                  Pesquisar variação:
+                  Filtrar por cor:
                 </label>
-                <div className="flex gap-2">
-                  <Input
-                    id="variation-search"
-                    type="text"
-                    placeholder="Digite a variação..."
-                    value={variationSearchInput}
-                    className="w-full"
-                    onChange={(e) => setVariationSearchInput(e.target.value)}
+                <Combobox
+                  items={colorOptions}
+                  itemToStringLabel={(option) => option.name}
+                  isItemEqualToValue={(a, b) => a.id === b.id}
+                  value={selectedColorOption}
+                  onValueChange={(option) => {
+                    setSelectedColorOption(option);
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    if (!option) {
+                      newSearchParams.delete("color");
+                    } else {
+                      newSearchParams.set("color", option.id);
+                    }
+                    newSearchParams.set("page", "1");
+                    setSearchParams(newSearchParams);
+                  }}
+                >
+                  <ComboboxInput
+                    id="color-select"
+                    placeholder="Selecione uma cor"
+                    className="w-full sm:w-48"
+                    showClear={Boolean(selectedColorOption)}
                   />
-                  <Button
-                    onClick={() => {
-                      const newSearchParams = new URLSearchParams(searchParams);
-                      if (variationSearchInput.trim()) {
-                        newSearchParams.set(
-                          "variation_search",
-                          variationSearchInput,
-                        );
-                      } else {
-                        newSearchParams.delete("variation_search");
-                      }
-                      newSearchParams.set("page", "1");
-                      setSearchParams(newSearchParams);
-                    }}
-                    disabled={!variationSearchInput.trim()}
-                  >
-                    Pesquisar
-                  </Button>
-                </div>
+                  <ComboboxContent className="max-h-62 min-w-[calc(100%+28px)]">
+                    <ComboboxEmpty>Nenhuma cor encontrada.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(option) => (
+                        <ComboboxItem key={option.id} value={option}>
+                          {option.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
               </div>
             </div>
           )}
         </div>
-        {showProductsRevalidating && (
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1 text-sm text-neutral-600">
-            <span className="inline-block size-2 animate-pulse rounded-full bg-neutral-500" />
-            Atualizando resultados...
-          </div>
-        )}
-        {errorMessage && (
-          <div className="flex h-64 items-center justify-center">
-            <ErrorState message={errorMessage} />
-          </div>
-        )}
-        {!errorMessage && data && data.data.length === 0 && (
-          <div className="flex h-64 items-center justify-center">
-            <EmptyState message="Nenhum produto encontrado" />
-          </div>
-        )}
-        {!errorMessage && data && data.data.length > 0 && (
+        {showProductsSection && (
           <>
             <ProductsPagination
               page={page}
               perPage={perPage}
-              data={{ total: data.pagination.total }}
+              total={data?.total ?? 0}
+              from={data?.from}
+              to={data?.to}
+              lastPage={data?.last_page}
               searchParams={pendingSearchParams}
               setSearchParams={setSearchParams}
               className="mb-8"
               top
             />
-            <div className="relative">
-              <div
-                className={`grid grid-cols-2 gap-3 transition-opacity md:gap-8 lg:grid-cols-4 ${
-                  showProductsRevalidating ? "opacity-50" : "opacity-100"
-                }`}
-              >
+            {errorMessage ? (
+              <div className="flex h-64 items-center justify-center">
+                <ErrorState message={errorMessage} />
+              </div>
+            ) : isProductsGridLoading ? (
+              <LoadingState />
+            ) : !data || data.data.length === 0 ? (
+              <div className="flex h-64 items-center justify-center">
+                <EmptyState message="Nenhum produto encontrado" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 md:gap-8 lg:grid-cols-4">
                 {data.data.map((product, index) => {
                   const selectedVariations = selectedProducts
                     .filter(
@@ -388,36 +432,33 @@ export default function Products() {
                   return (
                     <div
                       key={`product.product_cod-${product.product_cod}-${index}-${product.name}`}
-                      className="flex h-full"
+                      className="flex h-full w-full min-w-0"
                     >
                       <ProductCard
                         product={product}
                         selectedVariations={selectedVariations}
                         onSelect={toggleSelectProduct}
+                        preferVariationImage={Boolean(queryParams.color)}
                       />
                     </div>
                   );
                 })}
               </div>
-              {showProductsRevalidating && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="rounded-md bg-white/90 px-4 py-3 shadow">
-                    <LoadingState compact />
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
             <ProductsPagination
               page={page}
               perPage={perPage}
-              data={{ total: data.pagination.total }}
+              total={data?.total ?? 0}
+              from={data?.from}
+              to={data?.to}
+              lastPage={data?.last_page}
               searchParams={pendingSearchParams}
               setSearchParams={setSearchParams}
               className="mt-8"
             />
           </>
         )}
-        {isLoading && !data && <LoadingState />}
+        {isLoading && !data && !errorMessage && <LoadingState />}
       </div>
       <BackToTopButton />
     </section>

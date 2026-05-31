@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouteLoaderData } from "@remix-run/react";
-import type { Product } from "~/types/index";
+import type { Product, Variation } from "~/types/index";
 import {
   formatPrice,
   formatWeight,
@@ -38,6 +38,50 @@ function hasDescriptionOverride(product: Product): boolean {
   );
 }
 
+function isSameVariation(a: Variation, b: Variation): boolean {
+  return a.id === b.id || a.product_cod === b.product_cod;
+}
+
+function getVariationsForDisplay(product: Product): Variation[] {
+  const variations = product.variations ?? [];
+  const selected = product.selected_variation;
+
+  if (selected && variations.length === 0) {
+    return [];
+  }
+
+  if (!selected) {
+    return variations.length > 1 ? variations : [];
+  }
+
+  const selectedInList = variations.some((v) => isSameVariation(v, selected));
+  return selectedInList ? variations : [selected, ...variations];
+}
+
+function getVariationStockState(product: Product) {
+  const variations = product.variations ?? [];
+  const selected = product.selected_variation;
+  const variationsToDisplay = getVariationsForDisplay(product);
+  const showVariationsInSpecs = variationsToDisplay.length > 0;
+  const totalCount = variations.length + (selected ? 1 : 0);
+
+  if (totalCount === 1) {
+    const single =
+      selected && variations.length === 0 ? selected : variations[0];
+    return {
+      displayedStock: single?.stock ?? null,
+      showVariationsInSpecs: false,
+      variationsToDisplay: [] as Variation[],
+    };
+  }
+
+  return {
+    displayedStock: null,
+    showVariationsInSpecs,
+    variationsToDisplay,
+  };
+}
+
 export function ProductDetails({
   product,
   onProductUpdate,
@@ -56,10 +100,8 @@ export function ProductDetails({
   const formattedBoxWeight = formatBoxWeight(product.box_weight);
   const logoPath = getProviderLogoPath(product.provider);
 
-  const displayedStock =
-    product.variations && product.variations.length === 1
-      ? product.variations[0].stock
-      : null;
+  const { displayedStock, showVariationsInSpecs, variationsToDisplay } =
+    getVariationStockState(product);
 
   const handleStartEdit = () => {
     setEditedDescription(displayDescription);
@@ -137,7 +179,7 @@ export function ProductDetails({
             {displayedStock}
           </p>
         </div>
-      ) : product.variations && product.variations.length > 1 ? (
+      ) : showVariationsInSpecs ? (
         <div className="mt-1 text-xs text-neutral-500">
           Estoque individual por variação — consulte as especificações
         </div>
@@ -358,7 +400,7 @@ export function ProductDetails({
                   </div>
                 )}
 
-                {product.variations && product.variations.length > 1 && (
+                {showVariationsInSpecs && (
                   <div className="flex flex-col gap-3">
                     <div className="border-b border-neutral-200 pb-2">
                       <p className="text-base font-semibold text-neutral-900">
@@ -366,7 +408,7 @@ export function ProductDetails({
                       </p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      {product.variations.map((variation, index) => (
+                      {variationsToDisplay.map((variation, index) => (
                         <div key={index} className="grid grid-cols-3 gap-4">
                           <div>
                             <p className="text-xs text-neutral-500">Variação</p>

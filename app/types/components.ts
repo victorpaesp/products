@@ -80,12 +80,16 @@ export type ProductCardProps = {
   onSelect?: (product: Product, variation: Variation) => void;
   selectedVariations?: string[];
   onProductUpdate?: (updatedProduct: Product) => void;
+  preferVariationImage?: boolean;
 };
 
 export type ProductsPaginationProps = {
   page: number;
   perPage: number;
-  data: { total: number } | null;
+  total: number;
+  from?: number;
+  to?: number;
+  lastPage?: number;
   searchParams: URLSearchParams;
   setSearchParams: (params: URLSearchParams) => void;
   className?: string;

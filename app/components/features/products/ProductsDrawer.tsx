@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
-import { formatPrice, getProductImage } from "~/lib/utils";
+import {
+  formatPrice,
+  getProductImage,
+  getVariationImage,
+} from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
@@ -11,6 +15,51 @@ import type {
   ExportProposalData,
   ProductsDrawerProps,
 } from "~/types/components";
+import type { Product, Variation } from "~/types/index";
+
+function shouldUseVariationData(
+  product: Product,
+  colorFiltered?: boolean,
+): boolean {
+  const isSingleVariation =
+    product.variations && product.variations.length === 1;
+  return !isSingleVariation || Boolean(colorFiltered);
+}
+
+function getSelectedProductFields(
+  product: Product,
+  variation: Variation,
+  colorFiltered?: boolean,
+) {
+  if (shouldUseVariationData(product, colorFiltered)) {
+    const exportImages = Array.isArray(variation.images?.[0])
+      ? (variation.images[0] as string[])
+      : variation.images?.length
+        ? variation.images
+        : product.gallery;
+
+    return {
+      name: variation.name || product.name,
+      code: variation.product_cod,
+      price: variation.price ?? product.price,
+      image:
+        getVariationImage(variation) ||
+        product.gallery?.[0] ||
+        getProductImage(product),
+      stock: variation.stock ?? 0,
+      exportImages,
+    };
+  }
+
+  return {
+    name: product.name,
+    code: product.product_cod,
+    price: product.price,
+    image: product.gallery?.[0] || getProductImage(product),
+    stock: product.variations?.[0]?.stock ?? 0,
+    exportImages: product.gallery,
+  };
+}
 
 export function ProductsDrawer({
   isOpen,
@@ -29,42 +78,40 @@ export function ProductsDrawer({
   };
 
   const handleExportSubmit = async (formData: ExportProposalData) => {
-    const productsToExport = selectedProducts.map(({ product, variation }) => {
-      const isSingleVariation =
-        product.variations && product.variations.length === 1;
-      if (isSingleVariation) {
-        return {
-          ...product,
-          name: product.name,
-          product_cod: product.product_cod,
-          price: product.price,
-          images: product.gallery,
-          stock: product.variations?.[0]?.stock ?? 0,
-          description: product.description,
-          gallery: product.gallery,
-        };
-      } else {
-        let exportImages;
-        if (Array.isArray(variation.images?.[0])) {
-          exportImages = variation.images[0];
-        } else if (variation.images?.length) {
-          exportImages = variation.images;
-        } else {
-          exportImages = product.gallery;
+    const productsToExport = selectedProducts.map(
+      ({ product, variation, colorFiltered }) => {
+        const fields = getSelectedProductFields(
+          product,
+          variation,
+          colorFiltered,
+        );
+
+        if (shouldUseVariationData(product, colorFiltered)) {
+          return {
+            ...product,
+            ...variation,
+            name: fields.name,
+            product_cod: fields.code,
+            price: fields.price,
+            images: fields.exportImages,
+            stock: fields.stock,
+            description: product.description,
+            gallery: product.gallery,
+          };
         }
+
         return {
           ...product,
-          ...variation,
-          name: variation.name || product.name,
-          product_cod: variation.product_cod,
-          price: variation.price ?? product.price,
-          images: exportImages,
-          stock: variation.stock ?? 0,
+          name: fields.name,
+          product_cod: fields.code,
+          price: fields.price,
+          images: fields.exportImages,
+          stock: fields.stock,
           description: product.description,
           gallery: product.gallery,
         };
-      }
-    });
+      },
+    );
 
     await exportProducts(
       productsToExport,
@@ -119,26 +166,15 @@ export function ProductsDrawer({
             </div>
           ) : (
             <div className="space-y-4">
-              {selectedProducts.map(({ product, variation }) => {
-                const isSingleVariation =
-                  product.variations && product.variations.length === 1;
-                let name, code, price, image, stock;
-                if (isSingleVariation) {
-                  name = product.name;
-                  code = product.product_cod;
-                  price = product.price;
-                  image = product.gallery?.[0] || getProductImage(product);
-                  stock = product.variations?.[0]?.stock ?? 0;
-                } else {
-                  name = variation.name || product.name;
-                  code = variation.product_cod;
-                  price = variation.price ?? product.price;
-                  image = Array.isArray(variation.images?.[0])
-                    ? variation.images[0][0] || getProductImage(product)
-                    : variation.images?.[0] || getProductImage(product);
-                  stock = variation.stock ?? 0;
-                }
-                return (
+              {selectedProducts.map(
+                ({ product, variation, colorFiltered }) => {
+                  const { name, code, price, image, stock } =
+                    getSelectedProductFields(
+                      product,
+                      variation,
+                      colorFiltered,
+                    );
+                  return (
                   <div
                     key={product.product_cod + "-" + variation.product_cod}
                     className="flex items-start gap-3 rounded-lg border border-neutral-300 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950"
@@ -182,7 +218,8 @@ export function ProductsDrawer({
                     </Button>
                   </div>
                 );
-              })}
+              },
+              )}
             </div>
           )}
         </div>

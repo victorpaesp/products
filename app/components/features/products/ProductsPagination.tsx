@@ -21,18 +21,20 @@ import type { ProductsPaginationProps } from "~/types/components";
 export function ProductsPagination({
   page,
   perPage,
-  data,
+  total,
+  from,
+  to,
+  lastPage,
   searchParams,
   setSearchParams,
   className,
   top = false,
 }: ProductsPaginationProps) {
-  const total = data?.total ?? 0;
-  const pageCount = total ? Math.ceil(total / perPage) : 1;
+  const pageCount = lastPage ?? (total ? Math.ceil(total / perPage) : 1);
   const start = Math.max(1, page - 2);
   const end = Math.min(pageCount, page + 2);
-  const showingFrom = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const showingTo = Math.min(total, page * perPage);
+  const showingFrom = from ?? (total === 0 ? 0 : (page - 1) * perPage + 1);
+  const showingTo = to ?? Math.min(total, page * perPage);
 
   const handlePageChange = (newPage: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -49,7 +51,7 @@ export function ProductsPagination({
 
   return (
     <div
-      className={`flex w-full items-center justify-between gap-4 ${top ? "rounded-none border-b border-neutral-200 bg-transparent py-3" : "rounded-lg bg-white p-3"} ${className || ""}`}
+      className={`flex w-full items-center justify-between gap-4 ${top ? "flex-col rounded-none border-b border-neutral-200 bg-transparent py-3 sm:flex-row" : "rounded-lg bg-white p-3"} ${className || ""}`}
     >
       {top ? (
         <>

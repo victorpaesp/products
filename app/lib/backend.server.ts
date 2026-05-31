@@ -1,8 +1,16 @@
-import type { ApiResponse, LoginResponse, RegisterData, User } from "~/types";
+import type {
+  ApiResponse,
+  ColorsApiResponse,
+  LoginResponse,
+  RegisterData,
+  User,
+} from "~/types";
 import type { RequestOptions } from "~/types/server";
 
 const API_BASE_URL =
   process.env.BACKEND_API_URL ?? "https://hmg-searchm.on-forge.com/api";
+
+const PRODUCTS_LIST_PATH = "/all-products";
 
 export class BackendApiError extends Error {
   status: number;
@@ -42,6 +50,7 @@ export async function backendRequest<T>(
   const response = await fetch(buildUrl(path), {
     method: options.method ?? "GET",
     headers: {
+      Accept: "application/json",
       "Content-Type": "application/json",
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
     },
@@ -52,7 +61,14 @@ export async function backendRequest<T>(
 
   if (!response.ok) {
     const defaultMessage = `Backend API error (${response.status})`;
-    throw new BackendApiError(defaultMessage, response.status, payload);
+    const message =
+      payload &&
+      typeof payload === "object" &&
+      "message" in payload &&
+      typeof (payload as { message: unknown }).message === "string"
+        ? (payload as { message: string }).message
+        : defaultMessage;
+    throw new BackendApiError(message, response.status, payload);
   }
 
   return payload as T;
@@ -98,8 +114,31 @@ export async function backendListProducts(options: {
   token: string;
   params: URLSearchParams;
 }) {
-  const path = `/products?${options.params.toString()}`;
+  const path = `${PRODUCTS_LIST_PATH}?${options.params.toString()}`;
   return backendRequest<ApiResponse>(path, {
+    method: "GET",
+    token: options.token,
+  });
+}
+
+export async function backendListColors(options: { token: string }) {
+  return backendRequest<ColorsApiResponse>("/colors", {
+    method: "GET",
+    token: options.token,
+  });
+}
+
+export async function backendGetProduct(options: {
+  token: string;
+  productId: string | number;
+  variationId?: string | number;
+}) {
+  const query = options.variationId
+    ? `?variation_id=${encodeURIComponent(String(options.variationId))}`
+    : "";
+  const path = `/products/${options.productId}${query}`;
+
+  return backendRequest<unknown>(path, {
     method: "GET",
     token: options.token,
   });

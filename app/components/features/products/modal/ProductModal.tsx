@@ -1,7 +1,7 @@
 import type { ProductModalProps } from "~/types/components";
 import { ImageCarousel } from "./ImageCarousel";
 import { ProductDetails } from "./ProductDetails";
-import { getProductImage } from "~/lib/utils";
+import { getProductCarouselImages } from "~/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 
 export function ProductModal({
@@ -10,7 +10,7 @@ export function ProductModal({
   onClose,
   onProductUpdate,
 }: ProductModalProps) {
-  const allImages = [getProductImage(product), ...(product.gallery || [])];
+  const allImages = getProductCarouselImages(product);
 
   return (
     <Dialog

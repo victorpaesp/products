@@ -39,23 +39,34 @@ export type RegisterData = {
 };
 
 export type ApiResponse = {
-  success: boolean;
+  success?: boolean;
   data: Product[];
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-    from: number;
-    to: number;
-    next_page_url: string | null;
-    prev_page_url: string | null;
-    has_more_pages: boolean;
-  };
-  filters: {
+  current_page: number;
+  first_page_url: string | null;
+  from: number;
+  last_page: number;
+  last_page_url: string | null;
+  links: Link[];
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
+  filters?: {
     search?: string;
     sort?: Record<string, "asc" | "desc">;
   };
+};
+
+export type ProductColor = {
+  id: number;
+  name: string;
+  slug?: string;
+};
+
+export type ColorsApiResponse = {
+  data: ProductColor[];
 };
 
 export type Product = {
@@ -77,6 +88,7 @@ export type Product = {
   created_at: string;
   updated_at: string;
   variations: Variation[];
+  selected_variation?: Variation;
   fiscal_classification_type: string;
   fiscal_classification_code: string | number;
 };
@@ -94,6 +106,7 @@ export type Variation = {
 export type SelectedProduct = {
   product: Product;
   variation: Variation;
+  colorFiltered?: boolean;
 };
 
 export type Link = {

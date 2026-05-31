@@ -324,6 +324,68 @@ export const getProductImage = (product: {
   return DEFAULT_PRODUCT_PLACEHOLDER;
 };
 
+export const getVariationImage = (variation: {
+  images?: Array<string | string[]>;
+}): string | null => {
+  const firstImage = variation.images?.[0];
+  if (!firstImage) return null;
+
+  const raw = Array.isArray(firstImage) ? firstImage[0] : firstImage;
+  if (!raw) return null;
+
+  const normalized = normalizeImageUrl(raw);
+  return normalized === DEFAULT_PRODUCT_PLACEHOLDER ? null : normalized;
+};
+
+/**
+ * Monta as imagens do carrossel do produto. Com selected_variation, move a
+ * imagem da variação para a primeira posição se já estiver na lista.
+ */
+export const getProductCarouselImages = (product: {
+  provider: string;
+  image: string;
+  gallery?: string[];
+  selected_variation?: { images?: Array<string | string[]> };
+}): string[] => {
+  const base = [getProductImage(product), ...(product.gallery || [])];
+  const selected = product.selected_variation;
+  if (!selected) return base;
+
+  const variationImage = getVariationImage(selected);
+  if (!variationImage) return base;
+
+  const normalized = base.map((url) => normalizeImageUrl(url));
+  const priority = normalizeImageUrl(variationImage);
+  const index = normalized.indexOf(priority);
+
+  if (index <= 0) return normalized;
+
+  return [
+    priority,
+    ...normalized.slice(0, index),
+    ...normalized.slice(index + 1),
+  ];
+};
+
+export const getProductCardImage = (
+  product: {
+    provider: string;
+    image: string;
+    gallery?: string[];
+    variations?: Array<{ images?: Array<string | string[]> }>;
+  },
+  options?: { preferVariationImage?: boolean },
+): string => {
+  if (options?.preferVariationImage && product.variations?.length) {
+    for (const variation of product.variations) {
+      const variationImage = getVariationImage(variation);
+      if (variationImage) return variationImage;
+    }
+  }
+
+  return getProductImage(product);
+};
+
 /**
  * Faz o parse de uma string de dimensões no formato "41.00x36.50x0.00", "41.00x36.50" ou "41.00"
  * Detecta automaticamente a unidade (mm ou cm)

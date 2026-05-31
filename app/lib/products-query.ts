@@ -1,8 +1,11 @@
+import type { QueryClient } from "@tanstack/react-query";
+import type { ApiResponse, Product } from "~/types";
+
 export type ProductsQueryParams = {
   page: number;
   perPage: number;
   search?: string;
-  variationSearch?: string;
+  color?: number;
   sortType: "name" | "price";
   sortOrder: "asc" | "desc";
 };
@@ -14,8 +17,11 @@ export function getProductsQueryParams(
   const perPage = Number(searchParams.get("per_page")) || 48;
 
   const search = searchParams.get("q")?.trim() || undefined;
-  const variationSearch =
-    searchParams.get("variation_search")?.trim() || undefined;
+  const colorParam = searchParams.get("color");
+  const color =
+    colorParam && !Number.isNaN(Number(colorParam))
+      ? Number(colorParam)
+      : undefined;
 
   const sortName = searchParams.get("sort[name]");
   const sortPrice = searchParams.get("sort[price]");
@@ -25,7 +31,7 @@ export function getProductsQueryParams(
       page,
       perPage,
       search,
-      variationSearch,
+      color,
       sortType: "price",
       sortOrder: sortPrice,
     };
@@ -35,7 +41,7 @@ export function getProductsQueryParams(
     page,
     perPage,
     search,
-    variationSearch,
+    color,
     sortType: "name",
     sortOrder: sortName === "desc" ? "desc" : "asc",
   };
@@ -52,8 +58,8 @@ export function toProductsApiParams(
     query.set("search", params.search);
   }
 
-  if (params.variationSearch) {
-    query.set("variation_search", params.variationSearch);
+  if (params.color) {
+    query.set("colors", String(params.color));
   }
 
   if (params.sortType === "name") {
@@ -71,3 +77,44 @@ export const productsQueryKeys = {
   list: (params: ProductsQueryParams) =>
     [...productsQueryKeys.lists(), params] as const,
 };
+
+/** Campos de especificação ainda ausentes na API de detalhe — preenchidos pela listagem. */
+export function mergeProductSpecsFromListing(
+  detail: Product,
+  listing?: Product,
+): Product {
+  if (!listing) return detail;
+
+  return {
+    ...detail,
+    fiscal_classification_type:
+      detail.fiscal_classification_type ||
+      listing.fiscal_classification_type,
+    fiscal_classification_code:
+      detail.fiscal_classification_code ||
+      listing.fiscal_classification_code,
+    product_weight: detail.product_weight || listing.product_weight,
+    product_mention: detail.product_mention || listing.product_mention,
+    quantity_box: detail.quantity_box ?? listing.quantity_box,
+    box_weight: detail.box_weight || listing.box_weight,
+    box_mention: detail.box_mention || listing.box_mention,
+  };
+}
+
+export function findProductInListCache(
+  queryClient: QueryClient,
+  productId: string | number,
+): Product | undefined {
+  const entries = queryClient.getQueriesData<ApiResponse>({
+    queryKey: productsQueryKeys.lists(),
+  });
+
+  for (const [, data] of entries) {
+    const product = data?.data?.find(
+      (item) => String(item.id) === String(productId),
+    );
+    if (product) return product;
+  }
+
+  return undefined;
+}

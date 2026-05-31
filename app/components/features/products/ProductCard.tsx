@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useRouteLoaderData } from "@remix-run/react";
+import { LoaderCircle } from "lucide-react";
 import {
   formatPrice,
-  getProductImage,
+  getProductCardImage,
   getProviderDisplayName,
   normalizeImageUrl,
 } from "~/lib/utils";
@@ -24,23 +25,47 @@ export function ProductCard({
   product,
   onSelect,
   selectedVariations,
+  preferVariationImage = false,
 }: ProductCardProps) {
   const navigate = useNavigate();
   const rootData = useRouteLoaderData<typeof rootLoader>("root");
   const isAdmin = rootData?.user?.role === "admin";
   const [showVariationModal, setShowVariationModal] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const imageRef = useRef<HTMLImageElement>(null);
 
-  const imageSrc = getProductImage(product);
+  const imageSrc = getProductCardImage(product, { preferVariationImage });
+
+  useEffect(() => {
+    setIsImageLoading(true);
+
+    const img = imageRef.current;
+    if (img?.complete && img.naturalWidth > 0) {
+      setIsImageLoading(false);
+    }
+  }, [imageSrc]);
 
   const hasMultipleVariations =
     product.variations && product.variations.length > 1;
 
-  const hasAnySelected = selectedVariations && selectedVariations.length > 0;
+  const visibleVariationCodes = new Set(
+    product.variations.map((v) => v.product_cod),
+  );
+  const visibleSelectedVariations =
+    selectedVariations?.filter((cod) => visibleVariationCodes.has(cod)) ?? [];
 
-  const allVariationsSelected = hasMultipleVariations
-    ? selectedVariations &&
-      selectedVariations.length === product.variations.length
-    : selectedVariations && selectedVariations.length === 1;
+  const displayedVariationCod =
+    preferVariationImage && product.variations?.length === 1
+      ? product.variations[0].product_cod
+      : null;
+
+  const hasAnySelected = displayedVariationCod
+    ? visibleSelectedVariations.includes(displayedVariationCod)
+    : visibleSelectedVariations.length > 0;
+
+  const selectedVariationCount = visibleSelectedVariations.length;
+  const showSelectedCountBadge =
+    hasMultipleVariations && selectedVariationCount > 0;
 
   const productAsVariation: Variation = {
     id: product.id,
@@ -70,35 +95,59 @@ export function ProductCard({
     }
   };
 
+  const getProductDetailPath = () => {
+    const params = new URLSearchParams();
+
+    if (preferVariationImage && product.variations?.[0]?.id) {
+      params.set("variation_id", String(product.variations[0].id));
+    }
+
+    const query = params.toString();
+    return `/products/${product.id}${query ? `?${query}` : ""}`;
+  };
+
+  const handleOpenProduct = () => {
+    navigate(getProductDetailPath(), {
+      state: { from: window.location.href, listingProduct: product },
+    });
+  };
+
   return (
     <>
       <div
-        className="hover:border-primary relative flex transform cursor-pointer flex-col gap-1 overflow-hidden rounded-lg bg-white p-1 transition duration-300 ease-out hover:scale-[0.98] sm:p-3"
+        className="hover:border-primary relative flex w-full transform cursor-pointer flex-col gap-1 overflow-hidden rounded-lg bg-white p-1 transition duration-300 ease-out hover:scale-[0.98] sm:p-3"
         style={{
           boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
         }}
-        onClick={() =>
-          navigate(`/products/${product.product_cod}`, {
-            state: { product, from: window.location.href },
-          })
-        }
+        onClick={handleOpenProduct}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
-            navigate(`/products/${product.product_cod}`, {
-              state: { product, from: window.location.href },
-            });
+            handleOpenProduct();
           }
         }}
         role="group"
       >
-        <div className="relative">
-          <div className="aspect-square">
+        <div className="relative w-full">
+          <div className="relative aspect-square w-full overflow-hidden rounded-[4px]">
+            {isImageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <LoaderCircle
+                  strokeWidth={1.5}
+                  className="size-5 animate-spin text-neutral-400"
+                />
+              </div>
+            )}
             <img
+              ref={imageRef}
               src={imageSrc}
               alt={product.name}
-              className="h-full w-full rounded-[4px] object-cover"
+              className={`h-full w-full object-cover transition-opacity duration-200 ${
+                isImageLoading ? "opacity-0" : "opacity-100"
+              }`}
+              onLoad={() => setIsImageLoading(false)}
               onError={(e) => {
+                setIsImageLoading(false);
                 const target = e.target as HTMLImageElement;
                 target.src = "/logo-santomimo.png";
               }}
@@ -134,17 +183,27 @@ export function ProductCard({
             <p className="font-semibold text-neutral-900 sm:text-lg">
               {formatPrice(product.price)}
             </p>
-            <Button
-              variant={hasAnySelected ? "secondary" : "default"}
-              size={"sm"}
-              className="w-full sm:w-auto"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCheckboxChange();
-              }}
-            >
-              {hasAnySelected ? "Selecionado" : "Selecionar"}
-            </Button>
+            <div className="relative w-full sm:w-auto">
+              <Button
+                variant={hasAnySelected ? "secondary" : "default"}
+                size={"sm"}
+                className="w-full sm:w-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCheckboxChange();
+                }}
+              >
+                {hasAnySelected ? "Selecionado" : "Selecionar"}
+              </Button>
+              {showSelectedCountBadge && (
+                <span
+                  className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex size-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none"
+                  aria-label={`${selectedVariationCount} variações selecionadas`}
+                >
+                  {selectedVariationCount}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -161,7 +220,9 @@ export function ProductCard({
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="space-y-3 p-1">
               {product.variations?.map((v, idx) => {
-                const isSelected = selectedVariations?.includes(v.product_cod);
+                const isSelected = visibleSelectedVariations.includes(
+                  v.product_cod,
+                );
                 return (
                   <button
                     key={v.product_cod || idx}

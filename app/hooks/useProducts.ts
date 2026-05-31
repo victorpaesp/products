@@ -8,11 +8,15 @@ import {
 
 export async function fetchProductsQuery(
   params: ProductsQueryParams,
+  token: string,
 ): Promise<ApiResponse> {
   const query = toProductsApiParams(params);
-  const response = await fetch(`/api/products?${query.toString()}`, {
+  const response = await fetch(`/api/all-products?${query.toString()}`, {
     method: "GET",
     credentials: "same-origin",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   const payload = (await response.json().catch(() => null)) as
@@ -31,10 +35,18 @@ export async function fetchProductsQuery(
   return payload as ApiResponse;
 }
 
-export function useProductsQuery(params: ProductsQueryParams) {
+type UseProductsQueryOptions = {
+  token: string;
+};
+
+export function useProductsQuery(
+  params: ProductsQueryParams,
+  { token }: UseProductsQueryOptions,
+) {
   return useQuery({
     queryKey: productsQueryKeys.list(params),
-    queryFn: () => fetchProductsQuery(params),
+    queryFn: () => fetchProductsQuery(params, token),
     placeholderData: keepPreviousData,
+    staleTime: 0,
   });
 }
