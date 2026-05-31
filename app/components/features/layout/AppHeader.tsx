@@ -1,4 +1,4 @@
-import { Handbag, Search, SearchIcon, ShoppingBag } from "lucide-react";
+import { SearchIcon, ShoppingBag, XIcon } from "lucide-react";
 import {
   useNavigate,
   useRouteLoaderData,
@@ -52,16 +52,54 @@ export function AppHeader({
     submit(null, { method: "post", action: "/logout" });
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const navigateWithSearch = (term: string) => {
     const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set("q", searchInput);
-    newSearchParams.set("page", "1");
-    newSearchParams.delete("variation_search");
+    const trimmed = term.trim();
 
+    if (trimmed) {
+      newSearchParams.set("q", trimmed);
+    } else {
+      newSearchParams.delete("q");
+    }
+
+    newSearchParams.set("page", "1");
+    newSearchParams.delete("color");
     navigate(`/products?${newSearchParams.toString()}`);
   };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    navigateWithSearch(searchInput);
+  };
+
+  const handleClear = () => {
+    setSearchInput("");
+    navigateWithSearch("");
+  };
+
+  const searchField = (inputClassName: string) => (
+    <div className="relative min-w-0 flex-1">
+      <Input
+        type="search"
+        placeholder="Buscar produtos..."
+        className={inputClassName}
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+      />
+      {searchInput.length > 0 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="absolute top-1/2 right-2 size-7 -translate-y-1/2 rounded-full text-neutral-500 hover:text-neutral-700"
+          aria-label="Limpar busca"
+          onClick={handleClear}
+        >
+          <XIcon className="size-4" />
+        </Button>
+      )}
+    </div>
+  );
 
   return (
     <div className="mx-auto flex w-full flex-col items-center rounded-b-lg bg-[#363636] p-2 md:px-10 md:py-0">
@@ -84,14 +122,7 @@ export function AppHeader({
         <div className="mx-auto hidden min-w-0 flex-1 basis-full justify-center sm:flex">
           <form onSubmit={handleSubmit} className="w-full max-w-xl">
             <ButtonGroup className="w-full">
-              <Input
-                name="search"
-                type="search"
-                placeholder="Buscar produtos..."
-                className="h-10 rounded-full p-4"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
+              {searchField("h-10 rounded-l-full rounded-r-none p-4 pr-10")}
               <Button
                 variant="outline"
                 className="rounded-full p-4!"
@@ -155,14 +186,7 @@ export function AppHeader({
       <div className="w-full p-2 sm:hidden">
         <form onSubmit={handleSubmit} className="w-full">
           <ButtonGroup className="w-full">
-            <Input
-              name="search"
-              type="search"
-              placeholder="Buscar produtos..."
-              className="h-10 w-full rounded-full p-4"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
+            {searchField("h-10 w-full rounded-l-full rounded-r-none p-4 pr-10")}
             <Button
               variant="outline"
               className="rounded-full p-4!"
