@@ -180,14 +180,34 @@ export function ProductVariationSelect({
     }
   };
 
-  const triggerLabel =
-    selectedCount === 0
-      ? hasMultipleOptions
-        ? "Selecione uma variação"
-        : "Selecionar produto"
+  const handleTriggerClick = () => {
+    if (!hasMultipleOptions) {
+      const variation = options[0]?.variation;
+      if (variation) handleToggle(variation);
+      return;
+    }
+
+    setOpen((current) => {
+      const next = !current;
+      if (!next) onVariationHoverRef.current?.(null);
+      return next;
+    });
+  };
+
+  const isSingleOptionSelected =
+    !hasMultipleOptions &&
+    options[0] != null &&
+    selectedVariationCodes.includes(options[0].variation.product_cod);
+
+  const triggerLabel = hasMultipleOptions
+    ? selectedCount === 0
+      ? "Selecione uma variação"
       : selectedCount === 1
         ? triggerOption.label
-        : `${selectedCount} variações selecionadas`;
+        : `${selectedCount} variações selecionadas`
+    : isSingleOptionSelected
+      ? "Selecionado"
+      : "Selecionar produto";
 
   const triggerImage = triggerOption
     ? normalizeImageUrl(getVariationOptionImage(triggerOption, product))
@@ -199,19 +219,13 @@ export function ProductVariationSelect({
     <div ref={containerRef} className="relative w-full">
       <button
         type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
+        aria-haspopup={hasMultipleOptions ? "listbox" : undefined}
+        aria-expanded={hasMultipleOptions ? open : undefined}
         className={cn(
           "border-input ring-offset-background focus:ring-ring flex h-auto min-h-9 w-full items-center justify-between gap-3 rounded-md border bg-white px-3 py-2 text-sm shadow-xs focus:ring-1 focus:outline-hidden",
           selectedCount > 0 && "border-primary/40 bg-primary/5",
         )}
-        onClick={() =>
-          setOpen((current) => {
-            const next = !current;
-            if (!next) onVariationHoverRef.current?.(null);
-            return next;
-          })
-        }
+        onClick={handleTriggerClick}
       >
         <span className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <img
@@ -227,7 +241,9 @@ export function ProductVariationSelect({
             <span className="line-clamp-1 font-medium text-neutral-900">
               {triggerLabel}
             </span>
-            {selectedCount === 1 && triggerOption && (
+            {((hasMultipleOptions && selectedCount === 1) ||
+              !hasMultipleOptions) &&
+              triggerOption && (
               <span className="line-clamp-1 text-xs text-neutral-500">
                 Cod: {triggerOption.variation.product_cod} · Estoque:{" "}
                 {triggerOption.variation.stock ?? 0}
@@ -235,13 +251,17 @@ export function ProductVariationSelect({
             )}
           </span>
         </span>
-        <span className="relative ml-2 size-4 shrink-0 text-neutral-500">
-          {open ? (
-            <ChevronUp className="size-4" aria-hidden="true" />
-          ) : (
-            <ChevronDown className="size-4" aria-hidden="true" />
-          )}
-        </span>
+        {hasMultipleOptions ? (
+          <span className="relative ml-2 size-4 shrink-0 text-neutral-500">
+            {open ? (
+              <ChevronUp className="size-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="size-4" aria-hidden="true" />
+            )}
+          </span>
+        ) : isSingleOptionSelected ? (
+          <Check className="text-primary size-4 shrink-0" aria-hidden="true" />
+        ) : null}
         {showVariationCount && selectedCount > 1 && (
           <span className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex size-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none">
             {selectedCount}
@@ -249,7 +269,7 @@ export function ProductVariationSelect({
         )}
       </button>
 
-      {open && (
+      {open && hasMultipleOptions && (
         <div
           role="listbox"
           className="absolute top-[calc(100%+0.25rem)] z-50 max-h-80 w-full overflow-y-auto rounded-md border bg-white p-2 shadow-md"
