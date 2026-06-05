@@ -24,6 +24,7 @@ export type ProductDetailNavigationState = {
 export type ProductsOutletContextType = {
   selectedProducts: SelectedProduct[];
   setSelectedProducts: React.Dispatch<React.SetStateAction<SelectedProduct[]>>;
+  clearSelectedProducts: () => void;
   isDrawerOpen: boolean;
   setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };

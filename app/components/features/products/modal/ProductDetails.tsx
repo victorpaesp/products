@@ -1,6 +1,10 @@
-import { useState } from "react";
-import { useRouteLoaderData } from "@remix-run/react";
-import type { Product, Variation } from "~/types/index";
+import { useEffect, useMemo, useState } from "react";
+import {
+  useOutletContext,
+  useRouteLoaderData,
+  useSearchParams,
+} from "@remix-run/react";
+import type { Product, SelectedProduct, Variation } from "~/types/index";
 import {
   formatPrice,
   formatWeight,
@@ -10,6 +14,11 @@ import {
   hasNonZeroNumber,
   getProviderLogoPath,
   getVariationDifference,
+  getAllProductVariations,
+  getProductVariationCount,
+  getVariationImage,
+  isSameProductVariation,
+  cn,
 } from "~/lib/utils";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
@@ -23,7 +32,9 @@ import {
 } from "~/components/ui/accordion";
 import type { loader as rootLoader } from "~/root";
 import type { ProductDetailsProps } from "~/types/components";
+import type { ProductsOutletContextType } from "~/types/routes";
 import { useUpdateProductDescriptionMutation } from "~/hooks/useProductDescription";
+import { ProductVariationSelect } from "~/components/features/products/modal/ProductVariationSelect";
 
 function getDisplayDescription(product: Product): string {
   if (product.description_override) {
@@ -38,10 +49,6 @@ function hasDescriptionOverride(product: Product): boolean {
   );
 }
 
-function isSameVariation(a: Variation, b: Variation): boolean {
-  return a.id === b.id || a.product_cod === b.product_cod;
-}
-
 function getVariationsForDisplay(product: Product): Variation[] {
   const variations = product.variations ?? [];
   const selected = product.selected_variation;
@@ -54,7 +61,9 @@ function getVariationsForDisplay(product: Product): Variation[] {
     return variations.length > 1 ? variations : [];
   }
 
-  const selectedInList = variations.some((v) => isSameVariation(v, selected));
+  const selectedInList = variations.some((v) =>
+    isSameProductVariation(v, selected),
+  );
   return selectedInList ? variations : [selected, ...variations];
 }
 
@@ -63,7 +72,7 @@ function getVariationStockState(product: Product) {
   const selected = product.selected_variation;
   const variationsToDisplay = getVariationsForDisplay(product);
   const showVariationsInSpecs = variationsToDisplay.length > 0;
-  const totalCount = variations.length + (selected ? 1 : 0);
+  const totalCount = getProductVariationCount(product);
 
   if (totalCount === 1) {
     const single =
@@ -82,17 +91,82 @@ function getVariationStockState(product: Product) {
   };
 }
 
+const HOVER_VALUE_TRANSITION_MS = 200;
+
+function CrossfadeText({
+  value,
+  className,
+}: {
+  value: string;
+  className?: string;
+}) {
+  const [visibleValue, setVisibleValue] = useState(value);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    if (value === visibleValue) return;
+
+    setIsVisible(false);
+    const timeoutId = window.setTimeout(() => {
+      setVisibleValue(value);
+      requestAnimationFrame(() => setIsVisible(true));
+    }, HOVER_VALUE_TRANSITION_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [value, visibleValue]);
+
+  return (
+    <span
+      className={cn(
+        "inline-block transition-opacity ease-in-out",
+        isVisible ? "opacity-100" : "opacity-0",
+        className,
+      )}
+      style={{ transitionDuration: `${HOVER_VALUE_TRANSITION_MS}ms` }}
+    >
+      {visibleValue}
+    </span>
+  );
+}
+
 export function ProductDetails({
   product,
   onProductUpdate,
+  onCarouselPreviewImage,
 }: ProductDetailsProps) {
   const rootData = useRouteLoaderData<typeof rootLoader>("root");
+  const [searchParams] = useSearchParams();
+  const { selectedProducts, setSelectedProducts } =
+    useOutletContext<ProductsOutletContextType>();
   const updateDescriptionMutation = useUpdateProductDescriptionMutation();
   const isAdmin = rootData?.user?.role === "admin";
   const [isEditing, setIsEditing] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
+  const [hoveredVariation, setHoveredVariation] = useState<Variation | null>(
+    null,
+  );
 
   const isSaving = updateDescriptionMutation.isPending;
+  const colorFiltered = Boolean(searchParams.get("color"));
+  const hasMultipleVariations = getProductVariationCount(product) > 1;
+
+  const visibleSelectedVariations = useMemo(() => {
+    const variationCodes = new Set(
+      getAllProductVariations(product).map((v) => v.product_cod),
+    );
+
+    return selectedProducts
+      .filter((item) => item.product.product_cod === product.product_cod)
+      .map((item) => item.variation.product_cod)
+      .filter((cod) =>
+        hasMultipleVariations ? variationCodes.has(cod) : true,
+      );
+  }, [selectedProducts, product, hasMultipleVariations]);
+
+  useEffect(() => {
+    setHoveredVariation(null);
+    onCarouselPreviewImage?.(null);
+  }, [product.id, product.product_cod, onCarouselPreviewImage]);
 
   const displayDescription = getDisplayDescription(product);
   const hasOverride = hasDescriptionOverride(product);
@@ -149,6 +223,45 @@ export function ProductDetails({
     await submitDescription(null);
   };
 
+  const toggleSelectVariation = (variation: Variation) => {
+    setSelectedProducts((prev: SelectedProduct[]) => {
+      const isSelected = prev.some(
+        (item) =>
+          item.product.product_cod === product.product_cod &&
+          item.variation.product_cod === variation.product_cod,
+      );
+
+      if (isSelected) {
+        return prev.filter(
+          (item) =>
+            !(
+              item.product.product_cod === product.product_cod &&
+              item.variation.product_cod === variation.product_cod
+            ),
+        );
+      }
+
+      return [...prev, { product, variation, colorFiltered }];
+    });
+  };
+
+  const handleVariationHover = (variation: Variation | null) => {
+    setHoveredVariation(variation);
+    onCarouselPreviewImage?.(
+      variation ? getVariationImage(variation) : null,
+    );
+  };
+
+  const displayPrice = hoveredVariation?.price ?? product.price;
+  const displayStock =
+    hoveredVariation != null ? hoveredVariation.stock : displayedStock;
+  const showStockHint =
+    hoveredVariation == null &&
+    displayedStock === null &&
+    showVariationsInSpecs;
+  const showStockValue = displayStock !== null;
+  const formattedDisplayPrice = formatPrice(displayPrice);
+
   return (
     <div className="flex h-full w-full flex-col gap-8 sm:w-1/2">
       <div className="flex flex-col gap-2">
@@ -159,9 +272,10 @@ export function ProductDetails({
           {product.name}
         </h2>
       </div>
-      <span className="text-2xl font-bold text-neutral-900">
-        {formatPrice(product.price)}
-      </span>
+      <CrossfadeText
+        value={formattedDisplayPrice}
+        className="text-2xl font-bold text-neutral-900"
+      />
       {isAdmin && (
         <span>
           <img
@@ -172,18 +286,43 @@ export function ProductDetails({
         </span>
       )}
 
-      {displayedStock !== null ? (
-        <div className="mt-1 flex items-center gap-1">
-          <p className="text-xs text-neutral-500">Estoque:</p>
-          <p className="text-base font-semibold text-neutral-900">
-            {displayedStock}
+      {(showStockValue || showStockHint) && (
+        <div className="relative mt-1 grid min-h-6 *:col-start-1 *:row-start-1">
+          <div
+            className={cn(
+              "flex items-center gap-1 transition-opacity ease-in-out",
+              showStockValue ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+            style={{ transitionDuration: `${HOVER_VALUE_TRANSITION_MS}ms` }}
+          >
+            <p className="shrink-0 text-xs text-neutral-500">Estoque:</p>
+            <p className="text-base font-semibold text-neutral-900 tabular-nums">
+              {displayStock}
+            </p>
+          </div>
+          <p
+            className={cn(
+              "flex items-center text-xs text-neutral-500 transition-opacity ease-in-out",
+              showStockHint ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+            style={{ transitionDuration: `${HOVER_VALUE_TRANSITION_MS}ms` }}
+          >
+            Estoque individual por variação — consulte as especificações
           </p>
         </div>
-      ) : showVariationsInSpecs ? (
-        <div className="mt-1 text-xs text-neutral-500">
-          Estoque individual por variação — consulte as especificações
-        </div>
-      ) : null}
+      )}
+
+      <div className="flex flex-col gap-3">
+        <p className="text-base font-semibold text-neutral-900">
+          {hasMultipleVariations ? "Variações disponíveis" : "Seleção do produto"}
+        </p>
+        <ProductVariationSelect
+          product={product}
+          selectedVariationCodes={visibleSelectedVariations}
+          onToggleVariation={toggleSelectVariation}
+          onVariationHover={handleVariationHover}
+        />
+      </div>
 
       <div className="flex flex-col gap-2">
         <Accordion
@@ -409,10 +548,13 @@ export function ProductDetails({
                     </div>
                     <div className="flex flex-col gap-2">
                       {variationsToDisplay.map((variation, index) => (
-                        <div key={index} className="grid grid-cols-3 gap-4">
-                          <div>
+                        <div
+                          key={index}
+                          className="grid grid-cols-1 gap-4 rounded-lg border border-neutral-200 p-2 md:grid-cols-3"
+                        >
+                          <div className="min-w-0">
                             <p className="text-xs text-neutral-500">Variação</p>
-                            <p className="text-base font-semibold text-neutral-900">
+                            <p className="min-w-0 text-base font-semibold wrap-break-word text-neutral-900">
                               {getVariationDifference(
                                 product.name,
                                 variation.name,

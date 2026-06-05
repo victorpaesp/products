@@ -3,7 +3,7 @@ import { PhoneInput } from "~/components/ui/phone-input";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { useState, useEffect, useRef } from "react";
-import { useRevalidator, useSubmit } from "@remix-run/react";
+import { useRevalidator, useSubmit, useOutletContext } from "@remix-run/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import { PasswordInput } from "~/components/ui/password-input";
@@ -17,11 +17,14 @@ import {
   useUpdateProfileMutation,
 } from "~/hooks/useSettings";
 import { usersQueryKeys } from "~/hooks/useUsers";
+import type { ProductsOutletContextType } from "~/types/routes";
 
 export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
   const submit = useSubmit();
   const revalidator = useRevalidator();
   const queryClient = useQueryClient();
+  const { clearSelectedProducts } =
+    useOutletContext<ProductsOutletContextType>();
   const profileMutation = useUpdateProfileMutation();
   const passwordMutation = useUpdatePasswordMutation();
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -51,6 +54,7 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
   const changingPassword = passwordMutation.isPending;
 
   const handleLogout = () => {
+    clearSelectedProducts();
     sessionStorage.clear();
     submit(null, { method: "post", action: "/logout" });
   };

@@ -324,6 +324,138 @@ export const getProductImage = (product: {
   return DEFAULT_PRODUCT_PLACEHOLDER;
 };
 
+export const isSameProductVariation = (
+  a: { id: number; product_cod: string },
+  b: { id: number; product_cod: string },
+): boolean => a.id === b.id || a.product_cod === b.product_cod;
+
+export function getAllProductVariations<
+  T extends { id: number; product_cod: string },
+>(product: { variations?: T[]; selected_variation?: T }): T[] {
+  const variations = product.variations ?? [];
+  const selected = product.selected_variation;
+
+  if (selected && variations.length === 0) {
+    return [selected];
+  }
+
+  if (!selected) {
+    return variations;
+  }
+
+  const selectedInList = variations.some((v) =>
+    isSameProductVariation(v, selected),
+  );
+  return selectedInList ? variations : [selected, ...variations];
+}
+
+export function getProductVariationCount(product: {
+  variations?: unknown[];
+  selected_variation?: unknown;
+}): number {
+  const variations = product.variations ?? [];
+  const selected = product.selected_variation;
+  return variations.length + (selected ? 1 : 0);
+}
+
+export type ProductColorSelectOption<
+  T extends {
+    id: number;
+    product_cod: string;
+    name: string;
+    images?: Array<string | string[]>;
+    colors?: Array<{ color?: { id: number; name: string } }>;
+  } = {
+    id: number;
+    product_cod: string;
+    name: string;
+    images?: Array<string | string[]>;
+    colors?: Array<{ color?: { id: number; name: string } }>;
+  },
+> = {
+  id: string;
+  label: string;
+  variations: T[];
+};
+
+function countVariationsPerColorName<
+  T extends {
+    product_cod: string;
+    colors?: Array<{ color?: { name: string } }>;
+  },
+>(variations: T[]): Map<string, number> {
+  const nameToVariationCount = new Map<string, number>();
+
+  for (const variation of variations) {
+    const namesInVariation = new Set<string>();
+
+    for (const entry of variation.colors ?? []) {
+      const name = entry.color?.name?.trim();
+      if (!name || namesInVariation.has(name)) continue;
+      namesInVariation.add(name);
+    }
+
+    for (const name of namesInVariation) {
+      nameToVariationCount.set(name, (nameToVariationCount.get(name) ?? 0) + 1);
+    }
+  }
+
+  return nameToVariationCount;
+}
+
+export function getProductColorSelectOptions<
+  T extends {
+    id: number;
+    product_cod: string;
+    name: string;
+    images?: Array<string | string[]>;
+    colors?: Array<{ color?: { id: number; name: string } }>;
+  },
+>(product: {
+  name: string;
+  variations?: T[];
+  selected_variation?: T;
+}): ProductColorSelectOption<T>[] {
+  const allVariations = getAllProductVariations(product);
+  const colorNameVariationCount = countVariationsPerColorName(allVariations);
+  const colorMap = new Map<string, ProductColorSelectOption<T>>();
+
+  for (const variation of allVariations) {
+    const colorEntries = variation.colors ?? [];
+    if (colorEntries.length > 0) {
+      const seenNamesInVariation = new Set<string>();
+
+      for (const entry of colorEntries) {
+        const color = entry.color;
+        const name = color?.name?.trim();
+        if (!name || !color?.id || seenNamesInVariation.has(name)) continue;
+        seenNamesInVariation.add(name);
+
+        if ((colorNameVariationCount.get(name) ?? 0) !== 1) continue;
+
+        const key = String(color.id);
+        colorMap.set(key, {
+          id: key,
+          label: name,
+          variations: [variation],
+        });
+      }
+      continue;
+    }
+
+    const key = `variation-${variation.product_cod}`;
+    colorMap.set(key, {
+      id: key,
+      label: getVariationDifference(product.name, variation.name),
+      variations: [variation],
+    });
+  }
+
+  return Array.from(colorMap.values()).sort((a, b) =>
+    a.label.localeCompare(b.label, "pt-BR"),
+  );
+}
+
 export const getVariationImage = (variation: {
   images?: Array<string | string[]>;
 }): string | null => {

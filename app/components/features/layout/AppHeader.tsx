@@ -23,6 +23,7 @@ import type { AppHeaderProps } from "~/types/components";
 export function AppHeader({
   selectedProducts = [],
   onOpenDrawer,
+  onClearSelectedProducts,
 }: AppHeaderProps) {
   const navigate = useNavigate();
   const submit = useSubmit();
@@ -48,6 +49,7 @@ export function AppHeader({
   }, [searchTerm]);
 
   const handleLogout = () => {
+    onClearSelectedProducts?.();
     sessionStorage.clear();
     submit(null, { method: "post", action: "/logout" });
   };

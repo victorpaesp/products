@@ -217,23 +217,6 @@ export default function Products() {
     sortOrder = searchParams.get("sort[price]") as "asc" | "desc";
   }
 
-  useEffect(() => {
-    const saved = sessionStorage.getItem("selectedProducts");
-    if (saved) {
-      try {
-        setSelectedProducts(JSON.parse(saved));
-      } catch (error) {
-        console.error("Erro ao carregar produtos selecionados:", error);
-        sessionStorage.removeItem("selectedProducts");
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const value = JSON.stringify(selectedProducts);
-    sessionStorage.setItem("selectedProducts", value);
-  }, [selectedProducts]);
-
   const toggleSelectProduct = (
     product: Product,
     variation: Product["variations"][0],

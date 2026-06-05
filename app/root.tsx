@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useNavigation,
   useRouteError,
 } from "@remix-run/react";
@@ -15,6 +16,7 @@ import { ProductsDrawer } from "~/components/features/products/ProductsDrawer";
 import { useEffect, useState } from "react";
 import { useLocation } from "@remix-run/react";
 import { Toaster } from "~/components/ui/sonner";
+import { useSelectedProducts } from "~/hooks/useSelectedProducts";
 import {
   clearReloadMarkers,
   hasAlreadyReloadedOnce,
@@ -27,7 +29,6 @@ import {
   type LoaderFunctionArgs,
   type LinksFunction,
 } from "@remix-run/node";
-import type { SelectedProduct } from "~/types";
 import { getSessionUser } from "~/lib/auth.server";
 import { QueryProvider } from "~/components/providers/QueryProvider";
 
@@ -75,17 +76,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const { user } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const isNavigating = navigation.state !== "idle";
   const [showGlobalProgress, setShowGlobalProgress] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
-    [],
-  );
+  const { selectedProducts, setSelectedProducts, clearSelectedProducts } =
+    useSelectedProducts(Boolean(user));
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
   const hideHeaderRoutes = ["/login", "/register", "/reset-password"];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+
+  useEffect(() => {
+    if (!user) {
+      setIsDrawerOpen(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!isNavigating) {
@@ -116,6 +123,7 @@ export default function App() {
           <AppHeader
             selectedProducts={selectedProducts}
             onOpenDrawer={() => setIsDrawerOpen(true)}
+            onClearSelectedProducts={clearSelectedProducts}
           />
         )}
         <div className="flex-1">
@@ -123,6 +131,7 @@ export default function App() {
             context={{
               selectedProducts,
               setSelectedProducts,
+              clearSelectedProducts,
               isDrawerOpen,
               setIsDrawerOpen,
             }}

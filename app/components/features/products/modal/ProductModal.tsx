@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ProductModalProps } from "~/types/components";
 import { ImageCarousel } from "./ImageCarousel";
 import { ProductDetails } from "./ProductDetails";
@@ -10,6 +11,9 @@ export function ProductModal({
   onClose,
   onProductUpdate,
 }: ProductModalProps) {
+  const [carouselPreviewImage, setCarouselPreviewImage] = useState<
+    string | null
+  >(null);
   const allImages = getProductCarouselImages(product);
 
   return (
@@ -29,8 +33,16 @@ export function ProductModal({
           </DialogTitle>
         </div>
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:flex-row sm:gap-8 sm:p-6">
-          <ImageCarousel images={allImages} productName={product.name} />
-          <ProductDetails product={product} onProductUpdate={onProductUpdate} />
+          <ImageCarousel
+            images={allImages}
+            productName={product.name}
+            mainImage={carouselPreviewImage ?? undefined}
+          />
+          <ProductDetails
+            product={product}
+            onProductUpdate={onProductUpdate}
+            onCarouselPreviewImage={setCarouselPreviewImage}
+          />
         </div>
       </DialogContent>
     </Dialog>

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { FreeMode, Mousewheel, Navigation, Thumbs } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
-import { normalizeImageUrl } from "~/lib/utils";
+import { normalizeImageUrl, cn } from "~/lib/utils";
 import type { ImageCarouselProps } from "~/types/components";
 
 import "swiper/css";
@@ -44,6 +44,26 @@ export function ImageCarousel({
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [thumbsAtStart, setThumbsAtStart] = useState(true);
+  const [thumbsAtEnd, setThumbsAtEnd] = useState(false);
+  const loadRequestIdRef = useRef(0);
+
+  const updateThumbsEdges = (swiper: SwiperType) => {
+    setThumbsAtStart(swiper.isBeginning);
+    setThumbsAtEnd(swiper.isEnd);
+  };
+
+  const goToImage = (index: number) => {
+    if (!mainSwiper || mainSwiper.destroyed) return;
+
+    setCurrentImageIndex(index);
+
+    if (validImages.length > 1) {
+      mainSwiper.slideToLoop(index);
+    } else {
+      mainSwiper.slideTo(index);
+    }
+  };
 
   const getImageSrc = (index: number) => {
     if (imageErrors[index]) return "/logo-santomimo.png";
@@ -52,6 +72,33 @@ export function ImageCarousel({
 
   const currentImageSrc = getImageSrc(currentImageIndex);
 
+  const validImagesKey = validImages.join("\0");
+
+  const thumbMaskStyle = useMemo((): CSSProperties => {
+    if (thumbsAtStart && thumbsAtEnd) return {};
+
+    const fade = "2.5rem";
+
+    if (thumbsAtStart) {
+      return {
+        maskImage: `linear-gradient(to right, black calc(100% - ${fade}), transparent)`,
+        WebkitMaskImage: `linear-gradient(to right, black calc(100% - ${fade}), transparent)`,
+      };
+    }
+
+    if (thumbsAtEnd) {
+      return {
+        maskImage: `linear-gradient(to right, transparent, black ${fade})`,
+        WebkitMaskImage: `linear-gradient(to right, transparent, black ${fade})`,
+      };
+    }
+
+    return {
+      maskImage: `linear-gradient(to right, transparent, black ${fade}, black calc(100% - ${fade}), transparent)`,
+      WebkitMaskImage: `linear-gradient(to right, transparent, black ${fade}, black calc(100% - ${fade}), transparent)`,
+    };
+  }, [thumbsAtStart, thumbsAtEnd]);
+
   useEffect(() => {
     if (currentImageIndex >= validImages.length) {
       setCurrentImageIndex(0);
@@ -59,58 +106,67 @@ export function ImageCarousel({
   }, [currentImageIndex, validImages.length]);
 
   useEffect(() => {
+    setCurrentImageIndex(0);
+    setImageErrors({});
+  }, [mainImage, validImagesKey]);
+
+  useEffect(() => {
+    if (!mainSwiper || mainSwiper.destroyed) return;
+
+    if (validImages.length > 1) {
+      mainSwiper.slideToLoop(0, 0);
+    } else {
+      mainSwiper.slideTo(0, 0);
+    }
+  }, [mainImage, validImagesKey, mainSwiper, validImages.length]);
+
+  useEffect(() => {
     if (!thumbsSwiper || thumbsSwiper.destroyed) return;
     thumbsSwiper.slideTo(currentImageIndex);
+    requestAnimationFrame(() => updateThumbsEdges(thumbsSwiper));
   }, [currentImageIndex, thumbsSwiper]);
 
   useEffect(() => {
-    let cancelled = false;
+    const requestId = ++loadRequestIdRef.current;
 
     setIsLoading(true);
 
     const preloader = new Image();
     preloader.src = currentImageSrc;
 
-    const handleLoaded = () => {
-      if (!cancelled) {
-        setIsLoading(false);
+    const finishLoading = (failed = false) => {
+      if (requestId !== loadRequestIdRef.current) return;
+
+      if (failed) {
+        setImageErrors((prev) => ({
+          ...prev,
+          [currentImageIndex]: true,
+        }));
       }
-    };
-
-    const handleError = () => {
-      if (cancelled) return;
-
-      setImageErrors((prev) => ({
-        ...prev,
-        [currentImageIndex]: true,
-      }));
 
       setIsLoading(false);
     };
 
-    if (preloader.complete && preloader.naturalWidth > 0) {
-      handleLoaded();
+    if (preloader.complete) {
+      finishLoading();
     } else {
-      preloader.onload = handleLoaded;
-      preloader.onerror = handleError;
+      preloader.onload = () => finishLoading();
+      preloader.onerror = () => finishLoading(true);
     }
 
     return () => {
-      cancelled = true;
       preloader.onload = null;
       preloader.onerror = null;
     };
-  }, [currentImageIndex, currentImageSrc]);
+  }, [currentImageIndex, currentImageSrc, mainImage, validImagesKey]);
 
   const nextImage = () => {
     if (!mainSwiper) return;
-    setIsLoading(true);
     mainSwiper.slideNext();
   };
 
   const prevImage = () => {
     if (!mainSwiper) return;
-    setIsLoading(true);
     mainSwiper.slidePrev();
   };
 
@@ -128,8 +184,7 @@ export function ImageCarousel({
           navigation={false}
           onSwiper={setMainSwiper}
           onSlideChange={(swiper) => {
-            const nextIndex = swiper.realIndex;
-            setCurrentImageIndex(nextIndex);
+            setCurrentImageIndex(swiper.realIndex);
           }}
           thumbs={{
             swiper:
@@ -183,46 +238,66 @@ export function ImageCarousel({
       </div>
 
       {validImages.length > 1 && (
-        <div className="flex justify-center">
-          <Swiper
-            modules={[FreeMode, Thumbs, Mousewheel]}
-            onSwiper={setThumbsSwiper}
-            spaceBetween={8}
-            slidesPerView="auto"
-            centerInsufficientSlides
-            freeMode
-            watchSlidesProgress
-            mousewheel={{ forceToAxis: true }}
-            className="h-12 w-full max-w-[328px]"
-          >
-            {validImages.map((imageUrl, index) => (
-              <SwiperSlide key={imageUrl + index} className="w-12!">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    if (!mainSwiper || index === currentImageIndex) return;
-                    mainSwiper.slideToLoop(index);
-                  }}
-                  className={`h-12 w-12 overflow-hidden rounded-md border p-0 transition-all ${
-                    index === currentImageIndex
-                      ? "border-black"
-                      : "border-neutral-300 hover:border-neutral-500"
-                  }`}
-                  aria-label={`Ir para imagem ${index + 1}`}
-                >
-                  <img
-                    src={getImageSrc(index)}
-                    alt={`${productName} - Miniatura ${index + 1}`}
-                    onError={() =>
-                      setImageErrors((prev) => ({ ...prev, [index]: true }))
+        <div className="mx-auto w-full max-w-[328px]">
+          <div className="relative overflow-hidden" style={thumbMaskStyle}>
+            <Swiper
+              modules={[FreeMode, Thumbs, Mousewheel]}
+              onSwiper={(swiper) => {
+                setThumbsSwiper(swiper);
+                updateThumbsEdges(swiper);
+              }}
+              onSlideChange={updateThumbsEdges}
+              onResize={updateThumbsEdges}
+              onReachBeginning={() => setThumbsAtStart(true)}
+              onReachEnd={() => setThumbsAtEnd(true)}
+              onFromEdge={updateThumbsEdges}
+              spaceBetween={8}
+              slidesPerView="auto"
+              centerInsufficientSlides
+              freeMode
+              watchSlidesProgress
+              mousewheel={{ forceToAxis: true }}
+              className="h-12 w-full"
+            >
+              {validImages.map((imageUrl, index) => (
+                <SwiperSlide key={imageUrl + index} className="w-12!">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      if (index === currentImageIndex) return;
+                      goToImage(index);
+                    }}
+                    className={cn(
+                      "h-12 w-12 overflow-hidden rounded-md border p-0 transition-all",
+                      index === currentImageIndex
+                        ? "border-black"
+                        : "border-neutral-300 hover:border-neutral-500",
+                    )}
+                    aria-label={`Ir para imagem ${index + 1}`}
+                    aria-current={
+                      index === currentImageIndex ? "true" : undefined
                     }
-                    className="h-full w-full object-cover"
-                  />
-                </Button>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                  >
+                    <img
+                      src={getImageSrc(index)}
+                      alt={`${productName} - Miniatura ${index + 1}`}
+                      onError={() =>
+                        setImageErrors((prev) => ({ ...prev, [index]: true }))
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  </Button>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+
+          {validImages.length > 6 && (
+            <p className="mt-1.5 text-center text-xs text-neutral-500">
+              {currentImageIndex + 1} de {validImages.length} imagens
+            </p>
+          )}
         </div>
       )}
     </div>

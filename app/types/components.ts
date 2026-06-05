@@ -111,6 +111,7 @@ export type RegisterFormProps = {
 export type AppHeaderProps = {
   selectedProducts?: SelectedProduct[];
   onOpenDrawer?: () => void;
+  onClearSelectedProducts?: () => void;
 };
 
 export type SearchBarProps = AppHeaderProps;
@@ -147,6 +148,7 @@ export type DescriptionActionData = {
 export type ProductDetailsProps = {
   product: Product;
   onProductUpdate?: (updatedProduct: Product) => void;
+  onCarouselPreviewImage?: (image: string | null) => void;
 };
 
 export type EmptyStateProps = {

@@ -66,6 +66,9 @@ export default function ProductDetailPage() {
     navState?.listingProduct ?? findProductInListCache(queryClient, productId);
 
   const [updatedProduct, setUpdatedProduct] = useState<Product | null>(null);
+  const [carouselPreviewImage, setCarouselPreviewImage] = useState<
+    string | null
+  >(null);
 
   const displayProduct = useMemo(() => {
     const baseProduct = updatedProduct ?? product;
@@ -139,10 +142,15 @@ export default function ProductDetailPage() {
       </div>
 
       <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
-        <ImageCarousel images={allImages} productName={displayProduct.name} />
+        <ImageCarousel
+          images={allImages}
+          productName={displayProduct.name}
+          mainImage={carouselPreviewImage ?? undefined}
+        />
         <ProductDetails
           product={displayProduct}
           onProductUpdate={setUpdatedProduct}
+          onCarouselPreviewImage={setCarouselPreviewImage}
         />
       </div>
     </section>

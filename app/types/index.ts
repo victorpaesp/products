@@ -93,6 +93,10 @@ export type Product = {
   fiscal_classification_code: string | number;
 };
 
+export type VariationColorEntry = {
+  color: ProductColor;
+};
+
 export type Variation = {
   id: number;
   product_id: number;
@@ -101,6 +105,7 @@ export type Variation = {
   price: string;
   stock: number;
   images: string[];
+  colors?: VariationColorEntry[];
 };
 
 export type SelectedProduct = {
