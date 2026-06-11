@@ -45,6 +45,7 @@ import {
 } from "~/lib/products-query";
 import { fetchProductsQuery, useProductsQuery } from "~/hooks/useProducts";
 import { useColorsQuery } from "~/hooks/useColors";
+import { useSuppliersQuery } from "~/hooks/useSuppliers";
 import { BackendApiError } from "~/lib/backend.server";
 import { useCacheStatus } from "~/hooks/useCacheStatus";
 import { CacheIndicator } from "~/components/shared/CacheIndicator";
@@ -133,9 +134,12 @@ export default function Products() {
 
   const isProductsGridLoading = isFetching && !errorMessage;
   const selectedColor = searchParams.get("color") || "";
+  const selectedSupplierId = searchParams.get("supplier_id") || "";
   const { data: colors = [] } = useColorsQuery(loaderData.token);
+  const { data: suppliers = [] } = useSuppliersQuery(loaderData.token);
 
   type ColorOption = { id: string; name: string };
+  type SupplierOption = { id: string; name: string };
 
   const colorOptions = useMemo<ColorOption[]>(
     () =>
@@ -146,8 +150,20 @@ export default function Products() {
     [colors],
   );
 
+  const supplierOptions = useMemo<SupplierOption[]>(
+    () =>
+      suppliers.map((supplier) => ({
+        id: String(supplier.id),
+        name: supplier.name,
+      })),
+    [suppliers],
+  );
+
   const [selectedColorOption, setSelectedColorOption] =
     useState<ColorOption | null>(null);
+
+  const [selectedSupplierOption, setSelectedSupplierOption] =
+    useState<SupplierOption | null>(null);
 
   useEffect(() => {
     if (!selectedColor) {
@@ -170,6 +186,30 @@ export default function Products() {
       );
     });
   }, [colorOptions, selectedColor]);
+
+  useEffect(() => {
+    if (!selectedSupplierId) {
+      setSelectedSupplierOption(null);
+      return;
+    }
+
+    setSelectedSupplierOption(
+      supplierOptions.find((option) => option.id === selectedSupplierId) ??
+        null,
+    );
+  }, [selectedSupplierId]);
+
+  useEffect(() => {
+    if (!selectedSupplierId) return;
+
+    setSelectedSupplierOption((current) => {
+      if (current?.id === selectedSupplierId) return current;
+      return (
+        supplierOptions.find((option) => option.id === selectedSupplierId) ??
+        current
+      );
+    });
+  }, [supplierOptions, selectedSupplierId]);
 
   const pendingSearchParams = useMemo(() => searchParams, [searchParams]);
 
@@ -361,12 +401,54 @@ export default function Products() {
                 >
                   <ComboboxInput
                     id="color-select"
-                    placeholder="Selecione uma cor"
+                    placeholder="Selecione"
                     className="w-full sm:w-48"
                     showClear={Boolean(selectedColorOption)}
                   />
                   <ComboboxContent className="max-h-62 min-w-[calc(100%+28px)]">
                     <ComboboxEmpty>Nenhuma cor encontrada.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(option) => (
+                        <ComboboxItem key={option.id} value={option}>
+                          {option.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
+                <label
+                  htmlFor="supplier-select"
+                  className="mb-1 text-sm whitespace-nowrap sm:mb-0"
+                >
+                  Filtrar por fornecedor:
+                </label>
+                <Combobox
+                  items={supplierOptions}
+                  itemToStringLabel={(option) => option.name}
+                  isItemEqualToValue={(a, b) => a.id === b.id}
+                  value={selectedSupplierOption}
+                  onValueChange={(option) => {
+                    setSelectedSupplierOption(option);
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    if (!option) {
+                      newSearchParams.delete("supplier_id");
+                    } else {
+                      newSearchParams.set("supplier_id", option.id);
+                    }
+                    newSearchParams.set("page", "1");
+                    setSearchParams(newSearchParams);
+                  }}
+                >
+                  <ComboboxInput
+                    id="supplier-select"
+                    placeholder="Selecione"
+                    className="w-full sm:w-48"
+                    showClear={Boolean(selectedSupplierOption)}
+                  />
+                  <ComboboxContent className="max-h-62 min-w-[calc(100%+28px)]">
+                    <ComboboxEmpty>Nenhum fornecedor encontrado.</ComboboxEmpty>
                     <ComboboxList>
                       {(option) => (
                         <ComboboxItem key={option.id} value={option}>

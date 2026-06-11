@@ -3,6 +3,7 @@ import type {
   ColorsApiResponse,
   LoginResponse,
   RegisterData,
+  SuppliersApiResponse,
   User,
 } from "~/types";
 import type { RequestOptions } from "~/types/server";
@@ -123,6 +124,13 @@ export async function backendListProducts(options: {
 
 export async function backendListColors(options: { token: string }) {
   return backendRequest<ColorsApiResponse>("/colors", {
+    method: "GET",
+    token: options.token,
+  });
+}
+
+export async function backendListSuppliers(options: { token: string }) {
+  return backendRequest<SuppliersApiResponse>("/suppliers", {
     method: "GET",
     token: options.token,
   });

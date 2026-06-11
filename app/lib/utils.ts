@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { ProductSupplier } from "~/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -263,47 +264,108 @@ export const normalizeImageUrl = (
   return fallback;
 };
 
-export const providerLogoMap: Record<string, string> = {
-  AsianImport: "/asiaimport-logo.png",
-  MinhaXBZ: "/xbz-logo.png",
-  SpotGifts: "/spotgifts-logo.png",
+/** Fallback local quando supplier.image vem vazio, null ou undefined. */
+export const supplierLogoFallbackMap: Record<string, string> = {
+  "asia-import": "/asiaimport-logo.png",
+  xbz: "/xbz-logo.png",
+  spot: "/spotgifts-logo.png",
+  wooch: "/wooch-logo.png",
 };
 
-export const providerDisplayNameMap: Record<string, string> = {
-  AsianImport: "Asia Import",
-  MinhaXBZ: "XBZ Brindes",
-  SpotGifts: "SPOT",
+export const supplierLogoHeightClassMap: Record<string, string> = {
+  xbz: "h-25",
+  wooch: "h-15",
+  "asia-import": "h-25",
+  spot: "h-20",
 };
 
-export const getProviderLogoPath = (provider?: string): string => {
-  if (!provider || typeof provider !== "string") {
-    return "/logo-santomimo.png";
+const supplierIdAliasMap: Record<number, keyof typeof supplierLogoFallbackMap> = {
+  1: "wooch",
+  2: "xbz",
+  3: "asia-import",
+  4: "spot",
+};
+
+const legacyProviderAliasMap: Record<string, keyof typeof supplierLogoFallbackMap> =
+  {
+    wooch: "wooch",
+    MinhaXBZ: "xbz",
+    xbz: "xbz",
+    AsianImport: "asia-import",
+    "asia-import": "asia-import",
+    "asia-imports": "asia-import",
+    asiaimport: "asia-import",
+    SpotGifts: "spot",
+    spot: "spot",
+    spotgifts: "spot",
+  };
+
+export function resolveSupplierAlias(
+  supplier?: Pick<ProductSupplier, "alias" | "id"> | null,
+): keyof typeof supplierLogoFallbackMap | undefined {
+  if (!supplier) return undefined;
+
+  const aliasCandidates = [
+    supplier.alias?.trim(),
+    supplier.alias?.trim().toLowerCase(),
+  ].filter(Boolean) as string[];
+
+  for (const candidate of aliasCandidates) {
+    if (candidate in supplierLogoFallbackMap) {
+      return candidate as keyof typeof supplierLogoFallbackMap;
+    }
+
+    const legacyAlias = legacyProviderAliasMap[candidate];
+    if (legacyAlias) return legacyAlias;
   }
 
-  return providerLogoMap[provider] ?? "/logo-santomimo.png";
+  return supplierIdAliasMap[supplier.id];
+}
+
+export const getSupplierDisplayName = (
+  supplier?: Pick<ProductSupplier, "name">,
+): string => supplier?.name?.trim() ?? "";
+
+export const getSupplierLogoFallbackPath = (
+  supplier?: Pick<ProductSupplier, "alias" | "id"> | null,
+): string | null => {
+  const alias = resolveSupplierAlias(supplier);
+  if (alias) return supplierLogoFallbackMap[alias];
+
+  return null;
 };
 
-export const getProviderDisplayName = (provider?: string): string => {
-  if (!provider || typeof provider !== "string") {
-    return "";
+export const getSupplierLogoPath = (
+  supplier?: Pick<ProductSupplier, "alias" | "image" | "id"> | null,
+): string | null => {
+  const image = supplier?.image?.trim();
+  if (image) return image;
+
+  return getSupplierLogoFallbackPath(supplier);
+};
+
+export const getSupplierLogoHeightClass = (
+  supplier?: Pick<ProductSupplier, "alias" | "id"> | null,
+): string => {
+  const alias = resolveSupplierAlias(supplier);
+  if (alias && supplierLogoHeightClassMap[alias]) {
+    return supplierLogoHeightClassMap[alias];
   }
 
-  return providerDisplayNameMap[provider] ?? provider;
+  return "h-15";
 };
 
 /**
- * Obtém a URL da imagem correta do produto baseado no provider
- * Para "MinhaXBZ", usa gallery[1] se existir, caso contrário usa image
- * @param product O produto
- * @returns URL da imagem
+ * Obtém a URL da imagem correta do produto baseado no fornecedor.
+ * Para XBZ, usa gallery[1] se existir, caso contrário usa image.
  */
 export const getProductImage = (product: {
-  provider: string;
+  supplier?: Pick<ProductSupplier, "alias">;
   image: string;
   gallery?: string[];
 }): string => {
   if (
-    product.provider === "MinhaXBZ" &&
+    product.supplier?.alias === "xbz" &&
     Array.isArray(product.gallery) &&
     product.gallery[1]
   ) {
@@ -474,7 +536,7 @@ export const getVariationImage = (variation: {
  * imagem da variação para a primeira posição se já estiver na lista.
  */
 export const getProductCarouselImages = (product: {
-  provider: string;
+  supplier?: Pick<ProductSupplier, "alias">;
   image: string;
   gallery?: string[];
   selected_variation?: { images?: Array<string | string[]> };
@@ -501,7 +563,7 @@ export const getProductCarouselImages = (product: {
 
 export const getProductCardImage = (
   product: {
-    provider: string;
+    supplier?: Pick<ProductSupplier, "alias">;
     image: string;
     gallery?: string[];
     variations?: Array<{ images?: Array<string | string[]> }>;

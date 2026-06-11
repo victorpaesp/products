@@ -1,5 +1,5 @@
-import type { ApiResponse, Link, Product } from "~/types";
-import { removeHtmlTags } from "~/lib/utils";
+import type { ApiResponse, Link, Product, ProductSupplier } from "~/types";
+import { removeHtmlTags, resolveSupplierAlias } from "~/lib/utils";
 import { backendGetProduct, backendListProducts } from "~/lib/backend.server";
 
 type ListMeta = Omit<ApiResponse, "data" | "success" | "filters">;
@@ -124,9 +124,38 @@ function normalizeProductsResponse(raw: unknown): ApiResponse {
   };
 }
 
-function mapProduct(product: Product): Product {
+function normalizeSupplier(
+  product: Product & { provider?: string },
+): ProductSupplier {
+  if (product.supplier && typeof product.supplier === "object") {
+    const alias =
+      resolveSupplierAlias(product.supplier) ?? product.supplier.alias?.trim() ?? "";
+
+    return {
+      id: product.supplier.id,
+      name: product.supplier.name?.trim() ?? "",
+      alias,
+      image: product.supplier.image ?? null,
+    };
+  }
+
+  const legacyProvider = product.provider?.trim();
+  const alias = legacyProvider
+    ? (resolveSupplierAlias({ id: 0, alias: legacyProvider }) ?? legacyProvider)
+    : "";
+
+  return {
+    id: 0,
+    name: legacyProvider ?? "",
+    alias,
+    image: null,
+  };
+}
+
+function mapProduct(product: Product & { provider?: string }): Product {
   return {
     ...product,
+    supplier: normalizeSupplier(product),
     description: removeHtmlTags(product.description ?? ""),
     gallery: product.gallery ?? [],
     variations: product.variations ?? [],

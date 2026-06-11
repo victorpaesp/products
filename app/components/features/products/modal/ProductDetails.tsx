@@ -12,7 +12,10 @@ import {
   parseDimensions,
   formatNumberWithoutUnnecessaryDecimals,
   hasNonZeroNumber,
-  getProviderLogoPath,
+  getSupplierLogoPath,
+  getSupplierLogoFallbackPath,
+  getSupplierLogoHeightClass,
+  getSupplierDisplayName,
   getVariationDifference,
   getAllProductVariations,
   getProductVariationCount,
@@ -172,7 +175,10 @@ export function ProductDetails({
   const hasOverride = hasDescriptionOverride(product);
   const formattedProductWeight = formatWeight(product.product_weight);
   const formattedBoxWeight = formatBoxWeight(product.box_weight);
-  const logoPath = getProviderLogoPath(product.provider);
+  const logoPath = getSupplierLogoPath(product.supplier);
+  const logoFallbackPath = getSupplierLogoFallbackPath(product.supplier);
+  const logoHeightClass = getSupplierLogoHeightClass(product.supplier);
+  const supplierName = getSupplierDisplayName(product.supplier);
 
   const { displayedStock, showVariationsInSpecs, variationsToDisplay } =
     getVariationStockState(product);
@@ -247,9 +253,7 @@ export function ProductDetails({
 
   const handleVariationHover = (variation: Variation | null) => {
     setHoveredVariation(variation);
-    onCarouselPreviewImage?.(
-      variation ? getVariationImage(variation) : null,
-    );
+    onCarouselPreviewImage?.(variation ? getVariationImage(variation) : null);
   };
 
   const displayPrice = hoveredVariation?.price ?? product.price;
@@ -276,12 +280,24 @@ export function ProductDetails({
         value={formattedDisplayPrice}
         className="text-2xl font-bold text-neutral-900"
       />
-      {isAdmin && (
+      {isAdmin && logoPath && (
         <span>
           <img
             src={logoPath}
-            alt={`${product.provider} logo`}
-            className="h-25 w-auto"
+            alt={`${supplierName} logo`}
+            className={cn(logoHeightClass, "w-auto")}
+            onError={(event) => {
+              const target = event.currentTarget;
+              if (
+                logoFallbackPath &&
+                target.dataset.fallbackApplied !== "true"
+              ) {
+                target.dataset.fallbackApplied = "true";
+                target.src = logoFallbackPath;
+                return;
+              }
+              target.parentElement?.remove();
+            }}
           />
         </span>
       )}
@@ -314,7 +330,9 @@ export function ProductDetails({
 
       <div className="flex flex-col gap-3">
         <p className="text-base font-semibold text-neutral-900">
-          {hasMultipleVariations ? "Variações disponíveis" : "Seleção do produto"}
+          {hasMultipleVariations
+            ? "Variações disponíveis"
+            : "Seleção do produto"}
         </p>
         <ProductVariationSelect
           product={product}
@@ -555,10 +573,7 @@ export function ProductDetails({
                           <div className="min-w-0">
                             <p className="text-xs text-neutral-500">Variação</p>
                             <p className="min-w-0 text-base font-semibold wrap-break-word text-neutral-900">
-                              {getVariationDifference(
-                                product.name,
-                                variation.name,
-                              )}
+                              {variation.name}
                             </p>
                           </div>
 

@@ -56,7 +56,7 @@ function AccordionContent({
       className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm will-change-[height]"
       {...props}
     >
-      <div className={cn("pt-0 pb-4", className)}>{children}</div>
+      <div className={cn("min-h-10 pt-0 pb-4", className)}>{children}</div>
     </AccordionPrimitive.Content>
   );
 }

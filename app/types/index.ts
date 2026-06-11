@@ -69,10 +69,21 @@ export type ColorsApiResponse = {
   data: ProductColor[];
 };
 
+export type ProductSupplier = {
+  id: number;
+  name: string;
+  alias: string;
+  image: string | null;
+};
+
+export type SuppliersApiResponse = {
+  data: ProductSupplier[];
+};
+
 export type Product = {
   id: number;
   product_cod: string;
-  provider: string;
+  supplier: ProductSupplier;
   name: string;
   description: string;
   description_original?: string;

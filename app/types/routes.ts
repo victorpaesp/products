@@ -1,4 +1,4 @@
-import type { ApiResponse, Product, SelectedProduct } from "~/types/index";
+import type { ApiResponse, SelectedProduct } from "~/types/index";
 
 export type LoginActionData = {
   error?: string;
@@ -18,7 +18,6 @@ export type ProductDetailLoaderData = {
 
 export type ProductDetailNavigationState = {
   from?: string;
-  listingProduct?: Product;
 };
 
 export type ProductsOutletContextType = {

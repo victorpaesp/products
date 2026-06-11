@@ -5,8 +5,7 @@ import {
   type MetaFunction,
 } from "@remix-run/node";
 import { useLoaderData, useLocation, useNavigate, Link } from "@remix-run/react";
-import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { requireAuth } from "~/lib/auth.server";
 import { getProductCarouselImages } from "~/lib/utils";
@@ -17,10 +16,6 @@ import { useProductQuery } from "~/hooks/useProduct";
 import { ErrorState } from "~/components/shared/ErrorState";
 import { LoadingState } from "~/components/shared/LoadingState";
 import type { Product } from "~/types";
-import {
-  findProductInListCache,
-  mergeProductSpecsFromListing,
-} from "~/lib/products-query";
 import type {
   ProductDetailLoaderData,
   ProductDetailNavigationState,
@@ -53,7 +48,6 @@ export default function ProductDetailPage() {
     useLoaderData<typeof loader>();
   const location = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const navState = location.state as ProductDetailNavigationState | null;
 
   const { data: product, isLoading, isError, error } = useProductQuery({
@@ -62,19 +56,12 @@ export default function ProductDetailPage() {
     variationId,
   });
 
-  const listingProduct =
-    navState?.listingProduct ?? findProductInListCache(queryClient, productId);
-
   const [updatedProduct, setUpdatedProduct] = useState<Product | null>(null);
   const [carouselPreviewImage, setCarouselPreviewImage] = useState<
     string | null
   >(null);
 
-  const displayProduct = useMemo(() => {
-    const baseProduct = updatedProduct ?? product;
-    if (!baseProduct) return null;
-    return mergeProductSpecsFromListing(baseProduct, listingProduct);
-  }, [updatedProduct, product, listingProduct]);
+  const displayProduct = updatedProduct ?? product ?? null;
 
   const from = navState?.from;
 

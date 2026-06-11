@@ -4,7 +4,7 @@ import { LoaderCircle } from "lucide-react";
 import {
   formatPrice,
   getProductCardImage,
-  getProviderDisplayName,
+  getSupplierDisplayName,
   normalizeImageUrl,
 } from "~/lib/utils";
 import type { loader as rootLoader } from "~/root";
@@ -108,7 +108,7 @@ export function ProductCard({
 
   const handleOpenProduct = () => {
     navigate(getProductDetailPath(), {
-      state: { from: window.location.href, listingProduct: product },
+      state: { from: window.location.href },
     });
   };
 
@@ -175,7 +175,7 @@ export function ProductCard({
                 aria-label={product.product_cod}
               >
                 {product.product_cod}
-                {isAdmin && <> - {getProviderDisplayName(product.provider)}</>}
+                {isAdmin && <> - {getSupplierDisplayName(product.supplier)}</>}
               </span>
             </div>
           </div>
