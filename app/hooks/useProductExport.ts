@@ -56,6 +56,29 @@ async function loadImageArrayBuffer(
   }
 }
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
+
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
 
 function formatDateForFilename(date: Date) {
@@ -100,8 +123,10 @@ export function useProductExport() {
 
   const generateProductParagraphs = useCallback(
     async (products: ExportProduct[]) => {
-      const paragraphs = await Promise.all(
-        products.map(async (product, index) => {
+      const paragraphs = await mapWithConcurrency(
+        products,
+        3,
+        async (product, index) => {
           let imageUrl: string | undefined;
           const productWithImages = product;
 
@@ -231,7 +256,7 @@ export function useProductExport() {
               spacing: { after: 60 },
             }),
           ];
-        }),
+        },
       );
       return paragraphs.flat();
     },

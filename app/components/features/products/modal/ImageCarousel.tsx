@@ -4,7 +4,7 @@ import { Button } from "~/components/ui/button";
 import { FreeMode, Mousewheel, Navigation, Thumbs } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
-import { normalizeImageUrl, cn } from "~/lib/utils";
+import { normalizeImageUrl, handleImageLoadError, cn } from "~/lib/utils";
 import type { ImageCarouselProps } from "~/types/components";
 
 import "swiper/css";
@@ -47,6 +47,23 @@ export function ImageCarousel({
   const [thumbsAtStart, setThumbsAtStart] = useState(true);
   const [thumbsAtEnd, setThumbsAtEnd] = useState(false);
   const loadRequestIdRef = useRef(0);
+
+  const isActiveSlideImage = (
+    swiper: SwiperType | null,
+    img: HTMLImageElement,
+  ) => {
+    if (!swiper || swiper.destroyed) return false;
+    const activeSlide = swiper.slides[swiper.activeIndex];
+    return activeSlide?.contains(img) ?? false;
+  };
+
+  const markImageReady = (img?: HTMLImageElement | null) => {
+    if (img?.complete && img.naturalWidth > 0) {
+      setIsLoading(false);
+      return true;
+    }
+    return false;
+  };
 
   const updateThumbsEdges = (swiper: SwiperType) => {
     setThumbsAtStart(swiper.isBeginning);
@@ -128,37 +145,24 @@ export function ImageCarousel({
 
   useEffect(() => {
     const requestId = ++loadRequestIdRef.current;
-
     setIsLoading(true);
 
-    const preloader = new Image();
-    preloader.src = currentImageSrc;
-
-    const finishLoading = (failed = false) => {
+    const tryFinishLoading = () => {
       if (requestId !== loadRequestIdRef.current) return;
+      if (!mainSwiper || mainSwiper.destroyed) return;
 
-      if (failed) {
-        setImageErrors((prev) => ({
-          ...prev,
-          [currentImageIndex]: true,
-        }));
+      const activeSlide = mainSwiper.slides[mainSwiper.activeIndex];
+      const img = activeSlide?.querySelector("img");
+      if (img instanceof HTMLImageElement) {
+        markImageReady(img);
       }
-
-      setIsLoading(false);
     };
 
-    if (preloader.complete) {
-      finishLoading();
-    } else {
-      preloader.onload = () => finishLoading();
-      preloader.onerror = () => finishLoading(true);
-    }
+    tryFinishLoading();
+    const rafId = requestAnimationFrame(tryFinishLoading);
 
-    return () => {
-      preloader.onload = null;
-      preloader.onerror = null;
-    };
-  }, [currentImageIndex, currentImageSrc, mainImage, validImagesKey]);
+    return () => cancelAnimationFrame(rafId);
+  }, [currentImageIndex, currentImageSrc, validImagesKey, mainSwiper]);
 
   const nextImage = () => {
     if (!mainSwiper) return;
@@ -186,6 +190,13 @@ export function ImageCarousel({
           onSlideChange={(swiper) => {
             setCurrentImageIndex(swiper.realIndex);
           }}
+          onSlideChangeTransitionEnd={(swiper) => {
+            const activeSlide = swiper.slides[swiper.activeIndex];
+            const img = activeSlide?.querySelector("img");
+            if (img instanceof HTMLImageElement) {
+              markImageReady(img);
+            }
+          }}
           thumbs={{
             swiper:
               thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
@@ -198,9 +209,20 @@ export function ImageCarousel({
               <img
                 src={getImageSrc(index)}
                 alt={`${productName} - Imagem ${index + 1}`}
-                onError={() =>
-                  setImageErrors((prev) => ({ ...prev, [index]: true }))
-                }
+                loading={index === currentImageIndex ? "eager" : "lazy"}
+                decoding="async"
+                onLoad={(e) => {
+                  if (isActiveSlideImage(mainSwiper, e.currentTarget)) {
+                    setIsLoading(false);
+                  }
+                }}
+                onError={(e) => {
+                  if (isActiveSlideImage(mainSwiper, e.currentTarget)) {
+                    setIsLoading(false);
+                  }
+                  handleImageLoadError(e);
+                  setImageErrors((prev) => ({ ...prev, [index]: true }));
+                }}
                 className={`h-full w-full rounded-lg border border-neutral-200 object-contain ${
                   isLoading && index === currentImageIndex
                     ? "opacity-0"
@@ -282,9 +304,12 @@ export function ImageCarousel({
                     <img
                       src={getImageSrc(index)}
                       alt={`${productName} - Miniatura ${index + 1}`}
-                      onError={() =>
-                        setImageErrors((prev) => ({ ...prev, [index]: true }))
-                      }
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        handleImageLoadError(e);
+                        setImageErrors((prev) => ({ ...prev, [index]: true }));
+                      }}
                       className="h-full w-full object-cover"
                     />
                   </Button>

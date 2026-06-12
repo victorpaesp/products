@@ -5,6 +5,7 @@ import {
   formatPrice,
   getProductCardImage,
   getSupplierDisplayName,
+  handleImageLoadError,
   normalizeImageUrl,
 } from "~/lib/utils";
 import type { loader as rootLoader } from "~/root";
@@ -142,14 +143,15 @@ export function ProductCard({
               ref={imageRef}
               src={imageSrc}
               alt={product.name}
+              loading="lazy"
+              decoding="async"
               className={`h-full w-full object-cover transition-opacity duration-200 ${
                 isImageLoading ? "opacity-0" : "opacity-100"
               }`}
               onLoad={() => setIsImageLoading(false)}
               onError={(e) => {
                 setIsImageLoading(false);
-                const target = e.target as HTMLImageElement;
-                target.src = "/logo-santomimo.png";
+                handleImageLoadError(e);
               }}
             />
           </div>
@@ -245,11 +247,10 @@ export function ProductCard({
                           : v.images?.[0] || "/logo-santomimo.png",
                       )}
                       alt={v.name || product.name}
+                      loading="lazy"
+                      decoding="async"
                       className="size-20 shrink-0 rounded-md object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/logo-santomimo.png";
-                      }}
+                      onError={handleImageLoadError}
                     />
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 line-clamp-1 font-medium text-neutral-900">

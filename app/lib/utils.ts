@@ -228,6 +228,23 @@ export const formatBoxWeight = (value?: string | null): string | null => {
 
 const DEFAULT_PRODUCT_PLACEHOLDER = "/logo-santomimo.png";
 
+const shouldProxyRemoteImages = process.env.NODE_ENV === "production";
+
+/** Rotas imagens remotas pelo proxy para evitar rate limit (ex.: Wordfence). */
+const proxyRemoteImageUrl = (absoluteUrl: string): string => {
+  if (!shouldProxyRemoteImages) return absoluteUrl;
+  return `/api/image-proxy?url=${encodeURIComponent(absoluteUrl)}`;
+};
+
+export const handleImageLoadError = (
+  event: React.SyntheticEvent<HTMLImageElement>,
+  fallback = DEFAULT_PRODUCT_PLACEHOLDER,
+): void => {
+  const img = event.currentTarget;
+  if (img.src.endsWith(fallback)) return;
+  img.src = fallback;
+};
+
 export const normalizeImageUrl = (
   imageUrl?: string | null,
   fallback = DEFAULT_PRODUCT_PLACEHOLDER,
@@ -242,11 +259,11 @@ export const normalizeImageUrl = (
   }
 
   if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
+    return proxyRemoteImageUrl(trimmed);
   }
 
   if (/^\/\//.test(trimmed)) {
-    return `https:${trimmed}`;
+    return proxyRemoteImageUrl(`https:${trimmed}`);
   }
 
   if (trimmed.startsWith("/")) {
