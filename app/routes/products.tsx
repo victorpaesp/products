@@ -1,6 +1,7 @@
 import {
   useLoaderData,
   useOutletContext,
+  useRouteLoaderData,
   useSearchParams,
 } from "@remix-run/react";
 import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
@@ -50,6 +51,7 @@ import { BackendApiError } from "~/lib/backend.server";
 import { useCacheStatus } from "~/hooks/useCacheStatus";
 import { CacheIndicator } from "~/components/shared/CacheIndicator";
 import { BackToTopButton } from "~/components/shared/BackToTopButton";
+import type { loader as rootLoader } from "~/root";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireAuth(request);
@@ -113,11 +115,19 @@ export function shouldRevalidate({
 
 export default function Products() {
   const loaderData = useLoaderData<typeof loader>();
+  const rootData = useRouteLoaderData<typeof rootLoader>("root");
+  const isAdmin = rootData?.user?.role === "admin";
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const searchTermRaw = searchParams.get("q");
   const searchTerm = searchTermRaw ? searchTermRaw.trim() : "";
-  const queryParams = getProductsQueryParams(searchParams);
+  const queryParams = useMemo(() => {
+    const params = getProductsQueryParams(searchParams);
+    if (!isAdmin) {
+      return { ...params, supplierId: undefined };
+    }
+    return params;
+  }, [searchParams, isAdmin]);
 
   const { data, isLoading, isFetching, isError, error } = useProductsQuery(
     queryParams,
@@ -136,7 +146,9 @@ export default function Products() {
   const selectedColor = searchParams.get("color") || "";
   const selectedSupplierId = searchParams.get("supplier_id") || "";
   const { data: colors = [] } = useColorsQuery(loaderData.token);
-  const { data: suppliers = [] } = useSuppliersQuery(loaderData.token);
+  const { data: suppliers = [] } = useSuppliersQuery(loaderData.token, {
+    enabled: isAdmin,
+  });
 
   type ColorOption = { id: string; name: string };
   type SupplierOption = { id: string; name: string };
@@ -188,7 +200,7 @@ export default function Products() {
   }, [colorOptions, selectedColor]);
 
   useEffect(() => {
-    if (!selectedSupplierId) {
+    if (!isAdmin || !selectedSupplierId) {
       setSelectedSupplierOption(null);
       return;
     }
@@ -197,19 +209,15 @@ export default function Products() {
       supplierOptions.find((option) => option.id === selectedSupplierId) ??
         null,
     );
-  }, [selectedSupplierId]);
+  }, [isAdmin, selectedSupplierId, supplierOptions]);
 
   useEffect(() => {
-    if (!selectedSupplierId) return;
+    if (isAdmin || !searchParams.has("supplier_id")) return;
 
-    setSelectedSupplierOption((current) => {
-      if (current?.id === selectedSupplierId) return current;
-      return (
-        supplierOptions.find((option) => option.id === selectedSupplierId) ??
-        current
-      );
-    });
-  }, [supplierOptions, selectedSupplierId]);
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("supplier_id");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [isAdmin, searchParams, setSearchParams]);
 
   const pendingSearchParams = useMemo(() => searchParams, [searchParams]);
 
@@ -417,48 +425,52 @@ export default function Products() {
                   </ComboboxContent>
                 </Combobox>
               </div>
-              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
-                <label
-                  htmlFor="supplier-select"
-                  className="mb-1 text-sm whitespace-nowrap sm:mb-0"
-                >
-                  Filtrar por fornecedor:
-                </label>
-                <Combobox
-                  items={supplierOptions}
-                  itemToStringLabel={(option) => option.name}
-                  isItemEqualToValue={(a, b) => a.id === b.id}
-                  value={selectedSupplierOption}
-                  onValueChange={(option) => {
-                    setSelectedSupplierOption(option);
-                    const newSearchParams = new URLSearchParams(searchParams);
-                    if (!option) {
-                      newSearchParams.delete("supplier_id");
-                    } else {
-                      newSearchParams.set("supplier_id", option.id);
-                    }
-                    newSearchParams.set("page", "1");
-                    setSearchParams(newSearchParams);
-                  }}
-                >
-                  <ComboboxInput
-                    id="supplier-select"
-                    placeholder="Selecione"
-                    className="w-full sm:w-48"
-                    showClear={Boolean(selectedSupplierOption)}
-                  />
-                  <ComboboxContent className="max-h-62 min-w-[calc(100%+28px)]">
-                    <ComboboxEmpty>Nenhum fornecedor encontrado.</ComboboxEmpty>
-                    <ComboboxList>
-                      {(option) => (
-                        <ComboboxItem key={option.id} value={option}>
-                          {option.name}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-              </div>
+              {isAdmin && (
+                <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
+                  <label
+                    htmlFor="supplier-select"
+                    className="mb-1 text-sm whitespace-nowrap sm:mb-0"
+                  >
+                    Filtrar por fornecedor:
+                  </label>
+                  <Combobox
+                    items={supplierOptions}
+                    itemToStringLabel={(option) => option.name}
+                    isItemEqualToValue={(a, b) => a.id === b.id}
+                    value={selectedSupplierOption}
+                    onValueChange={(option) => {
+                      setSelectedSupplierOption(option);
+                      const newSearchParams = new URLSearchParams(searchParams);
+                      if (!option) {
+                        newSearchParams.delete("supplier_id");
+                      } else {
+                        newSearchParams.set("supplier_id", option.id);
+                      }
+                      newSearchParams.set("page", "1");
+                      setSearchParams(newSearchParams);
+                    }}
+                  >
+                    <ComboboxInput
+                      id="supplier-select"
+                      placeholder="Selecione"
+                      className="w-full sm:w-48"
+                      showClear={Boolean(selectedSupplierOption)}
+                    />
+                    <ComboboxContent className="max-h-62 min-w-[calc(100%+28px)]">
+                      <ComboboxEmpty>
+                        Nenhum fornecedor encontrado.
+                      </ComboboxEmpty>
+                      <ComboboxList>
+                        {(option) => (
+                          <ComboboxItem key={option.id} value={option}>
+                            {option.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                </div>
+              )}
             </div>
           )}
         </div>

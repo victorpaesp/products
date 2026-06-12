@@ -22,10 +22,14 @@ async function fetchSuppliersQuery(token: string): Promise<ProductSupplier[]> {
   return response.json();
 }
 
-export function useSuppliersQuery(token: string) {
+export function useSuppliersQuery(
+  token: string,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: suppliersQueryKeys.list(),
     queryFn: () => fetchSuppliersQuery(token),
     staleTime: Infinity,
+    enabled: options?.enabled ?? true,
   });
 }
