@@ -1,0 +1,326 @@
+{
+  "buildManifest": {
+    "serverBundles": {
+      "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0": {
+        "id": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+        "file": "build/server/nodejs-eyJydW50aW1lIjoibm9kZWpzIn0/index.js",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    },
+    "routeIdToServerBundleId": {
+      "routes/api.products.$productId.description": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.products.$productId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/products_.$productId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.password-forgot": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.users.$userId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.all-products": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.image-proxy": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/reset-password": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.suppliers": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.colors": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.users": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/products": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/register": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/settings": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/logout": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/_index": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/login": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0"
+    },
+    "routes": {
+      "root": {
+        "path": "",
+        "id": "root",
+        "file": "app/root.tsx",
+        "config": {}
+      },
+      "routes/api.products.$productId.description": {
+        "file": "app/routes/api.products.$productId.description.ts",
+        "id": "routes/api.products.$productId.description",
+        "path": "description",
+        "parentId": "routes/api.products.$productId",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.products.$productId": {
+        "file": "app/routes/api.products.$productId.ts",
+        "id": "routes/api.products.$productId",
+        "path": "api/products/:productId",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/products_.$productId": {
+        "file": "app/routes/products_.$productId.tsx",
+        "id": "routes/products_.$productId",
+        "path": "products/:productId",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.password-forgot": {
+        "file": "app/routes/api.password-forgot.ts",
+        "id": "routes/api.password-forgot",
+        "path": "api/password-forgot",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.users.$userId": {
+        "file": "app/routes/api.users.$userId.ts",
+        "id": "routes/api.users.$userId",
+        "path": ":userId",
+        "parentId": "routes/api.users",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.all-products": {
+        "file": "app/routes/api.all-products.ts",
+        "id": "routes/api.all-products",
+        "path": "api/all-products",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.image-proxy": {
+        "file": "app/routes/api.image-proxy.ts",
+        "id": "routes/api.image-proxy",
+        "path": "api/image-proxy",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/reset-password": {
+        "file": "app/routes/reset-password.tsx",
+        "id": "routes/reset-password",
+        "path": "reset-password",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.suppliers": {
+        "file": "app/routes/api.suppliers.ts",
+        "id": "routes/api.suppliers",
+        "path": "api/suppliers",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.colors": {
+        "file": "app/routes/api.colors.ts",
+        "id": "routes/api.colors",
+        "path": "api/colors",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.users": {
+        "file": "app/routes/api.users.ts",
+        "id": "routes/api.users",
+        "path": "api/users",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/products": {
+        "file": "app/routes/products.tsx",
+        "id": "routes/products",
+        "path": "products",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/register": {
+        "file": "app/routes/register.tsx",
+        "id": "routes/register",
+        "path": "register",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/settings": {
+        "file": "app/routes/settings.tsx",
+        "id": "routes/settings",
+        "path": "settings",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/logout": {
+        "file": "app/routes/logout.tsx",
+        "id": "routes/logout",
+        "path": "logout",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/_index": {
+        "file": "app/routes/_index.tsx",
+        "id": "routes/_index",
+        "index": true,
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/login": {
+        "file": "app/routes/login.tsx",
+        "id": "routes/login",
+        "path": "login",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    }
+  },
+  "remixConfig": {
+    "appDirectory": "C:\\Users\\victo\\Desktop\\ETC\\projects\\Santo Mimo\\Search M\\searchm\\products\\app",
+    "basename": "/",
+    "buildDirectory": "C:\\Users\\victo\\Desktop\\ETC\\projects\\Santo Mimo\\Search M\\searchm\\products\\build",
+    "future": {
+      "v3_fetcherPersist": true,
+      "v3_relativeSplatPath": true,
+      "v3_throwAbortReason": true,
+      "v3_routeConfig": false,
+      "v3_singleFetch": true,
+      "v3_lazyRouteDiscovery": true,
+      "unstable_optimizeDeps": false
+    },
+    "manifest": false,
+    "publicPath": "/",
+    "routes": {
+      "root": {
+        "path": "",
+        "id": "root",
+        "file": "root.tsx"
+      },
+      "routes/api.products.$productId.description": {
+        "file": "routes/api.products.$productId.description.ts",
+        "id": "routes/api.products.$productId.description",
+        "path": "description",
+        "parentId": "routes/api.products.$productId"
+      },
+      "routes/api.products.$productId": {
+        "file": "routes/api.products.$productId.ts",
+        "id": "routes/api.products.$productId",
+        "path": "api/products/:productId",
+        "parentId": "root"
+      },
+      "routes/products_.$productId": {
+        "file": "routes/products_.$productId.tsx",
+        "id": "routes/products_.$productId",
+        "path": "products/:productId",
+        "parentId": "root"
+      },
+      "routes/api.password-forgot": {
+        "file": "routes/api.password-forgot.ts",
+        "id": "routes/api.password-forgot",
+        "path": "api/password-forgot",
+        "parentId": "root"
+      },
+      "routes/api.users.$userId": {
+        "file": "routes/api.users.$userId.ts",
+        "id": "routes/api.users.$userId",
+        "path": ":userId",
+        "parentId": "routes/api.users"
+      },
+      "routes/api.all-products": {
+        "file": "routes/api.all-products.ts",
+        "id": "routes/api.all-products",
+        "path": "api/all-products",
+        "parentId": "root"
+      },
+      "routes/api.image-proxy": {
+        "file": "routes/api.image-proxy.ts",
+        "id": "routes/api.image-proxy",
+        "path": "api/image-proxy",
+        "parentId": "root"
+      },
+      "routes/reset-password": {
+        "file": "routes/reset-password.tsx",
+        "id": "routes/reset-password",
+        "path": "reset-password",
+        "parentId": "root"
+      },
+      "routes/api.suppliers": {
+        "file": "routes/api.suppliers.ts",
+        "id": "routes/api.suppliers",
+        "path": "api/suppliers",
+        "parentId": "root"
+      },
+      "routes/api.colors": {
+        "file": "routes/api.colors.ts",
+        "id": "routes/api.colors",
+        "path": "api/colors",
+        "parentId": "root"
+      },
+      "routes/api.users": {
+        "file": "routes/api.users.ts",
+        "id": "routes/api.users",
+        "path": "api/users",
+        "parentId": "root"
+      },
+      "routes/products": {
+        "file": "routes/products.tsx",
+        "id": "routes/products",
+        "path": "products",
+        "parentId": "root"
+      },
+      "routes/register": {
+        "file": "routes/register.tsx",
+        "id": "routes/register",
+        "path": "register",
+        "parentId": "root"
+      },
+      "routes/settings": {
+        "file": "routes/settings.tsx",
+        "id": "routes/settings",
+        "path": "settings",
+        "parentId": "root"
+      },
+      "routes/logout": {
+        "file": "routes/logout.tsx",
+        "id": "routes/logout",
+        "path": "logout",
+        "parentId": "root"
+      },
+      "routes/_index": {
+        "file": "routes/_index.tsx",
+        "id": "routes/_index",
+        "index": true,
+        "parentId": "root"
+      },
+      "routes/login": {
+        "file": "routes/login.tsx",
+        "id": "routes/login",
+        "path": "login",
+        "parentId": "root"
+      }
+    },
+    "serverBuildFile": "index.js",
+    "serverModuleFormat": "esm",
+    "ssr": true
+  },
+  "viteConfig": {
+    "build": {
+      "assetsDir": "assets"
+    }
+  }
+}
