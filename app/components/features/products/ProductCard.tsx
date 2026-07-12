@@ -48,6 +48,9 @@ export function ProductCard({
 
   const hasMultipleVariations =
     product.variations && product.variations.length > 1;
+  const singleVariation =
+    product.variations?.length === 1 ? product.variations[0] : null;
+  const singleVariationStock = singleVariation?.stock ?? 0;
 
   const visibleVariationCodes = new Set(
     product.variations.map((v) => v.product_cod),
@@ -179,9 +182,34 @@ export function ProductCard({
                 {product.product_cod}
                 {isAdmin && <> - {getSupplierDisplayName(product.supplier)}</>}
               </span>
+              {singleVariation ? (
+                <p className="mt-1 flex items-center gap-1.5 text-[10px] font-medium text-neutral-500 sm:text-[13px]">
+                  <span
+                    aria-hidden="true"
+                    className={`size-1.5 shrink-0 rounded-full ${
+                      singleVariationStock > 0
+                        ? "bg-emerald-500"
+                        : "bg-amber-500"
+                    }`}
+                  />
+                  <span>
+                    Estoque
+                    {" · "}
+                    {singleVariationStock.toLocaleString("pt-BR")}
+                  </span>
+                </p>
+              ) : hasMultipleVariations ? (
+                <p className="mt-1 flex items-center gap-1.5 text-[10px] font-medium text-neutral-500 sm:text-[13px]">
+                  <span
+                    aria-hidden="true"
+                    className="size-1.5 shrink-0 rounded-full bg-neutral-400"
+                  />
+                  Estoque por variação
+                </p>
+              ) : null}
             </div>
           </div>
-          <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+          <div className="mt-1 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
             <p className="font-semibold text-neutral-900 sm:text-lg">
               {formatPrice(product.price)}
             </p>
@@ -199,7 +227,7 @@ export function ProductCard({
               </Button>
               {showSelectedCountBadge && (
                 <span
-                  className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex size-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none"
+                  className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex size-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold"
                   aria-label={`${selectedVariationCount} variações selecionadas`}
                 >
                   {selectedVariationCount}
