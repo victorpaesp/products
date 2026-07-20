@@ -11,12 +11,14 @@
     },
     "routeIdToServerBundleId": {
       "routes/api.products.$productId.description": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.categories.$categoryId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.products.$productId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/products_.$productId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.password-forgot": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.users.$userId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.all-products": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.image-proxy": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.categories": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/reset-password": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.suppliers": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.colors": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
@@ -40,6 +42,15 @@
         "id": "routes/api.products.$productId.description",
         "path": "description",
         "parentId": "routes/api.products.$productId",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.categories.$categoryId": {
+        "file": "app/routes/api.categories.$categoryId.ts",
+        "id": "routes/api.categories.$categoryId",
+        "path": ":categoryId",
+        "parentId": "routes/api.categories",
         "config": {
           "runtime": "nodejs"
         }
@@ -93,6 +104,15 @@
         "file": "app/routes/api.image-proxy.ts",
         "id": "routes/api.image-proxy",
         "path": "api/image-proxy",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.categories": {
+        "file": "app/routes/api.categories.ts",
+        "id": "routes/api.categories",
+        "path": "api/categories",
         "parentId": "root",
         "config": {
           "runtime": "nodejs"
@@ -217,6 +237,12 @@
         "path": "description",
         "parentId": "routes/api.products.$productId"
       },
+      "routes/api.categories.$categoryId": {
+        "file": "routes/api.categories.$categoryId.ts",
+        "id": "routes/api.categories.$categoryId",
+        "path": ":categoryId",
+        "parentId": "routes/api.categories"
+      },
       "routes/api.products.$productId": {
         "file": "routes/api.products.$productId.ts",
         "id": "routes/api.products.$productId",
@@ -251,6 +277,12 @@
         "file": "routes/api.image-proxy.ts",
         "id": "routes/api.image-proxy",
         "path": "api/image-proxy",
+        "parentId": "root"
+      },
+      "routes/api.categories": {
+        "file": "routes/api.categories.ts",
+        "id": "routes/api.categories",
+        "path": "api/categories",
         "parentId": "root"
       },
       "routes/reset-password": {

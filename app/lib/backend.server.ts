@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  CategoriesApiResponse,
   ColorsApiResponse,
   LoginResponse,
   RegisterData,
@@ -131,6 +132,13 @@ export async function backendListColors(options: { token: string }) {
 
 export async function backendListSuppliers(options: { token: string }) {
   return backendRequest<SuppliersApiResponse>("/suppliers", {
+    method: "GET",
+    token: options.token,
+  });
+}
+
+export async function backendListCategories(options: { token: string }) {
+  return backendRequest<CategoriesApiResponse | unknown[]>("/categories", {
     method: "GET",
     token: options.token,
   });

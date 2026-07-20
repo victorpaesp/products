@@ -4,6 +4,7 @@ export type ProductsQueryParams = {
   search?: string;
   color?: number;
   supplierId?: number;
+  category?: string;
   sortType: "name" | "price";
   sortOrder: "asc" | "desc";
 };
@@ -27,6 +28,8 @@ export function getProductsQueryParams(
       ? Number(supplierIdParam)
       : undefined;
 
+  const category = searchParams.get("category")?.trim() || undefined;
+
   const sortName = searchParams.get("sort[name]");
   const sortPrice = searchParams.get("sort[price]");
 
@@ -37,6 +40,7 @@ export function getProductsQueryParams(
       search,
       color,
       supplierId,
+      category,
       sortType: "price",
       sortOrder: sortPrice,
     };
@@ -48,6 +52,7 @@ export function getProductsQueryParams(
     search,
     color,
     supplierId,
+    category,
     sortType: "name",
     sortOrder: sortName === "desc" ? "desc" : "asc",
   };
@@ -70,6 +75,10 @@ export function toProductsApiParams(
 
   if (params.supplierId) {
     query.set("supplier_id", String(params.supplierId));
+  }
+
+  if (params.category) {
+    query.set("category", params.category);
   }
 
   if (params.sortType === "name") {

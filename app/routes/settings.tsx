@@ -1,18 +1,16 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react";
 import { ProfileForm } from "~/components/features/settings/ProfileForm";
+import { CategoryManager } from "~/components/features/settings/CategoryManager";
 import { UsersTable } from "~/components/features/users/UsersTable";
 import { Button } from "~/components/ui/button";
-import { Settings, User } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Product } from "~/types";
+import { ChevronLeft, Tags, User, Users } from "lucide-react";
 import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
 import {
   commitUserSession,
   requireAuth,
   requireSessionUser,
 } from "~/lib/auth.server";
-import { ChevronLeft } from "lucide-react";
 import { backendCurrentUser, backendRequest } from "~/lib/backend.server";
 import { unformatPhoneNumber } from "~/lib/utils";
 import type { SettingsActionData } from "~/types/routes";
@@ -136,33 +134,39 @@ const tabs = [
   {
     name: "Gerenciar Usuários",
     value: "manage-users",
-    icon: Settings,
+    icon: Users,
+  },
+  {
+    name: "Gerenciar Categorias",
+    value: "manage-categories",
+    icon: Tags,
   },
 ];
 
 export default function SettingsPage() {
   const { user } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isAdmin = user.role === "admin";
-  const [hasSelectedProducts, setHasSelectedProducts] = useState(false);
-
-  useEffect(() => {
-    const saved = sessionStorage.getItem("selectedProducts");
-    if (saved) {
-      try {
-        const products = JSON.parse(saved) as Product[];
-        setHasSelectedProducts(products.length > 0);
-      } catch (error) {
-        setHasSelectedProducts(false);
-      }
-    }
-  }, []);
 
   const visibleTabs = tabs.filter((tab) => {
-    if (tab.value === "manage-users") return isAdmin;
+    if (tab.value === "manage-users" || tab.value === "manage-categories") {
+      return isAdmin;
+    }
 
     return true;
   });
+  const requestedTab = searchParams.get("tab");
+  const activeTab = visibleTabs.some((tab) => tab.value === requestedTab)
+    ? requestedTab!
+    : visibleTabs[0].value;
+
+  const handleTabChange = (value: string) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    if (value === "profile") nextSearchParams.delete("tab");
+    else nextSearchParams.set("tab", value);
+    setSearchParams(nextSearchParams, { replace: true });
+  };
 
   return (
     <section className="sm-container">
@@ -174,13 +178,14 @@ export default function SettingsPage() {
           className="shrink-0 gap-1.5"
           onClick={() => navigate("/")}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft data-icon="inline-start" />
           Voltar
         </Button>
       </div>
       <Tabs
         orientation="horizontal"
-        defaultValue={visibleTabs[0].value}
+        value={activeTab}
+        onValueChange={handleTabChange}
         className="flex w-full flex-col items-start justify-center gap-6 md:flex-row"
       >
         <TabsList className="bg-background grid w-full shrink-0 grid-cols-1 gap-1 p-1.5 md:w-auto">
@@ -190,7 +195,7 @@ export default function SettingsPage() {
               value={tab.value}
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start px-3 py-1.5"
             >
-              <tab.icon className="me-2 h-5 w-5" /> {tab.name}
+              <tab.icon /> {tab.name}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -204,6 +209,7 @@ export default function SettingsPage() {
               <ProfileForm currentUser={user} isAdmin={isAdmin} />
             ) : null}
             {tab.value === "manage-users" ? <UsersTable /> : null}
+            {tab.value === "manage-categories" ? <CategoryManager /> : null}
           </TabsContent>
         ))}
       </Tabs>

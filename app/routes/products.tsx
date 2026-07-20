@@ -8,6 +8,8 @@ import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { useEffect, useMemo, useState } from "react";
 import type { ApiResponse, Product, SelectedProduct } from "~/types";
 import { ProductCard } from "~/components/features/products/ProductCard";
+import { CategoriesFilter } from "~/components/features/products/CategoriesFilter";
+import { CategoryBreadcrumb } from "~/components/features/products/CategoryBreadcrumb";
 
 import {
   Select,
@@ -47,6 +49,8 @@ import {
 import { fetchProductsQuery, useProductsQuery } from "~/hooks/useProducts";
 import { useColorsQuery } from "~/hooks/useColors";
 import { useSuppliersQuery } from "~/hooks/useSuppliers";
+import { useCategoriesQuery } from "~/hooks/useCategories";
+import { buildCategoryIndex } from "~/lib/categories";
 import { BackendApiError } from "~/lib/backend.server";
 import { useCacheStatus } from "~/hooks/useCacheStatus";
 import { CacheIndicator } from "~/components/shared/CacheIndicator";
@@ -145,10 +149,26 @@ export default function Products() {
   const isProductsGridLoading = isFetching && !errorMessage;
   const selectedColor = searchParams.get("color") || "";
   const selectedSupplierId = searchParams.get("supplier_id") || "";
+  const selectedCategorySlug = searchParams.get("category")?.trim() || "";
   const { data: colors = [] } = useColorsQuery(loaderData.token);
   const { data: suppliers = [] } = useSuppliersQuery(loaderData.token, {
     enabled: isAdmin,
   });
+  const categoriesQuery = useCategoriesQuery(loaderData.token);
+  const categories = useMemo(
+    () => categoriesQuery.data ?? [],
+    [categoriesQuery.data],
+  );
+  const categoryIndex = useMemo(
+    () => buildCategoryIndex(categories),
+    [categories],
+  );
+  const selectedCategory = selectedCategorySlug
+    ? (categoryIndex.bySlug.get(selectedCategorySlug) ?? null)
+    : null;
+  const selectedCategoryPath = selectedCategorySlug
+    ? categoryIndex.pathsBySlug.get(selectedCategorySlug)
+    : undefined;
 
   type ColorOption = { id: string; name: string };
   type SupplierOption = { id: string; name: string };
@@ -255,6 +275,17 @@ export default function Products() {
   const perPage =
     data?.per_page ?? (Number(searchParams.get("per_page")) || 48);
 
+  const handleCategoryChange = (slug: string | null) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (slug) {
+      newSearchParams.set("category", slug);
+    } else {
+      newSearchParams.delete("category");
+    }
+    newSearchParams.set("page", "1");
+    setSearchParams(newSearchParams);
+  };
+
   let sortType: "name" | "price" = "name";
   let sortOrder: "asc" | "desc" = "asc";
   if (searchParams.get("sort[name]")) {
@@ -295,26 +326,26 @@ export default function Products() {
   function getSelectLabelWithIcon(value: string) {
     if (value.startsWith("name")) {
       return (
-        <>
+        <span className="flex items-center gap-2">
           {value.endsWith("asc") ? (
-            <ArrowDownAZ className="mr-2 inline h-4 w-4" />
+            <ArrowDownAZ className="size-4 shrink-0" />
           ) : (
-            <ArrowUpAZ className="mr-2 inline h-4 w-4" />
+            <ArrowUpAZ className="size-4 shrink-0" />
           )}
           Nome
-        </>
+        </span>
       );
     }
     if (value.startsWith("price")) {
       return (
-        <>
+        <span className="flex items-center gap-2">
           {value.endsWith("asc") ? (
-            <ArrowDown01 className="mr-2 inline h-4 w-4" />
+            <ArrowDown01 className="size-4 shrink-0" />
           ) : (
-            <ArrowUp01 className="mr-2 inline h-4 w-4" />
+            <ArrowUp01 className="size-4 shrink-0" />
           )}
           Preço
-        </>
+        </span>
       );
     }
     return "Selecione...";
@@ -324,65 +355,22 @@ export default function Products() {
     <section className="sm-container">
       <CacheIndicator status={cacheStatus} />
       <div>
-        <div className="sm:justify-betweenm mb-14 flex flex-col gap-4 sm:flex-row sm:items-center">
-          {searchTerm && (
-            <h1 className="text-2xl font-bold">
-              Resultados para: {searchTerm}
-            </h1>
-          )}
-          {showProductsSection && (
-            <div className="ml-auto flex w-full flex-col items-stretch gap-4 sm:w-auto sm:flex-row sm:items-center">
-              <div className="flex gap-4">
-                {/* Ordenar por */}
-                <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
-                  <label
-                    htmlFor="sort-select"
-                    className="mb-1 text-sm whitespace-nowrap sm:mb-0"
-                  >
-                    Ordenar por:
-                  </label>
-                  <Select
-                    value={`${sortType}-${sortOrder}`}
-                    onValueChange={(value) => {
-                      const [type, order] = value.split("-");
-                      const newSearchParams = new URLSearchParams(searchParams);
-                      newSearchParams.delete("sort[name]");
-                      newSearchParams.delete("sort[price]");
-                      if (type === "name") {
-                        newSearchParams.set("sort[name]", order);
-                      } else if (type === "price") {
-                        newSearchParams.set("sort[price]", order);
-                      }
-                      newSearchParams.set("page", "1");
-                      setSearchParams(newSearchParams);
-                    }}
-                  >
-                    <SelectTrigger id="sort-select" className="w-full sm:w-40">
-                      <SelectValue>
-                        {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name-asc">
-                        <ArrowDownAZ className="mr-2 inline h-4 w-4" />
-                        Nome: A-Z
-                      </SelectItem>
-                      <SelectItem value="name-desc">
-                        <ArrowUpAZ className="mr-2 inline h-4 w-4" />
-                        Nome: Z-A
-                      </SelectItem>
-                      <SelectItem value="price-asc">
-                        <ArrowDown01 className="mr-2 inline h-4 w-4" />
-                        Preço: Menor ao maior
-                      </SelectItem>
-                      <SelectItem value="price-desc">
-                        <ArrowUp01 className="mr-2 inline h-4 w-4" />
-                        Preço: Maior ao menor
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+        {showProductsSection ? (
+          <div className="mb-8 flex flex-wrap items-end gap-4">
+            <div className="flex min-w-0 flex-1 flex-wrap items-end gap-4">
+              <CategoriesFilter
+                categories={categories}
+                selectedCategory={selectedCategory}
+                selectedSlug={selectedCategorySlug}
+                isLoading={categoriesQuery.isLoading}
+                isError={categoriesQuery.isError}
+                errorMessage={categoriesQuery.error?.message}
+                isAdmin={isAdmin}
+                onSelect={handleCategoryChange}
+                onRetry={() => {
+                  void categoriesQuery.refetch();
+                }}
+              />
               <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
                 <label
                   htmlFor="color-select"
@@ -472,8 +460,82 @@ export default function Products() {
                 </div>
               )}
             </div>
-          )}
-        </div>
+
+            {/* Ordenar por */}
+            <div className="ml-auto flex w-full items-center justify-end gap-2 sm:w-auto">
+              <label
+                htmlFor="sort-select"
+                className="text-sm whitespace-nowrap"
+              >
+                Ordenar por:
+              </label>
+              <Select
+                value={`${sortType}-${sortOrder}`}
+                onValueChange={(value) => {
+                  const [type, order] = value.split("-");
+                  const newSearchParams = new URLSearchParams(searchParams);
+                  newSearchParams.delete("sort[name]");
+                  newSearchParams.delete("sort[price]");
+                  if (type === "name") {
+                    newSearchParams.set("sort[name]", order);
+                  } else if (type === "price") {
+                    newSearchParams.set("sort[price]", order);
+                  }
+                  newSearchParams.set("page", "1");
+                  setSearchParams(newSearchParams);
+                }}
+              >
+                <SelectTrigger
+                  id="sort-select"
+                  disableFocusRing
+                  className="w-auto min-w-36 justify-center border-0 bg-transparent px-1 shadow-none focus:border-transparent"
+                >
+                  <SelectValue>
+                    {getSelectLabelWithIcon(`${sortType}-${sortOrder}`)}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">
+                    <span className="flex items-center gap-2">
+                      <ArrowDownAZ className="size-4 shrink-0" />
+                      Nome: A-Z
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="name-desc">
+                    <span className="flex items-center gap-2">
+                      <ArrowUpAZ className="size-4 shrink-0" />
+                      Nome: Z-A
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="price-asc">
+                    <span className="flex items-center gap-2">
+                      <ArrowDown01 className="size-4 shrink-0" />
+                      Preço: Menor ao maior
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="price-desc">
+                    <span className="flex items-center gap-2">
+                      <ArrowUp01 className="size-4 shrink-0" />
+                      Preço: Maior ao menor
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ) : null}
+        {searchTerm ? (
+          <h1 className="mb-5 text-2xl font-bold">
+            Resultados para: {searchTerm}
+          </h1>
+        ) : null}
+        {showProductsSection && selectedCategorySlug ? (
+          <CategoryBreadcrumb
+            path={selectedCategoryPath}
+            isLoading={categoriesQuery.isLoading}
+            onSelect={handleCategoryChange}
+          />
+        ) : null}
         {showProductsSection && (
           <>
             <ProductsPagination

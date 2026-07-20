@@ -80,6 +80,50 @@ export type SuppliersApiResponse = {
   data: ProductSupplier[];
 };
 
+export type ProductCategory = {
+  id?: number;
+  name: string;
+  slug: string;
+  children: ProductCategory[];
+};
+
+export type CategoriesApiResponse = {
+  data: ProductCategory[];
+};
+
+export type CategoryKeyword = {
+  id: number;
+  category_id: number;
+  keyword: string;
+  weight: number;
+  created_at: string;
+};
+
+export type AdminCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  parent_id: number | null;
+  description: string | null;
+  active: boolean;
+  keywords: CategoryKeyword[];
+  children: AdminCategory[];
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminCategoriesApiResponse = {
+  success?: boolean;
+  data: AdminCategory[];
+};
+
+export type CategoryUpsertPayload = {
+  name: string;
+  parent_id: number | null;
+  description: string | null;
+  active: boolean;
+};
+
 export type Product = {
   id: number;
   product_cod: string;
