@@ -46,7 +46,7 @@ export function normalizeCategoriesResponse(raw: unknown): ProductCategory[] {
       : raw;
 
   if (!Array.isArray(candidate)) {
-    throw new Error("Resposta inválida da API de categorias.");
+    throw new Error("Erro ao carregar as categorias.");
   }
 
   return candidate
@@ -134,7 +134,7 @@ export function normalizeAdminCategoriesResponse(
       : raw;
 
   if (!Array.isArray(candidate)) {
-    throw new Error("Resposta inválida da API de categorias.");
+    throw new Error("Erro ao carregar as categorias.");
   }
 
   return candidate

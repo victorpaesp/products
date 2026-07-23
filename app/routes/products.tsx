@@ -156,7 +156,7 @@ export default function Products() {
   });
   const categoriesQuery = useCategoriesQuery(loaderData.token);
   const categories = useMemo(
-    () => categoriesQuery.data ?? [],
+    () => (Array.isArray(categoriesQuery.data) ? categoriesQuery.data : []),
     [categoriesQuery.data],
   );
   const categoryIndex = useMemo(

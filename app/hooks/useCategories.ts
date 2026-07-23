@@ -4,6 +4,10 @@ import type {
   CategoryUpsertPayload,
   ProductCategory,
 } from "~/types";
+import {
+  normalizeAdminCategoriesResponse,
+  normalizeCategoriesResponse,
+} from "~/lib/categories";
 
 export const categoriesQueryKeys = {
   all: ["categories"] as const,
@@ -38,16 +42,20 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
 }
 
 async function fetchCategoriesQuery(token: string): Promise<ProductCategory[]> {
-  return requestJson<ProductCategory[]>("/api/categories", {
+  const response = await requestJson<unknown>("/api/categories", {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  return normalizeCategoriesResponse(response);
 }
 
 async function fetchAdminCategoriesQuery(): Promise<AdminCategory[]> {
-  return requestJson<AdminCategory[]>("/api/categories?view=manage", {
+  const response = await requestJson<unknown>("/api/categories?view=manage", {
     method: "GET",
   });
+
+  return normalizeAdminCategoriesResponse(response);
 }
 
 type CategoryMutationPayload = {

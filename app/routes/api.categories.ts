@@ -11,6 +11,7 @@ import {
 } from "~/lib/auth.server";
 import {
   backendListCategories,
+  backendListCategoryTree,
   backendRequest,
   BackendApiError,
 } from "~/lib/backend.server";
@@ -44,7 +45,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }
     }
 
-    const response = await backendListCategories({ token });
+    const response = manageView
+      ? await backendListCategories({ token })
+      : await backendListCategoryTree({ token });
     return Response.json(
       manageView
         ? normalizeAdminCategoriesResponse(response)

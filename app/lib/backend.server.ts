@@ -144,6 +144,13 @@ export async function backendListCategories(options: { token: string }) {
   });
 }
 
+export async function backendListCategoryTree(options: { token: string }) {
+  return backendRequest<CategoriesApiResponse | unknown[]>("/categories/tree", {
+    method: "GET",
+    token: options.token,
+  });
+}
+
 export async function backendGetProduct(options: {
   token: string;
   productId: string | number;
