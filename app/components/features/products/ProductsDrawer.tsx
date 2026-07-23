@@ -90,6 +90,7 @@ export function ProductsDrawer({
           return {
             ...product,
             ...variation,
+            id: product.id,
             name: fields.name,
             product_cod: fields.code,
             price: fields.price,

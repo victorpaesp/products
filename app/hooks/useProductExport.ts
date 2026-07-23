@@ -14,7 +14,7 @@ import {
   ExternalHyperlink,
   Footer,
 } from "docx";
-import { formatPrice, getProductImage } from "~/lib/utils";
+import { formatPrice, getProductImage, parseDimensions } from "~/lib/utils";
 
 import { Product } from "~/types";
 import type { ExportProduct, ExportToastState } from "~/types/hooks";
@@ -77,6 +77,35 @@ async function mapWithConcurrency<T, R>(
   const workerCount = Math.min(concurrency, items.length);
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
   return results;
+}
+
+async function hydrateProductDimensions(
+  products: ExportProduct[],
+): Promise<ExportProduct[]> {
+  return mapWithConcurrency(products, 4, async (product) => {
+    if (parseDimensions(product.product_mention).length > 0) {
+      return product;
+    }
+
+    try {
+      const response = await fetch(`/api/products/${product.id}`, {
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) return product;
+
+      const details = (await response.json()) as Partial<Product>;
+      return {
+        ...product,
+        product_mention:
+          typeof details.product_mention === "string"
+            ? details.product_mention
+            : product.product_mention,
+      };
+    } catch {
+      return product;
+    }
+  });
 }
 
 const INVALID_FILENAME_CHARS = /[\\/:*?"<>|]/g;
@@ -155,6 +184,7 @@ export function useProductExport() {
             );
           }
 
+          const productDimensions = parseDimensions(product.product_mention);
           const descriptionBlock = [
             new Paragraph({
               children: [
@@ -174,6 +204,27 @@ export function useProductExport() {
                   color: "000000",
                   size: 22,
                 }),
+                ...(productDimensions.length > 0
+                  ? [
+                      new TextRun({
+                        text: "",
+                        break: 1,
+                      }),
+                      ...productDimensions.flatMap((dimension, index) => [
+                        new TextRun({
+                          text: `${index > 0 ? " | " : ""}${dimension.label}: `,
+                          bold: true,
+                          color: "000000",
+                          size: 22,
+                        }),
+                        new TextRun({
+                          text: dimension.value,
+                          color: "000000",
+                          size: 22,
+                        }),
+                      ]),
+                    ]
+                  : []),
               ],
               spacing: { after: 120 },
             }),
@@ -283,7 +334,11 @@ export function useProductExport() {
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
-        const productParagraphs = await generateProductParagraphs(products);
+        const productsWithDimensions =
+          await hydrateProductDimensions(products);
+        const productParagraphs = await generateProductParagraphs(
+          productsWithDimensions,
+        );
 
         const doc = new Document({
           styles: {
