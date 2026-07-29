@@ -9,6 +9,7 @@ import {
   Plus,
   RotateCw,
   Search,
+  Tags,
   Trash2,
 } from "lucide-react";
 import type { AdminCategory, CategoryUpsertPayload } from "~/types";
@@ -17,6 +18,7 @@ import {
   useDeleteCategoryMutation,
   useUpsertCategoryMutation,
 } from "~/hooks/useCategories";
+import { normalizeCategoryKeywordText } from "~/lib/categories";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
@@ -55,6 +57,7 @@ import {
 } from "~/components/ui/alert-dialog";
 import { Separator } from "~/components/ui/separator";
 import { toast } from "~/components/ui/toast-client";
+import { CategoryKeywordsDialog } from "~/components/features/settings/CategoryKeywordsDialog";
 import { cn } from "~/lib/utils";
 
 type CategoryRow = {
@@ -66,6 +69,12 @@ type CategoryRow = {
 type CategoryDialogData = {
   category: AdminCategory | null;
   parentId: number | null;
+};
+
+type KeywordDraft = {
+  id: number;
+  keyword: string;
+  weight: number;
 };
 
 function flattenCategories(categories: AdminCategory[]): CategoryRow[] {
@@ -125,6 +134,9 @@ function CategoryFormDialog({
     state.category?.parent_id ?? state.parentId,
   );
   const [active, setActive] = useState(state.category?.active ?? true);
+  const [keywords, setKeywords] = useState<KeywordDraft[]>([
+    { id: 1, keyword: "", weight: 1 },
+  ]);
   const [formError, setFormError] = useState("");
   const mutation = useUpsertCategoryMutation();
   const category = state.category;
@@ -147,11 +159,42 @@ function CategoryFormDialog({
       return;
     }
 
+    const normalizedKeywords = isEdit
+      ? undefined
+      : keywords.map(({ keyword, weight }) => ({
+          keyword: normalizeCategoryKeywordText(keyword),
+          weight,
+        }));
+
+    if (normalizedKeywords?.some(({ keyword }) => !keyword)) {
+      setFormError("Preencha todas as palavras-chave.");
+      return;
+    }
+
+    if (
+      normalizedKeywords?.some(
+        ({ weight }) => !Number.isInteger(weight) || weight < 1 || weight > 5,
+      )
+    ) {
+      setFormError("O peso de cada palavra-chave deve estar entre 1 e 5.");
+      return;
+    }
+
+    if (
+      normalizedKeywords &&
+      new Set(normalizedKeywords.map(({ keyword }) => keyword)).size !==
+        normalizedKeywords.length
+    ) {
+      setFormError("Não repita palavras-chave na mesma categoria.");
+      return;
+    }
+
     const payload: CategoryUpsertPayload = {
       name: trimmedName,
       parent_id: parentId,
       description: description.trim() || null,
       active,
+      keywords: normalizedKeywords,
     };
 
     try {
@@ -266,6 +309,135 @@ function CategoryFormDialog({
             />
           </div>
 
+          {!isEdit ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-medium">Palavras-chave</p>
+                  <p className="text-muted-foreground text-xs">
+                    Use pesos de 1 a 5 para indicar a relevância de cada termo.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setKeywords((current) => [
+                      ...current,
+                      {
+                        id:
+                          current.reduce(
+                            (highestId, item) => Math.max(highestId, item.id),
+                            0,
+                          ) + 1,
+                        keyword: "",
+                        weight: 1,
+                      },
+                    ]);
+                    setFormError("");
+                  }}
+                >
+                  <Plus data-icon="inline-start" />
+                  Adicionar
+                </Button>
+              </div>
+
+              {keywords.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="border-border grid gap-3 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_7rem_auto] sm:items-end"
+                >
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor={`category-keyword-${item.id}`}
+                      className="text-sm font-medium"
+                    >
+                      Palavra-chave {index + 1}
+                    </label>
+                    <Input
+                      id={`category-keyword-${item.id}`}
+                      value={item.keyword}
+                      onChange={(event) => {
+                        const keyword = event.target.value;
+                        setKeywords((current) =>
+                          current.map((currentItem) =>
+                            currentItem.id === item.id
+                              ? { ...currentItem, keyword }
+                              : currentItem,
+                          ),
+                        );
+                        setFormError("");
+                      }}
+                      maxLength={100}
+                      placeholder="Ex.: Café da Tarde"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor={`category-keyword-weight-${item.id}`}
+                      className="text-sm font-medium"
+                    >
+                      Peso
+                    </label>
+                    <Select
+                      value={String(item.weight)}
+                      onValueChange={(value) => {
+                        const weight = Number(value);
+                        setKeywords((current) =>
+                          current.map((currentItem) =>
+                            currentItem.id === item.id
+                              ? { ...currentItem, weight }
+                              : currentItem,
+                          ),
+                        );
+                        setFormError("");
+                      }}
+                    >
+                      <SelectTrigger
+                        id={`category-keyword-weight-${item.id}`}
+                        className="w-full"
+                        aria-label={`Peso da palavra-chave ${index + 1}`}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {[1, 2, 3, 4, 5].map((weight) => (
+                            <SelectItem key={weight} value={String(weight)}>
+                              {weight}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={keywords.length === 1}
+                    aria-label={`Remover palavra-chave ${index + 1}`}
+                    title="Remover palavra-chave"
+                    onClick={() => {
+                      setKeywords((current) =>
+                        current.filter(
+                          (currentItem) => currentItem.id !== item.id,
+                        ),
+                      );
+                      setFormError("");
+                    }}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
           <label
             htmlFor="category-active"
             className="border-border flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2"
@@ -322,6 +494,8 @@ export function CategoryManager() {
     null,
   );
   const [categoryToDelete, setCategoryToDelete] =
+    useState<AdminCategory | null>(null);
+  const [keywordDialogCategory, setKeywordDialogCategory] =
     useState<AdminCategory | null>(null);
   const query = useAdminCategoriesQuery();
   const deleteMutation = useDeleteCategoryMutation();
@@ -551,6 +725,14 @@ export function CategoryManager() {
                                 : "filhas"}
                             </Badge>
                           ) : null}
+                          {category.keywords.length > 0 ? (
+                            <Badge variant="outline">
+                              {category.keywords.length}{" "}
+                              {category.keywords.length === 1
+                                ? "palavra-chave"
+                                : "palavras-chave"}
+                            </Badge>
+                          ) : null}
                         </div>
                         <p className="text-muted-foreground mt-1 truncate text-xs">
                           {category.slug}
@@ -587,6 +769,17 @@ export function CategoryManager() {
                           <FolderPlus />
                         </Button>
                       ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-11 sm:size-9"
+                        aria-label={`Editar palavras-chave de ${category.name}`}
+                        title="Editar palavras-chave"
+                        onClick={() => setKeywordDialogCategory(category)}
+                      >
+                        <Tags />
+                      </Button>
                       <Button
                         type="button"
                         variant="ghost"
@@ -632,6 +825,16 @@ export function CategoryManager() {
           rows={rows}
           onOpenChange={(open) => {
             if (!open) setDialogState(null);
+          }}
+        />
+      ) : null}
+
+      {keywordDialogCategory ? (
+        <CategoryKeywordsDialog
+          key={keywordDialogCategory.id}
+          category={keywordDialogCategory}
+          onOpenChange={(open) => {
+            if (!open) setKeywordDialogCategory(null);
           }}
         />
       ) : null}

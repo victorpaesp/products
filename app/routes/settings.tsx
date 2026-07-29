@@ -2,9 +2,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react";
 import { ProfileForm } from "~/components/features/settings/ProfileForm";
 import { CategoryManager } from "~/components/features/settings/CategoryManager";
+import { ClassificationReviewManager } from "~/components/features/settings/ClassificationReviewManager";
 import { UsersTable } from "~/components/features/users/UsersTable";
 import { Button } from "~/components/ui/button";
-import { ChevronLeft, Tags, User, Users } from "lucide-react";
+import { ChevronLeft, ClipboardCheck, Tags, User, Users } from "lucide-react";
 import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
 import {
   commitUserSession,
@@ -141,6 +142,11 @@ const tabs = [
     value: "manage-categories",
     icon: Tags,
   },
+  {
+    name: "Revisar Classificações",
+    value: "classification-reviews",
+    icon: ClipboardCheck,
+  },
 ];
 
 export default function SettingsPage() {
@@ -150,7 +156,11 @@ export default function SettingsPage() {
   const isAdmin = user.role === "admin";
 
   const visibleTabs = tabs.filter((tab) => {
-    if (tab.value === "manage-users" || tab.value === "manage-categories") {
+    if (
+      tab.value === "manage-users" ||
+      tab.value === "manage-categories" ||
+      tab.value === "classification-reviews"
+    ) {
       return isAdmin;
     }
 
@@ -210,6 +220,9 @@ export default function SettingsPage() {
             ) : null}
             {tab.value === "manage-users" ? <UsersTable /> : null}
             {tab.value === "manage-categories" ? <CategoryManager /> : null}
+            {tab.value === "classification-reviews" ? (
+              <ClassificationReviewManager />
+            ) : null}
           </TabsContent>
         ))}
       </Tabs>

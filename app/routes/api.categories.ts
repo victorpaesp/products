@@ -17,6 +17,7 @@ import {
 } from "~/lib/backend.server";
 import {
   normalizeAdminCategoriesResponse,
+  normalizeCategoryKeywordText,
   normalizeCategoriesResponse,
   validateAdminCategoryParent,
 } from "~/lib/categories";
@@ -75,7 +76,64 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    if (!rawBody || typeof rawBody !== "object" || Array.isArray(rawBody)) {
+      return data({ error: "Dados da categoria inválidos." }, { status: 422 });
+    }
+
+    const rawKeywords = (rawBody as Record<string, unknown>).keywords;
+    if (!Array.isArray(rawKeywords) || rawKeywords.length === 0) {
+      return data(
+        { error: "Informe ao menos uma palavra-chave." },
+        { status: 422 },
+      );
+    }
+
+    const keywords = [];
+    for (const rawKeyword of rawKeywords) {
+      if (!rawKeyword || typeof rawKeyword !== "object") {
+        return data({ error: "Palavra-chave inválida." }, { status: 422 });
+      }
+
+      const candidate = rawKeyword as Record<string, unknown>;
+      const keyword =
+        typeof candidate.keyword === "string"
+          ? normalizeCategoryKeywordText(candidate.keyword)
+          : "";
+      const weight = candidate.weight;
+
+      if (!keyword) {
+        return data(
+          { error: "Preencha todas as palavras-chave." },
+          { status: 422 },
+        );
+      }
+
+      if (
+        typeof weight !== "number" ||
+        !Number.isInteger(weight) ||
+        weight < 1 ||
+        weight > 5
+      ) {
+        return data(
+          { error: "O peso de cada palavra-chave deve estar entre 1 e 5." },
+          { status: 422 },
+        );
+      }
+
+      keywords.push({ keyword, weight });
+    }
+
+    if (
+      new Set(keywords.map(({ keyword }) => keyword)).size !== keywords.length
+    ) {
+      return data(
+        { error: "Não repita palavras-chave na mesma categoria." },
+        { status: 422 },
+      );
+    }
+
+    const body = { ...rawBody, keywords };
     const parentId =
       body && typeof body === "object" && "parent_id" in body
         ? (body as { parent_id?: unknown }).parent_id

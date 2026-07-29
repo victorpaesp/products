@@ -1,5 +1,15 @@
 import type { AdminCategory, CategoryKeyword, ProductCategory } from "~/types";
 
+const COMBINING_MARKS_PATTERN = /[\u0300-\u036f]/g;
+
+export function normalizeCategoryKeywordText(value: string): string {
+  return value
+    .trim()
+    .normalize("NFD")
+    .replace(COMBINING_MARKS_PATTERN, "")
+    .toLowerCase();
+}
+
 export type CategoryIndex = {
   bySlug: Map<string, ProductCategory>;
   pathsBySlug: Map<string, ProductCategory[]>;
@@ -75,6 +85,23 @@ function normalizeKeyword(value: unknown): CategoryKeyword | null {
     created_at:
       typeof candidate.created_at === "string" ? candidate.created_at : "",
   };
+}
+
+export function normalizeCategoryKeywordsResponse(
+  raw: unknown,
+): CategoryKeyword[] {
+  const candidate =
+    raw && typeof raw === "object" && !Array.isArray(raw) && "data" in raw
+      ? (raw as { data?: unknown }).data
+      : raw;
+
+  if (!Array.isArray(candidate)) {
+    throw new Error("Erro ao carregar as palavras-chave.");
+  }
+
+  return candidate
+    .map(normalizeKeyword)
+    .filter((keyword): keyword is CategoryKeyword => keyword !== null);
 }
 
 function normalizeAdminCategory(

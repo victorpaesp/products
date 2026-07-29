@@ -117,11 +117,48 @@ export type AdminCategoriesApiResponse = {
   data: AdminCategory[];
 };
 
+export type CategoryKeywordPayload = {
+  keyword: string;
+  weight: number;
+};
+
 export type CategoryUpsertPayload = {
   name: string;
   parent_id: number | null;
   description: string | null;
   active: boolean;
+  keywords?: CategoryKeywordPayload[];
+};
+
+export type CategoryReviewStatus = "pending" | "approved" | "rejected";
+
+export type CategoryReview = {
+  id: number;
+  score: number;
+  status: CategoryReviewStatus;
+  product: {
+    id: number;
+    name: string;
+    provider: string;
+  };
+  suggested_category: {
+    id: number;
+    name: string;
+    parent: string | null;
+  } | null;
+  created_at: string;
+};
+
+export type CategoryReviewsPagination = {
+  total: number;
+  per_page: number;
+  current_page: number;
+  last_page: number;
+};
+
+export type CategoryReviewsResult = {
+  reviews: CategoryReview[];
+  pagination: CategoryReviewsPagination;
 };
 
 export type Product = {
