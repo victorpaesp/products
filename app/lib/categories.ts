@@ -16,6 +16,23 @@ export type CategoryIndex = {
   duplicateSlugs: Set<string>;
 };
 
+function extractCategoryArray(raw: unknown): unknown {
+  if (Array.isArray(raw)) return raw;
+  if (!raw || typeof raw !== "object") return raw;
+
+  const response = raw as Record<string, unknown>;
+  if (Array.isArray(response.categories)) return response.categories;
+  if (Array.isArray(response.data)) return response.data;
+
+  if (response.data && typeof response.data === "object") {
+    const data = response.data as Record<string, unknown>;
+    if (Array.isArray(data.categories)) return data.categories;
+    if (Array.isArray(data.data)) return data.data;
+  }
+
+  return raw;
+}
+
 function normalizeCategory(
   value: unknown,
   ancestors: Set<object>,
@@ -42,7 +59,8 @@ function normalizeCategory(
     .filter((child): child is ProductCategory => child !== null);
 
   const id =
-    typeof candidate.id === "number" && Number.isInteger(candidate.id)
+    (typeof candidate.id === "number" && Number.isInteger(candidate.id)) ||
+    (typeof candidate.id === "string" && candidate.id.trim())
       ? candidate.id
       : undefined;
 
@@ -50,10 +68,7 @@ function normalizeCategory(
 }
 
 export function normalizeCategoriesResponse(raw: unknown): ProductCategory[] {
-  const candidate =
-    raw && typeof raw === "object" && !Array.isArray(raw) && "data" in raw
-      ? (raw as { data?: unknown }).data
-      : raw;
+  const candidate = extractCategoryArray(raw);
 
   if (!Array.isArray(candidate)) {
     throw new Error("Erro ao carregar as categorias.");
@@ -155,10 +170,7 @@ function normalizeAdminCategory(
 export function normalizeAdminCategoriesResponse(
   raw: unknown,
 ): AdminCategory[] {
-  const candidate =
-    raw && typeof raw === "object" && !Array.isArray(raw) && "data" in raw
-      ? (raw as { data?: unknown }).data
-      : raw;
+  const candidate = extractCategoryArray(raw);
 
   if (!Array.isArray(candidate)) {
     throw new Error("Erro ao carregar as categorias.");

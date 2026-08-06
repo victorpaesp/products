@@ -11,6 +11,7 @@ import {
   Search,
   Tags,
   Trash2,
+  X,
 } from "lucide-react";
 import type { AdminCategory, CategoryUpsertPayload } from "~/types";
 import {
@@ -27,6 +28,7 @@ import { Textarea } from "~/components/ui/textarea";
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
 } from "~/components/ui/input-group";
 import {
@@ -370,7 +372,7 @@ function CategoryFormDialog({
                         setFormError("");
                       }}
                       maxLength={100}
-                      placeholder="Ex.: Café da Tarde"
+                      placeholder="Ex.: Brinquedos"
                       required
                     />
                   </div>
@@ -573,7 +575,7 @@ export function CategoryManager() {
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-2xl font-bold">Gerenciar categorias</h2>
+            <h1 className="text-2xl font-bold">Gerenciar categorias</h1>
             {query.data ? (
               <>
                 <Badge variant="outline">{rows.length} no total</Badge>
@@ -608,6 +610,17 @@ export function CategoryManager() {
               placeholder="Buscar categorias"
               aria-label="Buscar categorias"
             />
+            {search ? (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-xs"
+                  onClick={() => setSearch("")}
+                  aria-label="Limpar busca"
+                >
+                  <X />
+                </InputGroupButton>
+              </InputGroupAddon>
+            ) : null}
           </InputGroup>
           <p className="text-muted-foreground text-xs">
             Use “Adicionar subcategoria” para manter a hierarquia correta.

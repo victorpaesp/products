@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
-import { Link, useSearchParams } from "@remix-run/react";
+import { useSearchParams } from "@remix-run/react";
 import {
   ArrowDown,
   ArrowRight,
   Check,
   CircleCheckBig,
-  ExternalLink,
   Filter,
   LoaderCircle,
+  SquarePen,
   RotateCw,
   TriangleAlert,
   X,
@@ -41,6 +41,7 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import { toast } from "~/components/ui/toast-client";
+import { AdminProductEditor } from "~/components/features/admin/products";
 
 type CategoryOption = {
   id: number;
@@ -170,6 +171,7 @@ type ReviewCardProps = {
   review: CategoryReview;
   categoryOptions: CategoryOption[];
   categoriesPending: boolean;
+  onEditProduct: (productId: number) => void;
   onReject: (review: CategoryReview) => void;
 };
 
@@ -177,6 +179,7 @@ function ReviewCard({
   review,
   categoryOptions,
   categoriesPending,
+  onEditProduct,
   onReject,
 }: ReviewCardProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState(
@@ -241,15 +244,15 @@ function ReviewCard({
           <h3 className="font-semibold wrap-break-word">
             {review.product.name}
           </h3>
-          <Button asChild variant="link" size="sm" className="h-auto w-fit p-0">
-            <Link
-              to={`/products/${review.product.id}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Ver produto
-              <ExternalLink data-icon="inline-end" />
-            </Link>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-auto w-fit p-0"
+            onClick={() => onEditProduct(review.product.id)}
+          >
+            Editar produto
+            <SquarePen data-icon="inline-end" />
           </Button>
         </div>
 
@@ -288,12 +291,12 @@ function ReviewCard({
           >
             <SelectTrigger
               id={`review-category-${review.id}`}
-              className="h-11 w-full sm:h-9 xl:max-w-md"
+              className="min-h-11 w-full sm:min-h-9 xl:max-w-md"
               aria-invalid={!selectedCategoryExists}
             >
               <SelectValue placeholder="Selecione uma categoria" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[min(20rem,var(--radix-select-content-available-height))]">
               <SelectGroup>
                 {categoryOptions.map((option) => (
                   <SelectItem
@@ -345,12 +348,25 @@ function ReviewCard({
   );
 }
 
-export function ClassificationReviewManager() {
+type ClassificationReviewManagerProps = {
+  token: string;
+};
+
+function parseProductId(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const productId = Number(value);
+  return productId > 0 ? productId : null;
+}
+
+export function ClassificationReviewManager({
+  token,
+}: ClassificationReviewManagerProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const appliedProduct = searchParams.get("review_product")?.trim() ?? "";
   const appliedCategory = searchParams.get("review_category")?.trim() ?? "";
   const rawPage = Number(searchParams.get("review_page"));
   const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+  const selectedProductId = parseProductId(searchParams.get("product"));
   const [reviewToReject, setReviewToReject] = useState<CategoryReview | null>(
     null,
   );
@@ -442,7 +458,7 @@ export function ClassificationReviewManager() {
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-2xl font-bold">Revisão de classificação</h2>
+            <h1 className="text-2xl font-bold">Revisão de classificação</h1>
             {query.data ? (
               <Badge variant={total > 0 ? "secondary" : "outline"}>
                 {total} {total === 1 ? "pendência" : "pendências"}
@@ -548,6 +564,9 @@ export function ClassificationReviewManager() {
               review={review}
               categoryOptions={categoryOptions}
               categoriesPending={categoriesQuery.isLoading}
+              onEditProduct={(productId) =>
+                updateSearchParams({ product: String(productId) })
+              }
               onReject={(selectedReview) => {
                 setReviewToReject(selectedReview);
                 setReviewerNotes("");
@@ -659,6 +678,15 @@ export function ClassificationReviewManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {selectedProductId ? (
+        <AdminProductEditor
+          key={selectedProductId}
+          productId={selectedProductId}
+          token={token}
+          onClose={() => updateSearchParams({ product: null })}
+        />
+      ) : null}
     </div>
   );
 }

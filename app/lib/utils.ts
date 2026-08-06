@@ -228,14 +228,6 @@ export const formatBoxWeight = (value?: string | null): string | null => {
 
 const DEFAULT_PRODUCT_PLACEHOLDER = "/logo-santomimo.png";
 
-const shouldProxyRemoteImages = process.env.NODE_ENV === "production";
-
-/** Rotas imagens remotas pelo proxy para evitar rate limit (ex.: Wordfence). */
-const proxyRemoteImageUrl = (absoluteUrl: string): string => {
-  if (!shouldProxyRemoteImages) return absoluteUrl;
-  return `/api/image-proxy?url=${encodeURIComponent(absoluteUrl)}`;
-};
-
 export const handleImageLoadError = (
   event: React.SyntheticEvent<HTMLImageElement>,
   fallback = DEFAULT_PRODUCT_PLACEHOLDER,
@@ -259,11 +251,11 @@ export const normalizeImageUrl = (
   }
 
   if (/^https?:\/\//i.test(trimmed)) {
-    return proxyRemoteImageUrl(trimmed);
+    return trimmed;
   }
 
   if (/^\/\//.test(trimmed)) {
-    return proxyRemoteImageUrl(`https:${trimmed}`);
+    return `https:${trimmed}`;
   }
 
   if (trimmed.startsWith("/")) {
@@ -296,26 +288,29 @@ export const supplierLogoHeightClassMap: Record<string, string> = {
   spot: "h-20",
 };
 
-const supplierIdAliasMap: Record<number, keyof typeof supplierLogoFallbackMap> = {
-  1: "wooch",
-  2: "xbz",
-  3: "asia-import",
-  4: "spot",
-};
-
-const legacyProviderAliasMap: Record<string, keyof typeof supplierLogoFallbackMap> =
+const supplierIdAliasMap: Record<number, keyof typeof supplierLogoFallbackMap> =
   {
-    wooch: "wooch",
-    MinhaXBZ: "xbz",
-    xbz: "xbz",
-    AsianImport: "asia-import",
-    "asia-import": "asia-import",
-    "asia-imports": "asia-import",
-    asiaimport: "asia-import",
-    SpotGifts: "spot",
-    spot: "spot",
-    spotgifts: "spot",
+    1: "wooch",
+    2: "xbz",
+    3: "asia-import",
+    4: "spot",
   };
+
+const legacyProviderAliasMap: Record<
+  string,
+  keyof typeof supplierLogoFallbackMap
+> = {
+  wooch: "wooch",
+  MinhaXBZ: "xbz",
+  xbz: "xbz",
+  AsianImport: "asia-import",
+  "asia-import": "asia-import",
+  "asia-imports": "asia-import",
+  asiaimport: "asia-import",
+  SpotGifts: "spot",
+  spot: "spot",
+  spotgifts: "spot",
+};
 
 export function resolveSupplierAlias(
   supplier?: Pick<ProductSupplier, "alias" | "id"> | null,

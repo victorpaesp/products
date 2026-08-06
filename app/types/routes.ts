@@ -1,13 +1,7 @@
-import type { ApiResponse, SelectedProduct } from "~/types/index";
+import type { SelectedProduct } from "~/types/index";
 
 export type LoginActionData = {
   error?: string;
-};
-
-export type ProductsLoaderData = {
-  data: ApiResponse | null;
-  error: string | null;
-  token: string;
 };
 
 export type ProductDetailLoaderData = {

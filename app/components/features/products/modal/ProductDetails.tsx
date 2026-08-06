@@ -26,7 +26,7 @@ import {
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
 import toast from "~/components/ui/toast-client";
-import { Pencil, RotateCcw, Save, X, Loader2 } from "lucide-react";
+import { Pencil, RotateCcw, Save, Loader2 } from "lucide-react";
 import {
   Accordion,
   AccordionItem,
@@ -38,19 +38,10 @@ import type { ProductDetailsProps } from "~/types/components";
 import type { ProductsOutletContextType } from "~/types/routes";
 import { useUpdateProductDescriptionMutation } from "~/hooks/useProductDescription";
 import { ProductVariationSelect } from "~/components/features/products/modal/ProductVariationSelect";
-
-function getDisplayDescription(product: Product): string {
-  if (product.description_override) {
-    return product.description_override;
-  }
-  return product.description_original || product.description;
-}
-
-function hasDescriptionOverride(product: Product): boolean {
-  return (
-    !!product.description_override && product.description_override.trim() !== ""
-  );
-}
+import {
+  getEffectiveProductDescription,
+  hasProductDescriptionOverride,
+} from "~/lib/product-description";
 
 function getVariationsForDisplay(product: Product): Variation[] {
   const variations = product.variations ?? [];
@@ -171,8 +162,8 @@ export function ProductDetails({
     onCarouselPreviewImage?.(null);
   }, [product.id, product.product_cod, onCarouselPreviewImage]);
 
-  const displayDescription = getDisplayDescription(product);
-  const hasOverride = hasDescriptionOverride(product);
+  const displayDescription = getEffectiveProductDescription(product);
+  const hasOverride = hasProductDescriptionOverride(product);
   const formattedProductWeight = formatWeight(product.product_weight);
   const formattedBoxWeight = formatBoxWeight(product.box_weight);
   const logoPath = getSupplierLogoPath(product.supplier);

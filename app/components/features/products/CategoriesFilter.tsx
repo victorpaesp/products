@@ -11,7 +11,9 @@ import { useState } from "react";
 import { Link } from "@remix-run/react";
 import type { ProductCategory } from "~/types";
 import { cn } from "~/lib/utils";
+import { ADMIN_PANEL_ENTRY_POINTS_ENABLED } from "~/lib/admin-feature";
 import { Button } from "~/components/ui/button";
+import { ButtonGroup } from "~/components/ui/button-group";
 import {
   Popover,
   PopoverContent,
@@ -183,7 +185,7 @@ export function CategoriesFilter(props: CategoriesFilterProps) {
     <Button
       type="button"
       variant="outline"
-      className="h-9 w-full justify-between sm:w-52"
+      className="h-9 min-w-0 flex-1 justify-between"
       aria-label={
         props.selectedCategory
           ? `Categoria selecionada: ${props.selectedCategory.name}`
@@ -198,12 +200,33 @@ export function CategoriesFilter(props: CategoriesFilterProps) {
     </Button>
   );
 
+  const clearButton = props.selectedSlug ? (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      aria-label={
+        props.selectedCategory
+          ? `Limpar categoria ${props.selectedCategory.name}`
+          : "Limpar categoria selecionada"
+      }
+      title="Limpar categoria"
+      onClick={() => selectCategory(null)}
+    >
+      <X />
+    </Button>
+  ) : null;
+
   const contentProps = { ...props, onSelect: selectCategory };
 
   const managerLink = props.isAdmin ? (
     <Button type="button" className="shrink-0" asChild>
       <Link
-        to="/settings?tab=manage-categories"
+        to={
+          ADMIN_PANEL_ENTRY_POINTS_ENABLED
+            ? "/admin/categories"
+            : "/settings?tab=manage-categories"
+        }
         onClick={() => {
           setDesktopOpen(false);
           setMobileOpen(false);
@@ -223,7 +246,10 @@ export function CategoriesFilter(props: CategoriesFilterProps) {
 
       <div className="hidden md:block">
         <Popover open={desktopOpen} onOpenChange={setDesktopOpen}>
-          <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+          <ButtonGroup className="w-full sm:w-52">
+            <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+            {clearButton}
+          </ButtonGroup>
           <PopoverContent
             align="start"
             className="w-[min(56rem,calc(100vw-2rem))] p-0"
@@ -246,7 +272,10 @@ export function CategoriesFilter(props: CategoriesFilterProps) {
 
       <div className="md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>{trigger}</SheetTrigger>
+          <ButtonGroup className="w-full sm:w-52">
+            <SheetTrigger asChild>{trigger}</SheetTrigger>
+            {clearButton}
+          </ButtonGroup>
           <SheetContent
             side="left"
             className="w-full max-w-none p-0 sm:max-w-md"

@@ -46,14 +46,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }
     }
 
-    const response = manageView
-      ? await backendListCategories({ token })
-      : await backendListCategoryTree({ token });
-    return Response.json(
-      manageView
-        ? normalizeAdminCategoriesResponse(response)
-        : normalizeCategoriesResponse(response),
-    );
+    if (manageView) {
+      const response = await backendListCategories({ token });
+      return Response.json(normalizeAdminCategoriesResponse(response));
+    }
+
+    try {
+      const response = await backendListCategoryTree({ token });
+      const categories = normalizeCategoriesResponse(response);
+
+      if (categories.length > 0) {
+        return Response.json(categories);
+      }
+    } catch (error) {
+      const routeUnavailable =
+        error instanceof BackendApiError &&
+        (error.status === 404 || error.status === 405);
+
+      if (!routeUnavailable) {
+        throw error;
+      }
+    }
+
+    // MongoDB backends may expose the public category list directly at
+    // /categories instead of maintaining the legacy /categories/tree route.
+    const response = await backendListCategories({ token });
+    return Response.json(normalizeCategoriesResponse(response));
   } catch (error) {
     if (error instanceof BackendApiError && error.status === 401) {
       throw redirect("/login");

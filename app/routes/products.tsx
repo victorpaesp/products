@@ -1,12 +1,11 @@
 import {
-  useLoaderData,
   useOutletContext,
   useRouteLoaderData,
   useSearchParams,
 } from "@remix-run/react";
-import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 import { useEffect, useMemo, useState } from "react";
-import type { ApiResponse, Product, SelectedProduct } from "~/types";
+import type { Product, SelectedProduct } from "~/types";
 import { ProductCard } from "~/components/features/products/ProductCard";
 import { CategoriesFilter } from "~/components/features/products/CategoriesFilter";
 import { CategoryBreadcrumb } from "~/components/features/products/CategoryBreadcrumb";
@@ -33,96 +32,33 @@ import { ErrorState } from "~/components/shared/ErrorState";
 import { LoadingState } from "~/components/shared/LoadingState";
 import { MetaFunction } from "@remix-run/node";
 import { requireAuth } from "~/lib/auth.server";
-import { useQueryClient } from "@tanstack/react-query";
-import { createQueryClient } from "~/lib/query-client";
-import { fetchProductsForRequest } from "~/lib/products.server";
-import type {
-  ProductsLoaderData,
-  ProductsOutletContextType,
-} from "~/types/routes";
-import {
-  getProductsQueryParams,
-  productsQueryKeys,
-  type ProductsQueryParams,
-  toProductsApiParams,
-} from "~/lib/products-query";
-import { fetchProductsQuery, useProductsQuery } from "~/hooks/useProducts";
+import type { ProductsOutletContextType } from "~/types/routes";
+import { getProductsQueryParams } from "~/lib/products-query";
+import { useProductsQuery } from "~/hooks/useProducts";
 import { useColorsQuery } from "~/hooks/useColors";
 import { useSuppliersQuery } from "~/hooks/useSuppliers";
 import { useCategoriesQuery } from "~/hooks/useCategories";
 import { buildCategoryIndex } from "~/lib/categories";
-import { BackendApiError } from "~/lib/backend.server";
 import { useCacheStatus } from "~/hooks/useCacheStatus";
 import { CacheIndicator } from "~/components/shared/CacheIndicator";
 import { BackToTopButton } from "~/components/shared/BackToTopButton";
 import type { loader as rootLoader } from "~/root";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const token = await requireAuth(request);
-  const url = new URL(request.url);
-  const queryParams = getProductsQueryParams(url.searchParams);
-  const params = toProductsApiParams(queryParams);
-  const queryClient = createQueryClient();
-  const queryKey = productsQueryKeys.list(queryParams);
-
-  try {
-    await queryClient.prefetchQuery({
-      queryKey,
-      queryFn: () =>
-        fetchProductsForRequest({
-          token,
-          params,
-        }),
-    });
-
-    const prefetchedData = queryClient.getQueryData<ApiResponse>(queryKey);
-
-    return data<ProductsLoaderData>({
-      data: prefetchedData || null,
-      error: null,
-      token,
-    });
-  } catch (error) {
-    if (error instanceof BackendApiError && error.status === 401) {
-      throw redirect("/login");
-    }
-
-    const message =
-      error instanceof BackendApiError
-        ? error.message
-        : "Erro ao carregar os produtos.";
-
-    return data<ProductsLoaderData>(
-      {
-        data: null,
-        error: message,
-        token,
-      },
-      { status: 500 },
-    );
-  }
+  await requireAuth(request);
+  return null;
 }
 
 export const meta: MetaFunction = () => {
   return [{ title: "Santo Mimo" }];
 };
 
-export function shouldRevalidate({
-  currentUrl,
-  nextUrl,
-}: {
-  currentUrl: URL;
-  nextUrl: URL;
-}) {
-  return currentUrl.search !== nextUrl.search;
-}
+export const shouldRevalidate = () => false;
 
 export default function Products() {
-  const loaderData = useLoaderData<typeof loader>();
   const rootData = useRouteLoaderData<typeof rootLoader>("root");
   const isAdmin = rootData?.user?.role === "admin";
   const [searchParams, setSearchParams] = useSearchParams();
-  const queryClient = useQueryClient();
   const searchTermRaw = searchParams.get("q");
   const searchTerm = searchTermRaw ? searchTermRaw.trim() : "";
   const queryParams = useMemo(() => {
@@ -133,28 +69,24 @@ export default function Products() {
     return params;
   }, [searchParams, isAdmin]);
 
-  const { data, isLoading, isFetching, isError, error } = useProductsQuery(
-    queryParams,
-    { token: loaderData.token },
-  );
+  const { data, isLoading, isFetching, isError, error } =
+    useProductsQuery(queryParams);
 
   const cacheStatus = useCacheStatus({ data, isLoading, isFetching });
 
   const errorMessage = isError
     ? error.message || "Erro ao carregar os produtos."
-    : !data
-      ? loaderData.error
-      : null;
+    : null;
 
   const isProductsGridLoading = isFetching && !errorMessage;
   const selectedColor = searchParams.get("color") || "";
   const selectedSupplierId = searchParams.get("supplier_id") || "";
   const selectedCategorySlug = searchParams.get("category")?.trim() || "";
-  const { data: colors = [] } = useColorsQuery(loaderData.token);
-  const { data: suppliers = [] } = useSuppliersQuery(loaderData.token, {
+  const { data: colors = [] } = useColorsQuery();
+  const { data: suppliers = [] } = useSuppliersQuery(undefined, {
     enabled: isAdmin,
   });
-  const categoriesQuery = useCategoriesQuery(loaderData.token);
+  const categoriesQuery = useCategoriesQuery();
   const categories = useMemo(
     () => (Array.isArray(categoriesQuery.data) ? categoriesQuery.data : []),
     [categoriesQuery.data],
@@ -240,29 +172,6 @@ export default function Products() {
   }, [isAdmin, searchParams, setSearchParams]);
 
   const pendingSearchParams = useMemo(() => searchParams, [searchParams]);
-
-  const hasNextPage = Boolean(data?.next_page_url);
-
-  useEffect(() => {
-    if (!hasNextPage) return;
-    if (data?.current_page !== queryParams.page) return;
-
-    const nextParams: ProductsQueryParams = {
-      ...queryParams,
-      page: queryParams.page + 1,
-    };
-
-    void queryClient.prefetchQuery({
-      queryKey: productsQueryKeys.list(nextParams),
-      queryFn: () => fetchProductsQuery(nextParams, loaderData.token),
-    });
-  }, [
-    hasNextPage,
-    data?.current_page,
-    queryClient,
-    queryParams,
-    loaderData.token,
-  ]);
 
   const page = Number(searchParams.get("page")) || 1;
   const showProductsSection = Boolean(data || errorMessage);

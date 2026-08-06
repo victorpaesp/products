@@ -213,7 +213,7 @@ export function CategoryKeywordsDialog({
   return (
     <>
       <Dialog open onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar palavras-chave</DialogTitle>
             <DialogDescription>
@@ -248,7 +248,7 @@ export function CategoryKeywordsDialog({
                     setFormError("");
                   }}
                   maxLength={100}
-                  placeholder="Ex.: Café da Tarde"
+                  placeholder="Ex.: Brinquedos"
                   aria-invalid={Boolean(formError)}
                   required
                 />
@@ -309,51 +309,61 @@ export function CategoryKeywordsDialog({
 
           <Separator />
 
-          <div className="flex flex-col gap-3">
+          <div
+            className="flex min-h-0 flex-col gap-3"
+            role="region"
+            aria-labelledby="registered-keywords-title"
+          >
             <div className="flex items-center gap-2">
               <Tags aria-hidden="true" />
-              <h3 className="font-medium">Palavras-chave cadastradas</h3>
+              <h3 id="registered-keywords-title" className="font-medium">
+                Palavras-chave cadastradas
+              </h3>
             </div>
 
-            {query.isLoading ? (
-              <div className="text-muted-foreground flex min-h-32 items-center justify-center gap-2 text-sm">
-                <LoaderCircle aria-hidden="true" className="animate-spin" />
-                Carregando palavras-chave...
-              </div>
-            ) : query.isError ? (
-              <div className="flex min-h-32 flex-col items-center justify-center gap-3 text-center">
-                <p className="text-muted-foreground text-sm">
-                  {query.error.message ||
-                    "Não foi possível carregar as palavras-chave."}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void query.refetch()}
-                >
-                  <RotateCw data-icon="inline-start" />
-                  Tentar novamente
-                </Button>
-              </div>
-            ) : keywords.length === 0 ? (
-              <div className="border-border flex min-h-32 flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-4 text-center">
-                <p className="font-medium">Nenhuma palavra-chave cadastrada</p>
-                <p className="text-muted-foreground text-sm">
-                  Use o formulário acima para adicionar o primeiro termo.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {keywords.map((keyword) => (
-                  <CategoryKeywordRow
-                    key={keyword.id}
-                    keyword={keyword}
-                    onDelete={setKeywordToDelete}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="min-h-0 overflow-y-auto overscroll-contain pr-1">
+              {query.isLoading ? (
+                <div className="text-muted-foreground flex min-h-32 items-center justify-center gap-2 text-sm">
+                  <LoaderCircle aria-hidden="true" className="animate-spin" />
+                  Carregando palavras-chave...
+                </div>
+              ) : query.isError ? (
+                <div className="flex min-h-32 flex-col items-center justify-center gap-3 text-center">
+                  <p className="text-muted-foreground text-sm">
+                    {query.error.message ||
+                      "Não foi possível carregar as palavras-chave."}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void query.refetch()}
+                  >
+                    <RotateCw data-icon="inline-start" />
+                    Tentar novamente
+                  </Button>
+                </div>
+              ) : keywords.length === 0 ? (
+                <div className="border-border flex min-h-32 flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-4 text-center">
+                  <p className="font-medium">
+                    Nenhuma palavra-chave cadastrada
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    Use o formulário acima para adicionar o primeiro termo.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {keywords.map((keyword) => (
+                    <CategoryKeywordRow
+                      key={keyword.id}
+                      keyword={keyword}
+                      onDelete={setKeywordToDelete}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

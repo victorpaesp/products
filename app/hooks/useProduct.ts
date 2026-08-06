@@ -3,8 +3,13 @@ import type { Product } from "~/types";
 
 export const productQueryKeys = {
   all: ["product"] as const,
+  detailsForProduct: (productId: string | number) =>
+    [...productQueryKeys.all, String(productId)] as const,
   detail: (productId: string, variationId?: string) =>
-    [...productQueryKeys.all, productId, variationId ?? null] as const,
+    [
+      ...productQueryKeys.detailsForProduct(productId),
+      variationId ?? null,
+    ] as const,
 };
 
 export async function fetchProductQuery(

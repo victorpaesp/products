@@ -9,6 +9,7 @@ import type {
 } from "~/types";
 import type { RequestOptions } from "~/types/server";
 
+console.log("AQUI", process.env.BACKEND_API_URL);
 const API_BASE_URL =
   process.env.BACKEND_API_URL ?? "https://hmg-searchm.on-forge.com/api";
 
@@ -162,6 +163,16 @@ export async function backendGetProduct(options: {
   const path = `/products/${options.productId}${query}`;
 
   return backendRequest<unknown>(path, {
+    method: "GET",
+    token: options.token,
+  });
+}
+
+export async function backendGetProductCategories(options: {
+  token: string;
+  productId: string | number;
+}) {
+  return backendRequest<unknown>(`/products/${options.productId}/categories`, {
     method: "GET",
     token: options.token,
   });

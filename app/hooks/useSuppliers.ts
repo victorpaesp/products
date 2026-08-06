@@ -6,13 +6,11 @@ export const suppliersQueryKeys = {
   list: () => [...suppliersQueryKeys.all, "list"] as const,
 };
 
-async function fetchSuppliersQuery(token: string): Promise<ProductSupplier[]> {
+async function fetchSuppliersQuery(token?: string): Promise<ProductSupplier[]> {
   const response = await fetch("/api/suppliers", {
     method: "GET",
     credentials: "same-origin",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
   if (!response.ok) {
@@ -23,7 +21,7 @@ async function fetchSuppliersQuery(token: string): Promise<ProductSupplier[]> {
 }
 
 export function useSuppliersQuery(
-  token: string,
+  token?: string,
   options?: { enabled?: boolean },
 ) {
   return useQuery({

@@ -39,6 +39,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return data({ user });
 }
 
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+  formMethod,
+  defaultShouldRevalidate,
+}: {
+  currentUrl: URL;
+  nextUrl: URL;
+  formMethod?: string;
+  defaultShouldRevalidate: boolean;
+}) {
+  const isSamePageSearchChange =
+    !formMethod &&
+    currentUrl.pathname === nextUrl.pathname &&
+    currentUrl.search !== nextUrl.search;
+
+  return isSamePageSearchChange ? false : defaultShouldRevalidate;
+}
+
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -87,6 +106,9 @@ export default function App() {
 
   const hideHeaderRoutes = ["/login", "/register", "/reset-password"];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+  const isAdminRoute =
+    location.pathname === "/admin" || location.pathname.startsWith("/admin/");
+  const shouldShowCommercialChrome = shouldShowHeader && !isAdminRoute;
 
   useEffect(() => {
     if (!user) {
@@ -119,7 +141,7 @@ export default function App() {
             </div>
           </div>
         )}
-        {shouldShowHeader && (
+        {shouldShowCommercialChrome && (
           <AppHeader
             selectedProducts={selectedProducts}
             onOpenDrawer={() => setIsDrawerOpen(true)}
@@ -137,32 +159,34 @@ export default function App() {
             }}
           />
         </div>
-        {shouldShowHeader && <AppFooter />}
-        <ProductsDrawer
-          isOpen={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-          selectedProducts={selectedProducts}
-          onRemoveProduct={(product_cod: string, variation_cod: string) => {
-            setSelectedProducts((prev) =>
-              prev.filter((item) => {
-                if (
-                  item.product.variations.length === 1 &&
-                  item.product.product_cod === product_cod
-                ) {
-                  return false;
-                }
-                return !(
-                  item.product.product_cod === product_cod &&
-                  item.variation.product_cod === variation_cod
-                );
-              }),
-            );
-          }}
-          onClearProducts={() => {
-            setSelectedProducts([]);
-            setIsDrawerOpen(false);
-          }}
-        />
+        {shouldShowCommercialChrome && <AppFooter />}
+        {shouldShowCommercialChrome ? (
+          <ProductsDrawer
+            isOpen={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            selectedProducts={selectedProducts}
+            onRemoveProduct={(product_cod: string, variation_cod: string) => {
+              setSelectedProducts((prev) =>
+                prev.filter((item) => {
+                  if (
+                    item.product.variations.length === 1 &&
+                    item.product.product_cod === product_cod
+                  ) {
+                    return false;
+                  }
+                  return !(
+                    item.product.product_cod === product_cod &&
+                    item.variation.product_cod === variation_cod
+                  );
+                }),
+              );
+            }}
+            onClearProducts={() => {
+              setSelectedProducts([]);
+              setIsDrawerOpen(false);
+            }}
+          />
+        ) : null}
       </ThemeProvider>
     </QueryProvider>
   );

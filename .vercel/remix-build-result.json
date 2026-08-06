@@ -10,17 +10,30 @@
       }
     },
     "routeIdToServerBundleId": {
+      "routes/api.products.$productId.categories.$categoryId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.category-reviews.$reviewId.$decision": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.categories.$categoryId.keywords": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.products.$productId.description": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.categories.keywords.$keywordId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.products.$productId.categories": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.categories.$categoryId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.categories_.reviews": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.products.$productId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.category-reviews": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/products_.$productId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.password-forgot": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.admin-products": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.users.$userId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.categories": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.all-products": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.image-proxy": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.products": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.categories": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/reset-password": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.reviews": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.suppliers": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin._index": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/admin.users": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.colors": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.users": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/products": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
@@ -37,10 +50,55 @@
         "file": "app/root.tsx",
         "config": {}
       },
+      "routes/api.products.$productId.categories.$categoryId": {
+        "file": "app/routes/api.products.$productId.categories.$categoryId.ts",
+        "id": "routes/api.products.$productId.categories.$categoryId",
+        "path": ":categoryId",
+        "parentId": "routes/api.products.$productId.categories",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.category-reviews.$reviewId.$decision": {
+        "file": "app/routes/api.category-reviews.$reviewId.$decision.ts",
+        "id": "routes/api.category-reviews.$reviewId.$decision",
+        "path": ":reviewId/:decision",
+        "parentId": "routes/api.category-reviews",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.categories.$categoryId.keywords": {
+        "file": "app/routes/api.categories.$categoryId.keywords.ts",
+        "id": "routes/api.categories.$categoryId.keywords",
+        "path": "keywords",
+        "parentId": "routes/api.categories.$categoryId",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
       "routes/api.products.$productId.description": {
         "file": "app/routes/api.products.$productId.description.ts",
         "id": "routes/api.products.$productId.description",
         "path": "description",
+        "parentId": "routes/api.products.$productId",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.categories.keywords.$keywordId": {
+        "file": "app/routes/api.categories.keywords.$keywordId.ts",
+        "id": "routes/api.categories.keywords.$keywordId",
+        "path": "keywords/:keywordId",
+        "parentId": "routes/api.categories",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.products.$productId.categories": {
+        "file": "app/routes/api.products.$productId.categories.ts",
+        "id": "routes/api.products.$productId.categories",
+        "path": "categories",
         "parentId": "routes/api.products.$productId",
         "config": {
           "runtime": "nodejs"
@@ -55,10 +113,28 @@
           "runtime": "nodejs"
         }
       },
+      "routes/admin.categories_.reviews": {
+        "file": "app/routes/admin.categories_.reviews.tsx",
+        "id": "routes/admin.categories_.reviews",
+        "path": "categories/reviews",
+        "parentId": "routes/admin",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
       "routes/api.products.$productId": {
         "file": "app/routes/api.products.$productId.ts",
         "id": "routes/api.products.$productId",
         "path": "api/products/:productId",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.category-reviews": {
+        "file": "app/routes/api.category-reviews.ts",
+        "id": "routes/api.category-reviews",
+        "path": "api/category-reviews",
         "parentId": "root",
         "config": {
           "runtime": "nodejs"
@@ -82,11 +158,29 @@
           "runtime": "nodejs"
         }
       },
+      "routes/api.admin-products": {
+        "file": "app/routes/api.admin-products.ts",
+        "id": "routes/api.admin-products",
+        "path": "api/admin-products",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
       "routes/api.users.$userId": {
         "file": "app/routes/api.users.$userId.ts",
         "id": "routes/api.users.$userId",
         "path": ":userId",
         "parentId": "routes/api.users",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.categories": {
+        "file": "app/routes/admin.categories.tsx",
+        "id": "routes/admin.categories",
+        "path": "categories",
+        "parentId": "routes/admin",
         "config": {
           "runtime": "nodejs"
         }
@@ -109,6 +203,15 @@
           "runtime": "nodejs"
         }
       },
+      "routes/admin.products": {
+        "file": "app/routes/admin.products.tsx",
+        "id": "routes/admin.products",
+        "path": "products",
+        "parentId": "routes/admin",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
       "routes/api.categories": {
         "file": "app/routes/api.categories.ts",
         "id": "routes/api.categories",
@@ -127,11 +230,38 @@
           "runtime": "nodejs"
         }
       },
+      "routes/admin.reviews": {
+        "file": "app/routes/admin.reviews.tsx",
+        "id": "routes/admin.reviews",
+        "path": "reviews",
+        "parentId": "routes/admin",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
       "routes/api.suppliers": {
         "file": "app/routes/api.suppliers.ts",
         "id": "routes/api.suppliers",
         "path": "api/suppliers",
         "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin._index": {
+        "file": "app/routes/admin._index.tsx",
+        "id": "routes/admin._index",
+        "index": true,
+        "parentId": "routes/admin",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/admin.users": {
+        "file": "app/routes/admin.users.tsx",
+        "id": "routes/admin.users",
+        "path": "users",
+        "parentId": "routes/admin",
         "config": {
           "runtime": "nodejs"
         }
@@ -199,6 +329,13 @@
           "runtime": "nodejs"
         }
       },
+      "routes/admin": {
+        "file": "app/routes/admin.tsx",
+        "id": "routes/admin",
+        "path": "admin",
+        "parentId": "root",
+        "config": {}
+      },
       "routes/login": {
         "file": "app/routes/login.tsx",
         "id": "routes/login",
@@ -231,10 +368,40 @@
         "id": "root",
         "file": "root.tsx"
       },
+      "routes/api.products.$productId.categories.$categoryId": {
+        "file": "routes/api.products.$productId.categories.$categoryId.ts",
+        "id": "routes/api.products.$productId.categories.$categoryId",
+        "path": ":categoryId",
+        "parentId": "routes/api.products.$productId.categories"
+      },
+      "routes/api.category-reviews.$reviewId.$decision": {
+        "file": "routes/api.category-reviews.$reviewId.$decision.ts",
+        "id": "routes/api.category-reviews.$reviewId.$decision",
+        "path": ":reviewId/:decision",
+        "parentId": "routes/api.category-reviews"
+      },
+      "routes/api.categories.$categoryId.keywords": {
+        "file": "routes/api.categories.$categoryId.keywords.ts",
+        "id": "routes/api.categories.$categoryId.keywords",
+        "path": "keywords",
+        "parentId": "routes/api.categories.$categoryId"
+      },
       "routes/api.products.$productId.description": {
         "file": "routes/api.products.$productId.description.ts",
         "id": "routes/api.products.$productId.description",
         "path": "description",
+        "parentId": "routes/api.products.$productId"
+      },
+      "routes/api.categories.keywords.$keywordId": {
+        "file": "routes/api.categories.keywords.$keywordId.ts",
+        "id": "routes/api.categories.keywords.$keywordId",
+        "path": "keywords/:keywordId",
+        "parentId": "routes/api.categories"
+      },
+      "routes/api.products.$productId.categories": {
+        "file": "routes/api.products.$productId.categories.ts",
+        "id": "routes/api.products.$productId.categories",
+        "path": "categories",
         "parentId": "routes/api.products.$productId"
       },
       "routes/api.categories.$categoryId": {
@@ -243,10 +410,22 @@
         "path": ":categoryId",
         "parentId": "routes/api.categories"
       },
+      "routes/admin.categories_.reviews": {
+        "file": "routes/admin.categories_.reviews.tsx",
+        "id": "routes/admin.categories_.reviews",
+        "path": "categories/reviews",
+        "parentId": "routes/admin"
+      },
       "routes/api.products.$productId": {
         "file": "routes/api.products.$productId.ts",
         "id": "routes/api.products.$productId",
         "path": "api/products/:productId",
+        "parentId": "root"
+      },
+      "routes/api.category-reviews": {
+        "file": "routes/api.category-reviews.ts",
+        "id": "routes/api.category-reviews",
+        "path": "api/category-reviews",
         "parentId": "root"
       },
       "routes/products_.$productId": {
@@ -261,11 +440,23 @@
         "path": "api/password-forgot",
         "parentId": "root"
       },
+      "routes/api.admin-products": {
+        "file": "routes/api.admin-products.ts",
+        "id": "routes/api.admin-products",
+        "path": "api/admin-products",
+        "parentId": "root"
+      },
       "routes/api.users.$userId": {
         "file": "routes/api.users.$userId.ts",
         "id": "routes/api.users.$userId",
         "path": ":userId",
         "parentId": "routes/api.users"
+      },
+      "routes/admin.categories": {
+        "file": "routes/admin.categories.tsx",
+        "id": "routes/admin.categories",
+        "path": "categories",
+        "parentId": "routes/admin"
       },
       "routes/api.all-products": {
         "file": "routes/api.all-products.ts",
@@ -279,6 +470,12 @@
         "path": "api/image-proxy",
         "parentId": "root"
       },
+      "routes/admin.products": {
+        "file": "routes/admin.products.tsx",
+        "id": "routes/admin.products",
+        "path": "products",
+        "parentId": "routes/admin"
+      },
       "routes/api.categories": {
         "file": "routes/api.categories.ts",
         "id": "routes/api.categories",
@@ -291,11 +488,29 @@
         "path": "reset-password",
         "parentId": "root"
       },
+      "routes/admin.reviews": {
+        "file": "routes/admin.reviews.tsx",
+        "id": "routes/admin.reviews",
+        "path": "reviews",
+        "parentId": "routes/admin"
+      },
       "routes/api.suppliers": {
         "file": "routes/api.suppliers.ts",
         "id": "routes/api.suppliers",
         "path": "api/suppliers",
         "parentId": "root"
+      },
+      "routes/admin._index": {
+        "file": "routes/admin._index.tsx",
+        "id": "routes/admin._index",
+        "index": true,
+        "parentId": "routes/admin"
+      },
+      "routes/admin.users": {
+        "file": "routes/admin.users.tsx",
+        "id": "routes/admin.users",
+        "path": "users",
+        "parentId": "routes/admin"
       },
       "routes/api.colors": {
         "file": "routes/api.colors.ts",
@@ -337,6 +552,12 @@
         "file": "routes/_index.tsx",
         "id": "routes/_index",
         "index": true,
+        "parentId": "root"
+      },
+      "routes/admin": {
+        "file": "routes/admin.tsx",
+        "id": "routes/admin",
+        "path": "admin",
         "parentId": "root"
       },
       "routes/login": {

@@ -1,23 +1,10 @@
 import { useState, useCallback } from "react";
-import {
-  Document,
-  Header,
-  ImageRun,
-  Packer,
-  Paragraph,
-  TextRun,
-  Table,
-  TableRow,
-  TableCell,
-  TableLayoutType,
-  WidthType,
-  ExternalHyperlink,
-  Footer,
-} from "docx";
 import { formatPrice, getProductImage, parseDimensions } from "~/lib/utils";
 
 import { Product } from "~/types";
 import type { ExportProduct, ExportToastState } from "~/types/hooks";
+
+type DocxModule = typeof import("docx");
 
 function buildImageFetchUrl(imageUrl: string): string {
   if (!imageUrl) return imageUrl;
@@ -128,22 +115,6 @@ function formatCompanyForFilename(company?: string, maxLength = 20) {
   return cleaned ? `${cleaned} ` : "";
 }
 
-function getEffectiveStock(product: ExportProduct) {
-  const selectedVariationStock =
-    typeof product.stock === "number" ? product.stock : undefined;
-  const matchingVariationStock = product.variations?.find(
-    (variation) => variation.product_cod === product.product_cod,
-  )?.stock;
-
-  return (
-    selectedVariationStock ??
-    matchingVariationStock ??
-    (product.variations && product.variations.length > 0
-      ? (product.variations[0].stock ?? 0)
-      : 9999)
-  );
-}
-
 export function useProductExport() {
   const [exportToast, setExportToast] = useState<ExportToastState>({
     isVisible: false,
@@ -151,7 +122,16 @@ export function useProductExport() {
   });
 
   const generateProductParagraphs = useCallback(
-    async (products: ExportProduct[]) => {
+    async (products: ExportProduct[], docxModule: DocxModule) => {
+      const {
+        ImageRun,
+        Paragraph,
+        Table,
+        TableCell,
+        TableRow,
+        TextRun,
+        WidthType,
+      } = docxModule;
       const paragraphs = await mapWithConcurrency(
         products,
         3,
@@ -170,9 +150,7 @@ export function useProductExport() {
           }
 
           imageUrl =
-            imageUrl ||
-            getProductImage(product) ||
-            "https://via.placeholder.com/300x200/cccccc/000000?text=Produto";
+            imageUrl || getProductImage(product) || "/logo-santomimo.png";
           let imageArrayBuffer = await loadImageArrayBuffer(imageUrl);
 
           if (!imageArrayBuffer && imageUrl) {
@@ -180,7 +158,7 @@ export function useProductExport() {
               `Falha ao carregar imagem para ${product.name}, usando placeholder`,
             );
             imageArrayBuffer = await loadImageArrayBuffer(
-              "https://via.placeholder.com/300x200/cccccc/000000?text=Sem+Imagem",
+              "/logo-santomimo.png",
             );
           }
 
@@ -325,6 +303,23 @@ export function useProductExport() {
       if (!products || products.length === 0) return;
 
       try {
+        const docxModule = await import("docx");
+        const {
+          Document,
+          ExternalHyperlink,
+          Footer,
+          Header,
+          ImageRun,
+          Packer,
+          Paragraph,
+          Table,
+          TableCell,
+          TableLayoutType,
+          TableRow,
+          TextRun,
+          WidthType,
+        } = docxModule;
+
         setExportToast({
           isVisible: true,
           status: "processing",
@@ -334,10 +329,10 @@ export function useProductExport() {
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
-        const productsWithDimensions =
-          await hydrateProductDimensions(products);
+        const productsWithDimensions = await hydrateProductDimensions(products);
         const productParagraphs = await generateProductParagraphs(
           productsWithDimensions,
+          docxModule,
         );
 
         const doc = new Document({

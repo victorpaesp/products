@@ -3,6 +3,9 @@ import type { SelectedProduct } from "~/types";
 
 export const SELECTED_PRODUCTS_STORAGE_KEY = "selectedProducts";
 
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 export function clearSelectedProductsStorage(): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(SELECTED_PRODUCTS_STORAGE_KEY);
@@ -48,7 +51,7 @@ export function useSelectedProducts(isAuthenticated: boolean) {
     clearSelectedProductsStorage();
   }, []);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!isAuthenticated) {
       setSelectedProducts([]);
       clearSelectedProductsStorage();

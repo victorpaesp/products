@@ -46,10 +46,12 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
-async function fetchCategoriesQuery(token: string): Promise<ProductCategory[]> {
+async function fetchCategoriesQuery(
+  token?: string,
+): Promise<ProductCategory[]> {
   const response = await requestJson<unknown>("/api/categories", {
     method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
   return normalizeCategoriesResponse(response);
@@ -138,7 +140,7 @@ async function deleteCategoryKeyword({
   });
 }
 
-export function useCategoriesQuery(token: string) {
+export function useCategoriesQuery(token?: string) {
   return useQuery({
     queryKey: categoriesQueryKeys.tree(),
     queryFn: () => fetchCategoriesQuery(token),

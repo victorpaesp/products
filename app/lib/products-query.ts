@@ -2,8 +2,8 @@ export type ProductsQueryParams = {
   page: number;
   perPage: number;
   search?: string;
-  color?: number;
-  supplierId?: number;
+  color?: string;
+  supplierId?: string;
   category?: string;
   sortType: "name" | "price";
   sortOrder: "asc" | "desc";
@@ -16,17 +16,10 @@ export function getProductsQueryParams(
   const perPage = Number(searchParams.get("per_page")) || 48;
 
   const search = searchParams.get("q")?.trim() || undefined;
-  const colorParam = searchParams.get("color");
-  const color =
-    colorParam && !Number.isNaN(Number(colorParam))
-      ? Number(colorParam)
-      : undefined;
-
-  const supplierIdParam = searchParams.get("supplier_id");
-  const supplierId =
-    supplierIdParam && !Number.isNaN(Number(supplierIdParam))
-      ? Number(supplierIdParam)
-      : undefined;
+  // Filter IDs are opaque strings. MongoDB ObjectIds are not numeric, so
+  // coercing them with Number() would silently remove the active filter.
+  const color = searchParams.get("color")?.trim() || undefined;
+  const supplierId = searchParams.get("supplier_id")?.trim() || undefined;
 
   const category = searchParams.get("category")?.trim() || undefined;
 

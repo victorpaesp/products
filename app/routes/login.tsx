@@ -86,20 +86,9 @@ export default function Login() {
   const navigation = useNavigation();
   const submit = useSubmit();
   const [isForgotPassword, setIsForgotPassword] = React.useState(false);
-  const [loginError, setLoginError] = React.useState<string | null>(null);
-  const [isPageLoading, setIsPageLoading] = React.useState(true);
 
   const isSubmitting = navigation.state === "submitting";
-
-  React.useEffect(() => {
-    setIsPageLoading(false);
-  }, []);
-
-  React.useEffect(() => {
-    if (actionData?.error) {
-      setLoginError(actionData.error);
-    }
-  }, [actionData]);
+  const loginError = isSubmitting ? null : actionData?.error;
 
   const form: UseFormReturn<FormValues> = useForm<FormValues>({
     resolver: zodResolver(loginSchema),
@@ -110,7 +99,6 @@ export default function Login() {
   });
 
   async function onSubmit(values: FormValues) {
-    setLoginError(null);
     submit(
       {
         email: values.email,
@@ -143,6 +131,7 @@ export default function Login() {
         ) : (
           <Form {...form}>
             <form
+              method="post"
               onSubmit={form.handleSubmit(onSubmit)}
               className="flex w-full max-w-md flex-col gap-4 p-12"
             >
@@ -197,16 +186,10 @@ export default function Login() {
               >
                 Esqueci minha senha
               </Button>
-              {(loginError || actionData?.error) && (
-                <div className="mb-2 text-sm text-red-600">
-                  {loginError || actionData?.error}
-                </div>
+              {loginError && (
+                <div className="mb-2 text-sm text-red-600">{loginError}</div>
               )}
-              <Button
-                type="submit"
-                size={"lg"}
-                disabled={isSubmitting || isPageLoading}
-              >
+              <Button type="submit" size={"lg"} disabled={isSubmitting}>
                 {isSubmitting ? "Entrando..." : "Login"}
               </Button>
               <div className="text-center text-sm text-neutral-600">

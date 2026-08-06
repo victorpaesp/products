@@ -1,4 +1,10 @@
-import { SearchIcon, ShoppingBag, XIcon } from "lucide-react";
+import {
+  SearchIcon,
+  ShieldCheck,
+  ShoppingBag,
+  User,
+  XIcon,
+} from "lucide-react";
 import {
   useNavigate,
   useRouteLoaderData,
@@ -19,6 +25,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import type { loader as rootLoader } from "~/root";
 import type { AppHeaderProps } from "~/types/components";
+import { ADMIN_PANEL_ENTRY_POINTS_ENABLED } from "~/lib/admin-feature";
 
 export function AppHeader({
   selectedProducts = [],
@@ -176,8 +183,17 @@ export function AppHeader({
                 </>
               )}
               <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <User />
                 Configurações
               </DropdownMenuItem>
+              {user?.role === "admin" && ADMIN_PANEL_ENTRY_POINTS_ENABLED ? (
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/products">
+                    <ShieldCheck />
+                    Painel de administração
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>Sair</DropdownMenuItem>
             </DropdownMenuContent>

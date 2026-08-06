@@ -120,6 +120,25 @@ export async function requireSessionUser(
   return user;
 }
 
+export async function requireAdminSession(request: Request): Promise<{
+  token: string;
+  user: SessionUser;
+}> {
+  const token = await requireAuth(request);
+  const user = await requireSessionUser(request);
+
+  if (user.role !== "admin") {
+    throw redirect("/products");
+  }
+
+  return { token, user };
+}
+
+export async function requireAdminUser(request: Request): Promise<SessionUser> {
+  const { user } = await requireAdminSession(request);
+  return user;
+}
+
 export async function redirectIfAuthenticated(
   request: Request,
   redirectTo = "/products",

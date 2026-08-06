@@ -59,6 +59,26 @@ export type ApiResponse = {
   };
 };
 
+export type AdminProductListItem = {
+  id: string | number;
+  product_cod: string;
+  name: string;
+  thumbnail: string | null;
+  supplier: {
+    id: number;
+    name: string;
+  };
+  description_source: "supplier" | "manual";
+  has_description: boolean;
+  has_original_description: boolean;
+  updated_at: string;
+  categories: ProductCategoryRef[];
+};
+
+export type AdminProductsResponse = Omit<ApiResponse, "data"> & {
+  data: AdminProductListItem[];
+};
+
 export type ProductColor = {
   id: number;
   name: string;
@@ -81,10 +101,26 @@ export type SuppliersApiResponse = {
 };
 
 export type ProductCategory = {
-  id?: number;
+  id?: string | number;
   name: string;
   slug: string;
   children: ProductCategory[];
+};
+
+export type ProductCategoryRef = {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
+  parent: Pick<ProductCategoryRef, "id" | "name" | "slug"> | null;
+};
+
+export type ProductCategoryAssociation = {
+  id: string;
+  category: ProductCategoryRef;
+  score: number;
+  source: "auto" | "manual";
+  created_at: string | null;
 };
 
 export type CategoriesApiResponse = {
@@ -183,6 +219,7 @@ export type Product = {
   selected_variation?: Variation;
   fiscal_classification_type: string;
   fiscal_classification_code: string | number;
+  categories?: ProductCategoryRef[];
 };
 
 export type VariationColorEntry = {

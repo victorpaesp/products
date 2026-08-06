@@ -1,11 +1,10 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react";
 import { ProfileForm } from "~/components/features/settings/ProfileForm";
 import { CategoryManager } from "~/components/features/settings/CategoryManager";
-import { ClassificationReviewManager } from "~/components/features/settings/ClassificationReviewManager";
 import { UsersTable } from "~/components/features/users/UsersTable";
 import { Button } from "~/components/ui/button";
-import { ChevronLeft, ClipboardCheck, Tags, User, Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { ChevronLeft, Tags, User, Users } from "lucide-react";
 import { ActionFunctionArgs, data, LoaderFunctionArgs } from "@remix-run/node";
 import {
   commitUserSession,
@@ -15,6 +14,7 @@ import {
 import { backendCurrentUser, backendRequest } from "~/lib/backend.server";
 import { unformatPhoneNumber } from "~/lib/utils";
 import type { SettingsActionData } from "~/types/routes";
+import { ADMIN_PANEL_ENTRY_POINTS_ENABLED } from "~/lib/admin-feature";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireAuth(request);
@@ -41,13 +41,6 @@ export async function action({ request }: ActionFunctionArgs) {
   const sessionUser = await requireSessionUser(request);
   const formData = await request.formData();
   const intent = String(formData.get("intent") || "");
-
-  if (sessionUser.role !== "admin") {
-    return data<SettingsActionData>(
-      { error: "Ação não permitida." },
-      { status: 403 },
-    );
-  }
 
   if (intent === "update-profile") {
     const name = String(formData.get("name") || "").trim();
@@ -126,50 +119,18 @@ export async function action({ request }: ActionFunctionArgs) {
   return data<SettingsActionData>({ error: "Ação inválida." }, { status: 400 });
 }
 
-const tabs = [
-  {
-    name: "Meu perfil",
-    value: "profile",
-    icon: User,
-  },
-  {
-    name: "Gerenciar Usuários",
-    value: "manage-users",
-    icon: Users,
-  },
-  {
-    name: "Gerenciar Categorias",
-    value: "manage-categories",
-    icon: Tags,
-  },
-  {
-    name: "Revisar Classificações",
-    value: "classification-reviews",
-    icon: ClipboardCheck,
-  },
-];
-
 export default function SettingsPage() {
   const { user } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isAdmin = user.role === "admin";
-
-  const visibleTabs = tabs.filter((tab) => {
-    if (
-      tab.value === "manage-users" ||
-      tab.value === "manage-categories" ||
-      tab.value === "classification-reviews"
-    ) {
-      return isAdmin;
-    }
-
-    return true;
-  });
+  const showTemporaryManagement = isAdmin && !ADMIN_PANEL_ENTRY_POINTS_ENABLED;
   const requestedTab = searchParams.get("tab");
-  const activeTab = visibleTabs.some((tab) => tab.value === requestedTab)
-    ? requestedTab!
-    : visibleTabs[0].value;
+  const activeTab =
+    showTemporaryManagement &&
+    (requestedTab === "manage-users" || requestedTab === "manage-categories")
+      ? requestedTab
+      : "profile";
 
   const handleTabChange = (value: string) => {
     const nextSearchParams = new URLSearchParams(searchParams);
@@ -192,40 +153,53 @@ export default function SettingsPage() {
           Voltar
         </Button>
       </div>
-      <Tabs
-        orientation="horizontal"
-        value={activeTab}
-        onValueChange={handleTabChange}
-        className="flex w-full flex-col items-start justify-center gap-6 md:flex-row"
-      >
-        <TabsList className="bg-background grid w-full shrink-0 grid-cols-1 gap-1 p-1.5 md:w-auto">
-          {visibleTabs.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start px-3 py-1.5"
-            >
-              <tab.icon /> {tab.name}
+      {showTemporaryManagement ? (
+        <Tabs
+          orientation="horizontal"
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="flex w-full flex-col items-start justify-center gap-6 md:flex-row"
+        >
+          <TabsList className="bg-background grid w-full shrink-0 grid-cols-1 gap-1 p-1.5 md:w-auto">
+            <TabsTrigger value="profile" className="justify-start px-3 py-1.5">
+              <User /> Meu perfil
             </TabsTrigger>
-          ))}
-        </TabsList>
-        {visibleTabs.map((tab) => (
+            <TabsTrigger
+              value="manage-users"
+              className="justify-start px-3 py-1.5"
+            >
+              <Users /> Gerenciar usuários
+            </TabsTrigger>
+            <TabsTrigger
+              value="manage-categories"
+              className="justify-start px-3 py-1.5"
+            >
+              <Tags /> Gerenciar categorias
+            </TabsTrigger>
+          </TabsList>
+
           <TabsContent
-            key={tab.value}
-            value={tab.value}
+            value="profile"
             className="h-full w-full overflow-x-hidden md:pl-10"
           >
-            {tab.value === "profile" ? (
-              <ProfileForm currentUser={user} isAdmin={isAdmin} />
-            ) : null}
-            {tab.value === "manage-users" ? <UsersTable /> : null}
-            {tab.value === "manage-categories" ? <CategoryManager /> : null}
-            {tab.value === "classification-reviews" ? (
-              <ClassificationReviewManager />
-            ) : null}
+            <ProfileForm currentUser={user} isAdmin={isAdmin} />
           </TabsContent>
-        ))}
-      </Tabs>
+          <TabsContent
+            value="manage-users"
+            className="h-full w-full overflow-x-hidden md:pl-10"
+          >
+            <UsersTable />
+          </TabsContent>
+          <TabsContent
+            value="manage-categories"
+            className="h-full w-full overflow-x-hidden md:pl-10"
+          >
+            <CategoryManager />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <ProfileForm currentUser={user} isAdmin={isAdmin} />
+      )}
     </section>
   );
 }

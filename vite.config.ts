@@ -15,8 +15,9 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime"],
-    exclude: ["docx", "file-saver", "axios", "lucide-react"],
+    entries: ["app/**/*.{ts,tsx}"],
+    include: ["react", "react-dom", "react/jsx-runtime", "lucide-react"],
+    exclude: ["docx"],
   },
   plugins: [
     remix({

@@ -9,7 +9,9 @@ export type CategoryReviewsQueryParams = {
   page: number;
 };
 
-const categoryReviewsQueryKeys = {
+const PENDING_REVIEWS_QUERY_PARAMS: CategoryReviewsQueryParams = { page: 1 };
+
+export const categoryReviewsQueryKeys = {
   all: ["category-reviews"] as const,
   lists: () => [...categoryReviewsQueryKeys.all, "list"] as const,
   list: (params: CategoryReviewsQueryParams) =>
@@ -93,6 +95,15 @@ export function useCategoryReviewsQuery(params: CategoryReviewsQueryParams) {
   return useQuery({
     queryKey: categoryReviewsQueryKeys.list(params),
     queryFn: () => fetchCategoryReviews(params),
+  });
+}
+
+export function usePendingCategoryReviewsCountQuery() {
+  return useQuery({
+    queryKey: categoryReviewsQueryKeys.list(PENDING_REVIEWS_QUERY_PARAMS),
+    queryFn: () => fetchCategoryReviews(PENDING_REVIEWS_QUERY_PARAMS),
+    select: (result) => result.pagination.total,
+    staleTime: 30_000,
   });
 }
 

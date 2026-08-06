@@ -6,13 +6,10 @@ export const colorsQueryKeys = {
   list: () => [...colorsQueryKeys.all, "list"] as const,
 };
 
-async function fetchColorsQuery(token: string): Promise<ProductColor[]> {
+async function fetchColorsQuery(): Promise<ProductColor[]> {
   const response = await fetch("/api/colors", {
     method: "GET",
     credentials: "same-origin",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   if (!response.ok) {
@@ -22,10 +19,10 @@ async function fetchColorsQuery(token: string): Promise<ProductColor[]> {
   return response.json();
 }
 
-export function useColorsQuery(token: string) {
+export function useColorsQuery() {
   return useQuery({
     queryKey: colorsQueryKeys.list(),
-    queryFn: () => fetchColorsQuery(token),
+    queryFn: fetchColorsQuery,
     staleTime: Infinity,
   });
 }

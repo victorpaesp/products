@@ -122,7 +122,7 @@ export function UsersTable() {
     <div className="flex w-full flex-col gap-6">
       <CacheIndicator status={cacheStatus} />
       <div>
-        <h2 className="mb-1 text-2xl font-bold">Gerenciar Usuários</h2>
+        <h1 className="mb-1 text-2xl font-bold">Gerenciar Usuários</h1>
         <p className="text-muted-foreground text-sm">
           Gerencie usuários, edite dados e mantenha o controle do sistema.
         </p>
@@ -154,7 +154,7 @@ export function UsersTable() {
         {isFetching && !isLoading ? (
           <p className="text-muted-foreground mt-2 text-xs">Atualizando...</p>
         ) : null}
-        <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex items-center justify-end gap-2 py-4">
           <Button
             variant="outline"
             size="sm"
