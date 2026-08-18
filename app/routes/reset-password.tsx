@@ -149,11 +149,7 @@ export default function ResetPassword() {
         <div className="flex w-full max-w-md flex-col gap-4 p-12">
           <div className="flex flex-col">
             <div className="mb-14 flex justify-center">
-              <img
-                src="/logo-santomimo.png"
-                alt="Logo"
-                className="max-w-40 rounded-lg"
-              />
+              <img src="/logo-new.png" alt="Logo" className="max-w-56" />
             </div>
             {!success && (
               <div className="flex flex-col gap-1">

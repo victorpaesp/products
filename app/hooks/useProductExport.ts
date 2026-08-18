@@ -1,5 +1,11 @@
 import { useState, useCallback } from "react";
-import { formatPrice, getProductImage, parseDimensions } from "~/lib/utils";
+import {
+  formatPrice,
+  getProductImage,
+  parseDimensions,
+  PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+  PRODUCT_IMAGE_PLACEHOLDER,
+} from "~/lib/utils";
 
 import { Product } from "~/types";
 import type { ExportProduct, ExportToastState } from "~/types/hooks";
@@ -149,8 +155,15 @@ export function useProductExport() {
             }
           }
 
-          imageUrl =
-            imageUrl || getProductImage(product) || "/logo-santomimo.png";
+          imageUrl = imageUrl || getProductImage(product);
+          const isProductImagePlaceholder =
+            !imageUrl ||
+            imageUrl === PRODUCT_IMAGE_PLACEHOLDER ||
+            imageUrl === PRODUCT_IMAGE_COMPACT_PLACEHOLDER;
+
+          if (isProductImagePlaceholder) {
+            imageUrl = PRODUCT_IMAGE_COMPACT_PLACEHOLDER;
+          }
           let imageArrayBuffer = await loadImageArrayBuffer(imageUrl);
 
           if (!imageArrayBuffer && imageUrl) {
@@ -158,7 +171,7 @@ export function useProductExport() {
               `Falha ao carregar imagem para ${product.name}, usando placeholder`,
             );
             imageArrayBuffer = await loadImageArrayBuffer(
-              "/logo-santomimo.png",
+              PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
             );
           }
 
@@ -225,10 +238,7 @@ export function useProductExport() {
                     children: [
                       new ImageRun({
                         data: imageArrayBuffer,
-                        transformation: {
-                          width: 180,
-                          height: 180,
-                        },
+                        transformation: { width: 180, height: 180 },
                         type: "png",
                       }),
                     ],
@@ -325,7 +335,7 @@ export function useProductExport() {
           status: "processing",
         });
 
-        const response = await fetch("/logo-santomimo.png");
+        const response = await fetch("/logo-new.png");
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
 
@@ -355,10 +365,10 @@ export function useProductExport() {
                         new ImageRun({
                           data: arrayBuffer,
                           transformation: {
-                            width: 172,
-                            height: 172,
+                            width: 190,
+                            height: 74,
                           },
-                          type: "jpg",
+                          type: "png",
                         }),
                       ],
                       alignment: "center",

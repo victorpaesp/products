@@ -74,11 +74,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         className="flex w-full flex-col gap-4 px-8 pt-12 pb-0"
       >
         <div className="mb-10 flex flex-col items-center">
-          <img
-            src="/logo-santomimo.png"
-            alt="Logo"
-            className="max-w-40 rounded-lg"
-          />
+          <img src="/logo-new.png" alt="Logo" className="max-w-56" />
         </div>
         {!emailSent ? (
           <>

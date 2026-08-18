@@ -226,11 +226,13 @@ export const formatBoxWeight = (value?: string | null): string | null => {
   return formatAsKilograms(kilograms);
 };
 
-const DEFAULT_PRODUCT_PLACEHOLDER = "/logo-santomimo.png";
+export const PRODUCT_IMAGE_PLACEHOLDER = "/image-placeholder.png";
+export const PRODUCT_IMAGE_COMPACT_PLACEHOLDER =
+  "/image-placeholder-compact.png";
 
 export const handleImageLoadError = (
   event: React.SyntheticEvent<HTMLImageElement>,
-  fallback = DEFAULT_PRODUCT_PLACEHOLDER,
+  fallback = PRODUCT_IMAGE_PLACEHOLDER,
 ): void => {
   const img = event.currentTarget;
   if (img.src.endsWith(fallback)) return;
@@ -239,7 +241,7 @@ export const handleImageLoadError = (
 
 export const normalizeImageUrl = (
   imageUrl?: string | null,
-  fallback = DEFAULT_PRODUCT_PLACEHOLDER,
+  fallback = PRODUCT_IMAGE_PLACEHOLDER,
 ): string => {
   if (!imageUrl || typeof imageUrl !== "string") return fallback;
 
@@ -382,20 +384,20 @@ export const getProductImage = (product: {
     product.gallery[1]
   ) {
     const img = normalizeImageUrl(product.gallery[1]);
-    if (img !== DEFAULT_PRODUCT_PLACEHOLDER) return img;
+    if (img !== PRODUCT_IMAGE_PLACEHOLDER) return img;
   }
 
   if (Array.isArray(product.gallery)) {
     const img = normalizeImageUrl(product.gallery[0]);
-    if (img !== DEFAULT_PRODUCT_PLACEHOLDER) return img;
+    if (img !== PRODUCT_IMAGE_PLACEHOLDER) return img;
   }
 
   if (product.image) {
     const img = normalizeImageUrl(product.image);
-    if (img !== DEFAULT_PRODUCT_PLACEHOLDER) return img;
+    if (img !== PRODUCT_IMAGE_PLACEHOLDER) return img;
   }
 
-  return DEFAULT_PRODUCT_PLACEHOLDER;
+  return PRODUCT_IMAGE_PLACEHOLDER;
 };
 
 export const isSameProductVariation = (
@@ -540,7 +542,7 @@ export const getVariationImage = (variation: {
   if (!raw) return null;
 
   const normalized = normalizeImageUrl(raw);
-  return normalized === DEFAULT_PRODUCT_PLACEHOLDER ? null : normalized;
+  return normalized === PRODUCT_IMAGE_PLACEHOLDER ? null : normalized;
 };
 
 /**

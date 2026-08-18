@@ -9,6 +9,8 @@ import {
   getVariationDifference,
   getVariationImage,
   normalizeImageUrl,
+  PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+  PRODUCT_IMAGE_PLACEHOLDER,
 } from "~/lib/utils";
 
 type VariationSelectOption = {
@@ -17,7 +19,9 @@ type VariationSelectOption = {
   variation: Variation;
 };
 
-function buildVariationSelectOptions(product: Product): VariationSelectOption[] {
+function buildVariationSelectOptions(
+  product: Product,
+): VariationSelectOption[] {
   const colorOptions = getProductColorSelectOptions(product);
 
   if (colorOptions.length > 0) {
@@ -61,12 +65,26 @@ function buildVariationSelectOptions(product: Product): VariationSelectOption[] 
   ];
 }
 
-function getVariationOptionImage(option: VariationSelectOption, product: Product) {
+function getVariationOptionImage(
+  option: VariationSelectOption,
+  product: Product,
+) {
   return (
     getVariationImage(option.variation) ||
     product.gallery?.[0] ||
-    "/logo-santomimo.png"
+    PRODUCT_IMAGE_COMPACT_PLACEHOLDER
   );
+}
+
+function normalizeCompactImageUrl(imageUrl?: string | null) {
+  const normalized = normalizeImageUrl(
+    imageUrl,
+    PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+  );
+
+  return normalized === PRODUCT_IMAGE_PLACEHOLDER
+    ? PRODUCT_IMAGE_COMPACT_PLACEHOLDER
+    : normalized;
 }
 
 function VariationSelectItem({
@@ -82,7 +100,9 @@ function VariationSelectItem({
   onToggle: () => void;
   onHover: (variation: Variation | null) => void;
 }) {
-  const imageSrc = normalizeImageUrl(getVariationOptionImage(option, product));
+  const imageSrc = normalizeCompactImageUrl(
+    getVariationOptionImage(option, product),
+  );
 
   return (
     <button
@@ -98,10 +118,10 @@ function VariationSelectItem({
       <img
         src={imageSrc}
         alt={option.label}
-        className="size-16 shrink-0 rounded-md object-cover sm:size-20"
+        className="size-16 shrink-0 rounded-md object-contain sm:size-20"
         onError={(e) => {
           const target = e.target as HTMLImageElement;
-          target.src = "/logo-santomimo.png";
+          target.src = PRODUCT_IMAGE_COMPACT_PLACEHOLDER;
         }}
       />
       <div className="min-w-0 flex-1">
@@ -210,10 +230,11 @@ export function ProductVariationSelect({
       : "Selecionar produto";
 
   const triggerImage = triggerOption
-    ? normalizeImageUrl(getVariationOptionImage(triggerOption, product))
-    : "/logo-santomimo.png";
+    ? normalizeCompactImageUrl(getVariationOptionImage(triggerOption, product))
+    : PRODUCT_IMAGE_COMPACT_PLACEHOLDER;
 
-  const showVariationCount = getProductVariationCount(product) > 1 && selectedCount > 0;
+  const showVariationCount =
+    getProductVariationCount(product) > 1 && selectedCount > 0;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -231,10 +252,10 @@ export function ProductVariationSelect({
           <img
             src={triggerImage}
             alt=""
-            className="size-10 shrink-0 rounded-md object-cover"
+            className="size-10 shrink-0 rounded-md object-contain"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = "/logo-santomimo.png";
+              target.src = PRODUCT_IMAGE_COMPACT_PLACEHOLDER;
             }}
           />
           <span className="min-w-0">
@@ -244,11 +265,11 @@ export function ProductVariationSelect({
             {((hasMultipleOptions && selectedCount === 1) ||
               !hasMultipleOptions) &&
               triggerOption && (
-              <span className="line-clamp-1 text-xs text-neutral-500">
-                Cod: {triggerOption.variation.product_cod} · Estoque:{" "}
-                {triggerOption.variation.stock ?? 0}
-              </span>
-            )}
+                <span className="line-clamp-1 text-xs text-neutral-500">
+                  Cod: {triggerOption.variation.product_cod} · Estoque:{" "}
+                  {triggerOption.variation.stock ?? 0}
+                </span>
+              )}
           </span>
         </span>
         {hasMultipleOptions ? (
@@ -263,7 +284,7 @@ export function ProductVariationSelect({
           <Check className="text-primary size-4 shrink-0" aria-hidden="true" />
         ) : null}
         {showVariationCount && selectedCount > 1 && (
-          <span className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex size-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none">
+          <span className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex size-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold">
             {selectedCount}
           </span>
         )}

@@ -7,6 +7,8 @@ import {
   getProductCarouselImages,
   handleImageLoadError,
   normalizeImageUrl,
+  PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+  PRODUCT_IMAGE_PLACEHOLDER,
 } from "~/lib/utils";
 import type { Product } from "~/types";
 
@@ -125,11 +127,20 @@ export function ProductEditorOverview({ product }: ProductEditorOverviewProps) {
                   aria-current={index === currentIndex ? "true" : undefined}
                 >
                   <img
-                    src={image}
+                    src={
+                      image === PRODUCT_IMAGE_PLACEHOLDER
+                        ? PRODUCT_IMAGE_COMPACT_PLACEHOLDER
+                        : image
+                    }
                     alt=""
                     loading="lazy"
-                    className="size-full object-cover"
-                    onError={handleImageLoadError}
+                    className="size-full object-contain"
+                    onError={(event) =>
+                      handleImageLoadError(
+                        event,
+                        PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+                      )
+                    }
                   />
                 </Button>
               ))}

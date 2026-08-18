@@ -7,6 +7,8 @@ import {
   getSupplierDisplayName,
   handleImageLoadError,
   normalizeImageUrl,
+  PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+  PRODUCT_IMAGE_PLACEHOLDER,
 } from "~/lib/utils";
 import type { loader as rootLoader } from "~/root";
 import { Badge } from "~/components/ui/badge";
@@ -148,7 +150,7 @@ export function ProductCard({
               alt={product.name}
               loading="lazy"
               decoding="async"
-              className={`h-full w-full object-cover transition-opacity duration-200 ${
+              className={`h-full w-full object-contain transition-opacity duration-200 ${
                 isImageLoading ? "opacity-0" : "opacity-100"
               }`}
               onLoad={() => setIsImageLoading(false)}
@@ -271,14 +273,19 @@ export function ProductCard({
                     <img
                       src={normalizeImageUrl(
                         Array.isArray(v.images?.[0])
-                          ? v.images[0][0] || "/logo-santomimo.png"
-                          : v.images?.[0] || "/logo-santomimo.png",
+                          ? v.images[0][0] || PRODUCT_IMAGE_COMPACT_PLACEHOLDER
+                          : v.images?.[0] || PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
                       )}
                       alt={v.name || product.name}
                       loading="lazy"
                       decoding="async"
-                      className="size-20 shrink-0 rounded-md object-cover"
-                      onError={handleImageLoadError}
+                      className="size-20 shrink-0 rounded-md object-contain"
+                      onError={(event) =>
+                        handleImageLoadError(
+                          event,
+                          PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+                        )
+                      }
                     />
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 line-clamp-1 font-medium text-neutral-900">

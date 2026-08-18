@@ -4,6 +4,8 @@ import {
   formatPrice,
   getProductImage,
   getVariationImage,
+  PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+  PRODUCT_IMAGE_PLACEHOLDER,
 } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { useProductExport } from "~/hooks/useProductExport";
@@ -167,26 +169,25 @@ export function ProductsDrawer({
             </div>
           ) : (
             <div className="space-y-4">
-              {selectedProducts.map(
-                ({ product, variation, colorFiltered }) => {
-                  const { name, code, price, image, stock } =
-                    getSelectedProductFields(
-                      product,
-                      variation,
-                      colorFiltered,
-                    );
-                  return (
+              {selectedProducts.map(({ product, variation, colorFiltered }) => {
+                const { name, code, price, image, stock } =
+                  getSelectedProductFields(product, variation, colorFiltered);
+                return (
                   <div
                     key={product.product_cod + "-" + variation.product_cod}
                     className="flex items-start gap-3 rounded-lg border border-neutral-300 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950"
                   >
                     <img
-                      src={image}
+                      src={
+                        image === PRODUCT_IMAGE_PLACEHOLDER
+                          ? PRODUCT_IMAGE_COMPACT_PLACEHOLDER
+                          : image
+                      }
                       alt={name}
-                      className="h-16 w-16 shrink-0 rounded-md object-cover"
+                      className="h-16 w-16 shrink-0 rounded-md object-contain"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = "/logo-santomimo.png";
+                        target.src = PRODUCT_IMAGE_COMPACT_PLACEHOLDER;
                       }}
                     />
 
@@ -219,8 +220,7 @@ export function ProductsDrawer({
                     </Button>
                   </div>
                 );
-              },
-              )}
+              })}
             </div>
           )}
         </div>

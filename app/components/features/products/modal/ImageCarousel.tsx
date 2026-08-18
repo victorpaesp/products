@@ -1,10 +1,22 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { FreeMode, Mousewheel, Navigation, Thumbs } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
-import { normalizeImageUrl, handleImageLoadError, cn } from "~/lib/utils";
+import {
+  normalizeImageUrl,
+  handleImageLoadError,
+  cn,
+  PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+  PRODUCT_IMAGE_PLACEHOLDER,
+} from "~/lib/utils";
 import type { ImageCarouselProps } from "~/types/components";
 
 import "swiper/css";
@@ -33,7 +45,7 @@ export function ImageCarousel({
     );
 
     if (dedupedImages.length === 0) {
-      return ["/logo-santomimo.png"];
+      return [PRODUCT_IMAGE_PLACEHOLDER];
     }
 
     return dedupedImages;
@@ -83,8 +95,15 @@ export function ImageCarousel({
   };
 
   const getImageSrc = (index: number) => {
-    if (imageErrors[index]) return "/logo-santomimo.png";
-    return validImages[index] ?? "/logo-santomimo.png";
+    if (imageErrors[index]) return PRODUCT_IMAGE_PLACEHOLDER;
+    return validImages[index] ?? PRODUCT_IMAGE_PLACEHOLDER;
+  };
+
+  const getThumbnailImageSrc = (index: number) => {
+    const imageSrc = getImageSrc(index);
+    return imageSrc === PRODUCT_IMAGE_PLACEHOLDER
+      ? PRODUCT_IMAGE_COMPACT_PLACEHOLDER
+      : imageSrc;
   };
 
   const currentImageSrc = getImageSrc(currentImageIndex);
@@ -302,15 +321,18 @@ export function ImageCarousel({
                     }
                   >
                     <img
-                      src={getImageSrc(index)}
+                      src={getThumbnailImageSrc(index)}
                       alt={`${productName} - Miniatura ${index + 1}`}
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
-                        handleImageLoadError(e);
+                        handleImageLoadError(
+                          e,
+                          PRODUCT_IMAGE_COMPACT_PLACEHOLDER,
+                        );
                         setImageErrors((prev) => ({ ...prev, [index]: true }));
                       }}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-contain"
                     />
                   </Button>
                 </SwiperSlide>

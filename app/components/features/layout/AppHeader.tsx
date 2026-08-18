@@ -112,18 +112,18 @@ export function AppHeader({
 
   return (
     <div className="mx-auto flex w-full flex-col items-center rounded-b-lg bg-[#363636] p-2 md:px-10 md:py-0">
-      <div className="flex w-full items-center justify-between gap-3 p-2 pl-0">
+      <div className="flex w-full items-center justify-between gap-3 p-2">
         <div className="flex items-center sm:basis-1/4">
           <Link to="/">
             <img
-              src="/logo-santomimo-h2-white.png"
+              src="/logo-new-white.png"
               alt="logo"
-              className="w-52 cursor-pointer rounded-md sm:hidden md:p-2"
+              className="w-46 cursor-pointer sm:hidden md:p-2"
             />
             <img
-              src="/logo-santomimo-h-white.png"
+              src="/logo-new-white.png"
               alt="logo"
-              className="hidden w-56 cursor-pointer rounded-md sm:block md:p-2"
+              className="hidden w-46 cursor-pointer sm:block md:p-2"
             />
           </Link>
         </div>

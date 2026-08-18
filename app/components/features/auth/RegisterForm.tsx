@@ -42,11 +42,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     >
       <div className="flex flex-col">
         <div className="mb-14 flex justify-center">
-          <img
-            src="/logo-santomimo.png"
-            alt="Logo"
-            className="max-w-40 rounded-lg"
-          />
+          <img src="/logo-new.png" alt="Logo" className="max-w-56" />
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl text-neutral-900">Registrar</h2>
