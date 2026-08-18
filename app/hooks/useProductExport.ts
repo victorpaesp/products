@@ -567,16 +567,6 @@ export function useProductExport() {
                 }),
                 new Paragraph({
                   children: [
-                    new TextRun({
-                      text: "RJ 21 97682-0431",
-                      size: 24,
-                      color: "000000",
-                    }),
-                  ],
-                  keepNext: true,
-                }),
-                new Paragraph({
-                  children: [
                     new ExternalHyperlink({
                       children: [
                         new TextRun({
