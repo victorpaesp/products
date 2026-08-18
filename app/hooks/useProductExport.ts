@@ -626,16 +626,6 @@ export function useProductExport() {
                                   ],
                                   alignment: "left",
                                 }),
-                                new Paragraph({
-                                  children: [
-                                    new TextRun({
-                                      text: "RJ 21 97682-0431",
-                                      size: 24,
-                                      color: "000000",
-                                    }),
-                                  ],
-                                  alignment: "left",
-                                }),
                               ],
                               verticalAlign: "center",
                               borders: {
