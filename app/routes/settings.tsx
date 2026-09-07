@@ -160,7 +160,7 @@ export default function SettingsPage() {
           onValueChange={handleTabChange}
           className="flex w-full flex-col items-start justify-center gap-6 md:flex-row"
         >
-          <TabsList className="bg-background grid w-full shrink-0 grid-cols-1 gap-1 p-1.5 md:w-auto">
+          <TabsList className="grid w-full shrink-0 grid-cols-1 gap-1 p-1.5 md:w-auto">
             <TabsTrigger value="profile" className="justify-start px-3 py-1.5">
               <User /> Meu perfil
             </TabsTrigger>
