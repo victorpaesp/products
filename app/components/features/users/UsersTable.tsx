@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { EditUserDialog } from "./EditUserDialog";
-import toast from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,

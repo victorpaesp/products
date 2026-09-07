@@ -25,7 +25,7 @@ import {
 } from "~/lib/utils";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
-import toast from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 import { Pencil, RotateCcw, Save, Loader2 } from "lucide-react";
 import {
   Accordion,
@@ -247,6 +247,19 @@ export function ProductDetails({
     onCarouselPreviewImage?.(variation ? getVariationImage(variation) : null);
   };
 
+  const hasProductDimensions =
+    Boolean(product.product_mention) &&
+    hasNonZeroNumber(product.product_mention) &&
+    parseDimensions(product.product_mention).length > 0;
+  const showProductSpecs = Boolean(formattedProductWeight) || hasProductDimensions;
+
+  const hasBoxDimensions =
+    Boolean(product.box_mention) &&
+    hasNonZeroNumber(product.box_mention) &&
+    parseDimensions(product.box_mention).length > 0;
+  const showBoxSpecs =
+    Boolean(product.quantity_box) || Boolean(formattedBoxWeight) || hasBoxDimensions;
+
   const displayPrice = hoveredVariation?.price ?? product.price;
   const displayStock =
     hoveredVariation != null ? hoveredVariation.stock : displayedStock;
@@ -459,7 +472,7 @@ export function ProductDetails({
                   )}
                 </div>
 
-                {(product.product_weight || product.product_mention) && (
+                {showProductSpecs && (
                   <div className="flex flex-col gap-3">
                     <div className="border-b border-neutral-200 pb-2">
                       <p className="text-base font-semibold text-neutral-900">
@@ -497,7 +510,7 @@ export function ProductDetails({
                   </div>
                 )}
 
-                {(product.quantity_box || product.box_mention) && (
+                {showBoxSpecs && (
                   <div className="flex flex-col gap-3">
                     <div className="border-b border-neutral-200 pb-2">
                       <p className="text-base font-semibold text-neutral-900">
@@ -555,11 +568,11 @@ export function ProductDetails({
                         Variações
                       </p>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex max-h-88 flex-col gap-2 overflow-y-auto pr-1">
                       {variationsToDisplay.map((variation, index) => (
                         <div
                           key={index}
-                          className="grid grid-cols-1 gap-4 rounded-lg border border-neutral-200 p-2 md:grid-cols-3"
+                          className="grid shrink-0 grid-cols-1 gap-4 rounded-lg border border-neutral-200 p-2 md:grid-cols-3"
                         >
                           <div className="min-w-0">
                             <p className="text-xs text-neutral-500">Variação</p>

@@ -15,7 +15,7 @@ import { AppFooter } from "~/components/features/layout/AppFooter";
 import { ProductsDrawer } from "~/components/features/products/ProductsDrawer";
 import { useEffect, useState } from "react";
 import { useLocation } from "@remix-run/react";
-import { Toaster } from "~/components/ui/sonner";
+import { Toaster } from "react-hot-toast";
 import { useSelectedProducts } from "~/hooks/useSelectedProducts";
 import {
   clearReloadMarkers,
@@ -106,7 +106,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
-        <Toaster />
+        <Toaster position="top-right" />
       </body>
     </html>
   );

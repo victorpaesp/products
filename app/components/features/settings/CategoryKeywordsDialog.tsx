@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
-import { toast } from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 
 const KEYWORD_WEIGHTS = [1, 2, 3, 4, 5] as const;
 

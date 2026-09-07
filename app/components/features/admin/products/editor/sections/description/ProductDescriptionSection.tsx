@@ -34,7 +34,7 @@ import {
   FieldLabel,
 } from "~/components/ui/field";
 import { Textarea } from "~/components/ui/textarea";
-import { toast } from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 import { useUpdateProductDescriptionMutation } from "~/hooks/useProductDescription";
 import {
   getOriginalProductDescription,

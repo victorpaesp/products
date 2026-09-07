@@ -7,7 +7,7 @@ import { useRevalidator, useSubmit, useOutletContext } from "@remix-run/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import { PasswordInput } from "~/components/ui/password-input";
-import toast from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 import { Pencil, Save } from "lucide-react";
 import { formatPhoneNumber } from "~/lib/utils";
 import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
@@ -103,9 +103,7 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao atualizar perfil.";
-      toast.error("Erro ao atualizar perfil.", {
-        description: message,
-      });
+      toast.error(message);
     }
   };
 
@@ -128,10 +126,12 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
       const toastId = "logout-timer";
       let seconds = 10;
       const updateToast = () => {
-        toast.success("Senha alterada com sucesso!", {
-          description: `Você será deslogado para autenticação com a nova senha em ${seconds} segundos.`,
-          id: toastId,
-        });
+        toast.success(
+          `Senha alterada com sucesso! Você será deslogado para autenticação com a nova senha em ${seconds} segundos.`,
+          {
+            id: toastId,
+          },
+        );
       };
       updateToast();
       if (logoutTimeoutRef.current) clearInterval(logoutTimeoutRef.current);
@@ -147,9 +147,7 @@ export function ProfileForm({ currentUser, isAdmin }: ProfileFormProps) {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao alterar senha.";
-      toast.error("Erro ao alterar senha.", {
-        description: message,
-      });
+      toast.error(message);
       setPasswordError(message);
     }
   };

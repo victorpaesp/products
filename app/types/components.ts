@@ -51,15 +51,6 @@ export type ExportProposalModalProps = {
   onSubmit: (data: ExportProposalData) => void;
 };
 
-export type ExportToastStatus = "processing" | "success" | "error";
-
-export type ExportToastProps = {
-  isVisible: boolean;
-  onClose: () => void;
-  status: ExportToastStatus;
-  message?: string;
-};
-
 export type ForgotPasswordFormValues = {
   email: string;
 };

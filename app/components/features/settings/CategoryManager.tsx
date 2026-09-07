@@ -58,7 +58,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { Separator } from "~/components/ui/separator";
-import { toast } from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 import { CategoryKeywordsDialog } from "~/components/features/settings/CategoryKeywordsDialog";
 import { cn } from "~/lib/utils";
 

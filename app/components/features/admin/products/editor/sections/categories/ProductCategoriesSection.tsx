@@ -8,7 +8,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "~/components/ui/input-group";
-import { toast } from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 import { useCategoriesQuery } from "~/hooks/useCategories";
 import {
   useProductCategoriesQuery,

@@ -10,7 +10,6 @@ import {
 import { Button } from "~/components/ui/button";
 import { useProductExport } from "~/hooks/useProductExport";
 import { useBodyOverflow } from "~/hooks/useBodyOverflow";
-import { ExportToast } from "./ExportToast";
 import { ExportProposalModal } from "./ExportProposalModal";
 
 import type {
@@ -67,7 +66,7 @@ export function ProductsDrawer({
   onRemoveProduct,
   onClearProducts,
 }: ProductsDrawerProps) {
-  const { exportToast, exportProducts, resetExportState } = useProductExport();
+  const { exportProducts } = useProductExport();
   const [isExportModalOpen, setExportModalOpen] = useState(false);
 
   useBodyOverflow(isOpen);
@@ -235,13 +234,6 @@ export function ProductsDrawer({
           </div>
         )}
       </div>
-
-      <ExportToast
-        isVisible={exportToast.isVisible}
-        status={exportToast.status}
-        message={exportToast.message}
-        onClose={resetExportState}
-      />
     </>
   );
 }

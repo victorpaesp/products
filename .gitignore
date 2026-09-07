@@ -5,3 +5,5 @@ node_modules
 .env
 
 \[.\]well-known.appspecific.\[com.chrome.devtools.json\].ts
+
+*.yaml

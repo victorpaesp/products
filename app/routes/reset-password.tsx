@@ -21,7 +21,7 @@ import {
 } from "../components/ui/form";
 import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { ActionFunctionArgs, data } from "@remix-run/node";
 import { backendResetPassword, BackendApiError } from "~/lib/backend.server";
 import type { ResetPasswordActionData } from "~/types/routes";

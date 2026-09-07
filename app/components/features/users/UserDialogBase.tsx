@@ -18,7 +18,7 @@ import {
 import { PasswordInput } from "~/components/ui/password-input";
 import { PasswordChecklist } from "~/components/shared/PasswordChecklist";
 import { usePasswordValidation } from "~/components/features/auth/hooks/usePasswordValidation";
-import toast from "~/components/ui/toast-client";
+import toast from "react-hot-toast";
 import { formatPhoneNumber, unformatPhoneNumber } from "~/lib/utils";
 import type { UsersTableUser } from "~/types/components";
 import { useCreateOrUpdateUserMutation } from "~/hooks/useUsers";
@@ -165,7 +165,7 @@ export function UserDialogBase({
         <DialogDescription>{description}</DialogDescription>
         <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
           <div>
-            <label className="block text-sm font-medium mb-1">Nome</label>
+            <label className="mb-1 block text-sm font-medium">Nome</label>
             <Input
               id="name"
               name="name"
@@ -182,7 +182,7 @@ export function UserDialogBase({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="mb-1 block text-sm font-medium">Email</label>
             <Input
               id="email"
               name="email"
@@ -200,7 +200,7 @@ export function UserDialogBase({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="mb-1 block text-sm font-medium">
               Tipo de usuário
             </label>
             <Select value={formData.role} onValueChange={handleRoleChange}>
@@ -214,7 +214,7 @@ export function UserDialogBase({
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Telefone</label>
+            <label className="mb-1 block text-sm font-medium">Telefone</label>
             <PhoneInput
               id="phone"
               name="phone"
@@ -233,7 +233,7 @@ export function UserDialogBase({
           {isCreateMode ? (
             <>
               <div>
-                <label className="block text-sm font-medium mb-1">Senha</label>
+                <label className="mb-1 block text-sm font-medium">Senha</label>
                 <PasswordInput
                   id="password"
                   name="password"
@@ -246,7 +246,7 @@ export function UserDialogBase({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="mb-1 block text-sm font-medium">
                   Repetir Senha
                 </label>
                 <PasswordInput
@@ -277,8 +277,8 @@ export function UserDialogBase({
             {upsertUserMutation.isPending
               ? "Salvando..."
               : isCreateMode
-              ? "Criar"
-              : "Salvar"}
+                ? "Criar"
+                : "Salvar"}
           </Button>
         </form>
       </DialogContent>

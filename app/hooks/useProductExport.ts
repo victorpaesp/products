@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import toast from "react-hot-toast";
 import {
   formatPrice,
   getProductImage,
@@ -8,9 +9,11 @@ import {
 } from "~/lib/utils";
 
 import { Product } from "~/types";
-import type { ExportProduct, ExportToastState } from "~/types/hooks";
+import type { ExportProduct } from "~/types/hooks";
 
 type DocxModule = typeof import("docx");
+
+const EXPORT_TOAST_ID = "product-export";
 
 function buildImageFetchUrl(imageUrl: string): string {
   if (!imageUrl) return imageUrl;
@@ -122,11 +125,6 @@ function formatCompanyForFilename(company?: string, maxLength = 20) {
 }
 
 export function useProductExport() {
-  const [exportToast, setExportToast] = useState<ExportToastState>({
-    isVisible: false,
-    status: "processing",
-  });
-
   const generateProductParagraphs = useCallback(
     async (products: ExportProduct[], docxModule: DocxModule) => {
       const {
@@ -330,10 +328,10 @@ export function useProductExport() {
           WidthType,
         } = docxModule;
 
-        setExportToast({
-          isVisible: true,
-          status: "processing",
-        });
+        toast.loading(
+          "Gerando documento... Processando as imagens e criando o arquivo Word.",
+          { id: EXPORT_TOAST_ID },
+        );
 
         const response = await fetch("/logo-new.png");
         const blob = await response.blob();
@@ -773,55 +771,35 @@ export function useProductExport() {
             URL.revokeObjectURL(url);
             console.log("Arquivo Word gerado e download iniciado.");
 
-            setExportToast({
-              isVisible: true,
-              status: "success",
-            });
+            toast.success(
+              "Documento criado! O arquivo foi baixado com sucesso.",
+              {
+                id: EXPORT_TOAST_ID,
+                duration: 3000,
+              },
+            );
 
             if (setSelectedProducts) setSelectedProducts([]);
-
-            setTimeout(() => {
-              setExportToast((prev) => ({ ...prev, isVisible: false }));
-            }, 3000);
           })
           .catch((error) => {
             console.error("Erro ao gerar arquivo Word:", error);
-            setExportToast({
-              isVisible: true,
-              status: "error",
-              message: "Erro ao gerar o arquivo Word",
+            toast.error("Erro ao gerar o arquivo Word", {
+              id: EXPORT_TOAST_ID,
+              duration: 5000,
             });
-
-            setTimeout(() => {
-              setExportToast((prev) => ({ ...prev, isVisible: false }));
-            }, 5000);
           });
       } catch (error) {
         console.error("Erro durante a exportação:", error);
-        setExportToast({
-          isVisible: true,
-          status: "error",
-          message: "Erro ao processar as imagens",
+        toast.error("Erro ao processar as imagens", {
+          id: EXPORT_TOAST_ID,
+          duration: 5000,
         });
-
-        setTimeout(() => {
-          setExportToast((prev) => ({ ...prev, isVisible: false }));
-        }, 5000);
       }
     },
     [generateProductParagraphs],
   );
 
-  const resetExportState = () => {
-    setExportToast((prev) => ({
-      ...prev,
-      isVisible: false,
-    }));
-  };
-
   return {
-    exportToast,
     exportProducts,
-    resetExportState,
   };
 }
