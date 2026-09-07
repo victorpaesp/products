@@ -88,7 +88,7 @@ function normalizePagination(value: unknown): CategoryReviewsPagination {
       typeof candidate.total === "number" && candidate.total >= 0
         ? candidate.total
         : 0,
-    per_page: normalizePositiveInteger(candidate.per_page, 50),
+    per_page: normalizePositiveInteger(candidate.per_page, 10),
     current_page: normalizePositiveInteger(candidate.current_page, 1),
     last_page: normalizePositiveInteger(candidate.last_page, 1),
   };

@@ -1,14 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "@remix-run/react";
 import {
   ArrowDown,
   ArrowRight,
   Check,
   CircleCheckBig,
-  Filter,
   LoaderCircle,
-  SquarePen,
   RotateCw,
+  Search,
   TriangleAlert,
   X,
 } from "lucide-react";
@@ -80,93 +79,6 @@ function formatReviewDate(value: string): string {
     : REVIEW_DATE_FORMATTER.format(date);
 }
 
-type ReviewFiltersProps = {
-  appliedProduct: string;
-  appliedCategory: string;
-  onApply: (product: string, category: string) => void;
-  onClear: () => void;
-};
-
-function ReviewFilters({
-  appliedProduct,
-  appliedCategory,
-  onApply,
-  onClear,
-}: ReviewFiltersProps) {
-  const [product, setProduct] = useState(appliedProduct);
-  const [category, setCategory] = useState(appliedCategory);
-
-  return (
-    <form
-      className="border-border bg-card flex flex-col gap-4 rounded-xl border p-4 shadow-xs"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onApply(product, category);
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <Filter aria-hidden="true" />
-        <h3 className="font-medium">Filtrar fila</h3>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="review-product-filter"
-            className="text-sm font-medium"
-          >
-            Produto
-          </label>
-          <Input
-            id="review-product-filter"
-            type="search"
-            className="h-11 sm:h-9"
-            value={product}
-            onChange={(event) => setProduct(event.target.value)}
-            placeholder="Buscar pelo nome do produto"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="review-category-filter"
-            className="text-sm font-medium"
-          >
-            Categoria sugerida
-          </label>
-          <Input
-            id="review-category-filter"
-            type="search"
-            className="h-11 sm:h-9"
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            placeholder="Buscar pela categoria"
-          />
-        </div>
-        <div className="flex flex-col-reverse gap-2 sm:flex-row md:col-span-2 xl:col-span-1">
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11 sm:min-h-9"
-            onClick={() => {
-              setProduct("");
-              setCategory("");
-              onClear();
-            }}
-            disabled={
-              !product && !category && !appliedProduct && !appliedCategory
-            }
-          >
-            Limpar
-          </Button>
-          <Button type="submit" className="min-h-11 sm:min-h-9">
-            <Filter data-icon="inline-start" />
-            Aplicar filtros
-          </Button>
-        </div>
-      </div>
-    </form>
-  );
-}
-
 type ReviewCardProps = {
   review: CategoryReview;
   categoryOptions: CategoryOption[];
@@ -183,9 +95,7 @@ function ReviewCard({
   onReject,
 }: ReviewCardProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState(
-    review.suggested_category
-      ? String(review.suggested_category.id)
-      : undefined,
+    review.suggested_category ? String(review.suggested_category.id) : "",
   );
   const approveMutation = useApproveCategoryReviewMutation();
   const selectedCategoryExists = categoryOptions.some(
@@ -241,18 +151,13 @@ function ReviewCard({
           <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Produto
           </span>
-          <h3 className="font-semibold wrap-break-word">
-            {review.product.name}
-          </h3>
           <Button
             type="button"
             variant="link"
-            size="sm"
-            className="h-auto w-fit p-0"
+            className="h-auto w-fit p-0 text-left font-semibold wrap-break-word whitespace-normal"
             onClick={() => onEditProduct(review.product.id)}
           >
-            Editar produto
-            <SquarePen data-icon="inline-end" />
+            {review.product.name}
           </Button>
         </div>
 
@@ -314,16 +219,18 @@ function ReviewCard({
         </div>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11 sm:min-h-9"
-            disabled={approveMutation.isPending}
-            onClick={() => onReject(review)}
-          >
-            <X data-icon="inline-start" />
-            Rejeitar sugestão
-          </Button>
+          {review.suggested_category ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 sm:min-h-9"
+              disabled={approveMutation.isPending}
+              onClick={() => onReject(review)}
+            >
+              <X data-icon="inline-start" />
+              Rejeitar sugestão
+            </Button>
+          ) : null}
           <Button
             type="button"
             className="min-h-11 sm:min-h-9"
@@ -363,7 +270,6 @@ export function ClassificationReviewManager({
 }: ClassificationReviewManagerProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const appliedProduct = searchParams.get("review_product")?.trim() ?? "";
-  const appliedCategory = searchParams.get("review_category")?.trim() ?? "";
   const rawPage = Number(searchParams.get("review_page"));
   const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
   const selectedProductId = parseProductId(searchParams.get("product"));
@@ -371,9 +277,9 @@ export function ClassificationReviewManager({
     null,
   );
   const [reviewerNotes, setReviewerNotes] = useState("");
+  const [productInput, setProductInput] = useState(appliedProduct);
 
   const query = useCategoryReviewsQuery({
-    category: appliedCategory || undefined,
     product: appliedProduct || undefined,
     page,
   });
@@ -399,27 +305,31 @@ export function ClassificationReviewManager({
     setSearchParams(next, { replace: options?.replace ?? false });
   };
 
-  const applyFilters = (product: string, category: string) => {
+  const clearFilters = () => {
+    setProductInput("");
     updateSearchParams(
       {
-        review_product: product.trim() || null,
-        review_category: category.trim() || null,
+        review_product: null,
         review_page: null,
       },
       { replace: true },
     );
   };
 
-  const clearFilters = () => {
-    updateSearchParams(
-      {
-        review_product: null,
-        review_category: null,
-        review_page: null,
-      },
-      { replace: true },
-    );
-  };
+  useEffect(() => {
+    const trimmed = productInput.trim();
+    if (trimmed === appliedProduct) return;
+
+    const timeout = setTimeout(() => {
+      updateSearchParams(
+        { review_product: trimmed || null, review_page: null },
+        { replace: true },
+      );
+    }, 400);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productInput]);
 
   const handleReject = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -446,11 +356,11 @@ export function ClassificationReviewManager({
     total === 0
       ? 0
       : ((pagination?.current_page ?? page) - 1) *
-          (pagination?.per_page ?? 50) +
+          (pagination?.per_page ?? 10) +
         1;
   const pageTo = Math.min(
     total,
-    (pagination?.current_page ?? page) * (pagination?.per_page ?? 50),
+    (pagination?.current_page ?? page) * (pagination?.per_page ?? 10),
   );
 
   return (
@@ -472,13 +382,27 @@ export function ClassificationReviewManager({
         </div>
       </div>
 
-      <ReviewFilters
-        key={JSON.stringify([appliedProduct, appliedCategory])}
-        appliedProduct={appliedProduct}
-        appliedCategory={appliedCategory}
-        onApply={applyFilters}
-        onClear={clearFilters}
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-muted-foreground text-sm">
+          {query.data
+            ? `Mostrando ${pageFrom}–${pageTo} de ${total} revisões`
+            : null}
+        </p>
+        <div className="relative w-full sm:w-72">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            value={productInput}
+            onChange={(event) => setProductInput(event.target.value)}
+            placeholder="Buscar pelo nome do produto"
+            aria-label="Buscar pelo nome do produto"
+            className="h-9 pl-9"
+          />
+        </div>
+      </div>
 
       {categoriesQuery.isError && categoryOptions.length === 0 ? (
         <div
@@ -537,17 +461,17 @@ export function ClassificationReviewManager({
           />
           <div className="flex flex-col gap-1">
             <p className="font-medium">
-              {appliedProduct || appliedCategory
+              {appliedProduct
                 ? "Nenhuma revisão encontrada"
                 : "Fila de revisão concluída"}
             </p>
             <p className="text-muted-foreground max-w-md text-sm">
-              {appliedProduct || appliedCategory
+              {appliedProduct
                 ? "Revise os filtros aplicados ou limpe a busca para ver todas as pendências."
                 : "Não há produtos aguardando uma decisão de classificação."}
             </p>
           </div>
-          {appliedProduct || appliedCategory ? (
+          {appliedProduct ? (
             <Button type="button" variant="outline" onClick={clearFilters}>
               Limpar filtros
             </Button>
@@ -555,9 +479,6 @@ export function ClassificationReviewManager({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="text-muted-foreground text-sm">
-            Mostrando {pageFrom}–{pageTo} de {total} revisões
-          </div>
           {reviews.map((review) => (
             <ReviewCard
               key={review.id}

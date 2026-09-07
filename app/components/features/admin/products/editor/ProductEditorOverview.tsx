@@ -56,7 +56,7 @@ export function ProductEditorOverview({ product }: ProductEditorOverviewProps) {
   return (
     <aside
       aria-label="Imagens do produto"
-      className="bg-muted/30 flex flex-col gap-4 p-4 lg:sticky lg:top-0 lg:self-start lg:border-r lg:p-6"
+      className="bg-muted/30 flex h-full flex-col gap-4 p-4 lg:sticky lg:top-0 lg:self-start lg:border-r lg:p-6"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-1">

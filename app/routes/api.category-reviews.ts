@@ -37,6 +37,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (category) query.set("category", category);
     if (product) query.set("product", product);
     query.set("page", String(page));
+    query.set("per_page", "10");
 
     const response = await backendRequest(
       `/category-reviews?${query.toString()}`,
