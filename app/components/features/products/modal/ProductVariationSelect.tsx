@@ -5,6 +5,7 @@ import {
   cn,
   getAllProductVariations,
   getProductColorSelectOptions,
+  getProductImage,
   getProductVariationCount,
   getVariationDifference,
   getVariationImage,
@@ -69,11 +70,7 @@ function getVariationOptionImage(
   option: VariationSelectOption,
   product: Product,
 ) {
-  return (
-    getVariationImage(option.variation) ||
-    product.gallery?.[0] ||
-    PRODUCT_IMAGE_COMPACT_PLACEHOLDER
-  );
+  return getVariationImage(option.variation) || getProductImage(product);
 }
 
 function normalizeCompactImageUrl(imageUrl?: string | null) {

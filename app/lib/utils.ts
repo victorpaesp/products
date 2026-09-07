@@ -370,30 +370,20 @@ export const getSupplierLogoHeightClass = (
 };
 
 /**
- * Obtém a URL da imagem correta do produto baseado no fornecedor.
- * Para XBZ, usa gallery[1] se existir, caso contrário usa image.
+ * Obtém a URL da imagem principal do produto: usa "image" e, na ausência
+ * dela, cai para a primeira imagem de "gallery".
  */
 export const getProductImage = (product: {
-  supplier?: Pick<ProductSupplier, "alias">;
   image: string;
   gallery?: string[];
 }): string => {
-  if (
-    product.supplier?.alias === "xbz" &&
-    Array.isArray(product.gallery) &&
-    product.gallery[1]
-  ) {
-    const img = normalizeImageUrl(product.gallery[1]);
+  if (product.image) {
+    const img = normalizeImageUrl(product.image);
     if (img !== PRODUCT_IMAGE_PLACEHOLDER) return img;
   }
 
   if (Array.isArray(product.gallery)) {
     const img = normalizeImageUrl(product.gallery[0]);
-    if (img !== PRODUCT_IMAGE_PLACEHOLDER) return img;
-  }
-
-  if (product.image) {
-    const img = normalizeImageUrl(product.image);
     if (img !== PRODUCT_IMAGE_PLACEHOLDER) return img;
   }
 
@@ -550,7 +540,6 @@ export const getVariationImage = (variation: {
  * imagem da variação para a primeira posição se já estiver na lista.
  */
 export const getProductCarouselImages = (product: {
-  supplier?: Pick<ProductSupplier, "alias">;
   image: string;
   gallery?: string[];
   selected_variation?: { images?: Array<string | string[]> };
@@ -577,7 +566,6 @@ export const getProductCarouselImages = (product: {
 
 export const getProductCardImage = (
   product: {
-    supplier?: Pick<ProductSupplier, "alias">;
     image: string;
     gallery?: string[];
     variations?: Array<{ images?: Array<string | string[]> }>;

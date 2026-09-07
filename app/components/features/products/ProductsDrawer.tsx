@@ -44,10 +44,7 @@ function getSelectedProductFields(
       name: variation.name || product.name,
       code: variation.product_cod,
       price: variation.price ?? product.price,
-      image:
-        getVariationImage(variation) ||
-        product.gallery?.[0] ||
-        getProductImage(product),
+      image: getVariationImage(variation) || getProductImage(product),
       stock: variation.stock ?? 0,
       exportImages,
     };
@@ -57,7 +54,7 @@ function getSelectedProductFields(
     name: product.name,
     code: product.product_cod,
     price: product.price,
-    image: product.gallery?.[0] || getProductImage(product),
+    image: getProductImage(product),
     stock: product.variations?.[0]?.stock ?? 0,
     exportImages: product.gallery,
   };

@@ -9,7 +9,6 @@ import type {
 } from "~/types";
 import type { RequestOptions } from "~/types/server";
 
-console.log("AQUI", process.env.BACKEND_API_URL);
 const API_BASE_URL =
   process.env.BACKEND_API_URL ?? "https://hmg-searchm.on-forge.com/api";
 
