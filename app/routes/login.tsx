@@ -9,6 +9,8 @@ import {
 import { z } from "zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertTitle, AlertDescription } from "~/components/ui/alert";
+import { AlertTriangleIcon } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { PasswordInput } from "~/components/ui/password-input";
 import { Button } from "~/components/ui/button";
@@ -186,10 +188,13 @@ export default function Login() {
                 Esqueci minha senha
               </Button>
               {sessionExpired && (
-                <div className="mb-2 text-sm text-amber-600">
-                  Sua sessão expirou. Faça login novamente para continuar — seu
-                  orçamento em andamento foi mantido.
-                </div>
+                <Alert className="max-w-md">
+                  <AlertTriangleIcon />
+                  <AlertTitle>Sua sessão expirou!</AlertTitle>
+                  <AlertDescription className="text-neutral-600">
+                    Faça login novamente para continuar.
+                  </AlertDescription>
+                </Alert>
               )}
               {loginError && (
                 <div className="mb-2 text-sm text-red-600">{loginError}</div>
