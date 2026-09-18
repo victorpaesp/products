@@ -3,6 +3,7 @@ import {
   Link,
   useActionData,
   useNavigation,
+  useSearchParams,
   useSubmit,
 } from "@remix-run/react";
 import { z } from "zod";
@@ -85,10 +86,12 @@ export default function Login() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const submit = useSubmit();
+  const [searchParams] = useSearchParams();
   const [isForgotPassword, setIsForgotPassword] = React.useState(false);
 
   const isSubmitting = navigation.state === "submitting";
   const loginError = isSubmitting ? null : actionData?.error;
+  const sessionExpired = !loginError && searchParams.get("expired") === "1";
 
   const form: UseFormReturn<FormValues> = useForm<FormValues>({
     resolver: zodResolver(loginSchema),
@@ -182,6 +185,12 @@ export default function Login() {
               >
                 Esqueci minha senha
               </Button>
+              {sessionExpired && (
+                <div className="mb-2 text-sm text-amber-600">
+                  Sua sessão expirou. Faça login novamente para continuar — seu
+                  orçamento em andamento foi mantido.
+                </div>
+              )}
               {loginError && (
                 <div className="mb-2 text-sm text-red-600">{loginError}</div>
               )}

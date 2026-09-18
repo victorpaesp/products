@@ -135,6 +135,10 @@ export default function App() {
   }, [user]);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
     if (!isNavigating) {
       setShowGlobalProgress(false);
       return;

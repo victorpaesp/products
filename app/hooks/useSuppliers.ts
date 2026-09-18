@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ProductSupplier } from "~/types";
+import { assertSessionActive } from "~/lib/session-expired";
 
 export const suppliersQueryKeys = {
   all: ["suppliers"] as const,
@@ -12,6 +13,8 @@ async function fetchSuppliersQuery(token?: string): Promise<ProductSupplier[]> {
     credentials: "same-origin",
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
+
+  assertSessionActive(response);
 
   if (!response.ok) {
     throw new Error("Erro ao carregar os fornecedores.");

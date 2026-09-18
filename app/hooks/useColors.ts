@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ProductColor } from "~/types";
+import { assertSessionActive } from "~/lib/session-expired";
 
 export const colorsQueryKeys = {
   all: ["colors"] as const,
@@ -11,6 +12,8 @@ async function fetchColorsQuery(): Promise<ProductColor[]> {
     method: "GET",
     credentials: "same-origin",
   });
+
+  assertSessionActive(response);
 
   if (!response.ok) {
     throw new Error("Erro ao carregar as cores.");

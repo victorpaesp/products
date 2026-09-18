@@ -5,6 +5,7 @@ import {
   ProductsQueryParams,
   toProductsApiParams,
 } from "~/lib/products-query";
+import { assertSessionActive } from "~/lib/session-expired";
 
 export async function fetchProductsQuery(
   params: ProductsQueryParams,
@@ -14,6 +15,8 @@ export async function fetchProductsQuery(
     method: "GET",
     credentials: "same-origin",
   });
+
+  assertSessionActive(response);
 
   const payload = (await response.json().catch(() => null)) as
     | { error?: string }

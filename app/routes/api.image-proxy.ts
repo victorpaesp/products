@@ -20,6 +20,9 @@ const DEFAULT_ALLOWED_HOSTS = [
   "xbzbrindes.com.br",
   "spotgifts.com.br",
   "asiaimport.com.br",
+  // Bucket S3 onde a wooch hospeda as fotos dos produtos (real origem das
+  // imagens exibidas nos cards, diferente do domínio wooch.com).
+  "upload-arquivos.s3-sa-east-1.amazonaws.com",
 ];
 
 const allowedHosts = new Set(

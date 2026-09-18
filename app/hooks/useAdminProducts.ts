@@ -5,6 +5,7 @@ import {
   toProductsApiParams,
   type ProductsQueryParams,
 } from "~/lib/products-query";
+import { assertSessionActive } from "~/lib/session-expired";
 
 async function fetchAdminProductsQuery(
   params: ProductsQueryParams,
@@ -14,6 +15,7 @@ async function fetchAdminProductsQuery(
     method: "GET",
     credentials: "same-origin",
   });
+  assertSessionActive(response);
   const payload = (await response.json().catch(() => null)) as
     | AdminProductsResponse
     | { error?: string }

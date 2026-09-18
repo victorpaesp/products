@@ -53,8 +53,9 @@ export function useSelectedProducts(isAuthenticated: boolean) {
 
   useIsomorphicLayoutEffect(() => {
     if (!isAuthenticated) {
+      // Não limpa o storage aqui: perda de sessão (expiração) não deve
+      // apagar o carrinho, só logout explícito (ver clearSelectedProducts).
       setSelectedProducts([]);
-      clearSelectedProductsStorage();
       setIsHydrated(true);
       return;
     }

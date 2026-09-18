@@ -11,6 +11,7 @@ import {
   normalizeCategoryKeywordsResponse,
   normalizeCategoriesResponse,
 } from "~/lib/categories";
+import { assertSessionActive } from "~/lib/session-expired";
 
 export const categoriesQueryKeys = {
   all: ["categories"] as const,
@@ -29,6 +30,8 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
       ...(init?.headers ?? {}),
     },
   });
+
+  assertSessionActive(response);
 
   const payload = (await response.json().catch(() => null)) as
     | T
