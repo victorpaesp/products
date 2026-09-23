@@ -15,6 +15,26 @@ type DocxModule = typeof import("docx");
 
 const EXPORT_TOAST_ID = "product-export";
 
+function reportExportDiagnostic(payload: Record<string, unknown>): void {
+  void fetch("/api/export-diagnostics", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      feature: "product-export",
+      ...payload,
+    }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
+function getImageHost(imageUrl: string): string | undefined {
+  try {
+    return new URL(imageUrl, window.location.origin).hostname;
+  } catch {
+    return undefined;
+  }
+}
+
 function buildImageFetchUrl(imageUrl: string): string {
   if (!imageUrl) return imageUrl;
 
@@ -35,6 +55,7 @@ function buildImageFetchUrl(imageUrl: string): string {
 
 async function loadImageArrayBuffer(
   imageUrl: string,
+  context?: Record<string, unknown>,
 ): Promise<ArrayBuffer | null> {
   if (!imageUrl?.trim()) return null;
 
@@ -43,11 +64,25 @@ async function loadImageArrayBuffer(
       signal: AbortSignal.timeout(8000),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      reportExportDiagnostic({
+        stage: "image-fetch",
+        imageHost: getImageHost(imageUrl),
+        status: response.status,
+        ...context,
+      });
+      return null;
+    }
 
     const imageBlob = await response.blob();
     return imageBlob.arrayBuffer();
-  } catch {
+  } catch (error) {
+    reportExportDiagnostic({
+      stage: "image-fetch",
+      imageHost: getImageHost(imageUrl),
+      error: error instanceof Error ? error.message : String(error),
+      ...context,
+    });
     return null;
   }
 }
@@ -162,7 +197,14 @@ export function useProductExport() {
           if (isProductImagePlaceholder) {
             imageUrl = PRODUCT_IMAGE_COMPACT_PLACEHOLDER;
           }
-          let imageArrayBuffer = await loadImageArrayBuffer(imageUrl);
+          const imageContext = {
+            productId: product.id,
+            productCode: product.product_cod,
+          };
+          let imageArrayBuffer = await loadImageArrayBuffer(
+            imageUrl,
+            imageContext,
+          );
 
           if (!imageArrayBuffer && imageUrl) {
             console.warn(
@@ -790,6 +832,14 @@ export function useProductExport() {
           });
       } catch (error) {
         console.error("Erro durante a exportação:", error);
+        reportExportDiagnostic({
+          stage: "export-catch",
+          error: error instanceof Error ? error.message : String(error),
+          productCount: products.length,
+          productCodes: products
+            .slice(0, 20)
+            .map((product) => product.product_cod),
+        });
         toast.error("Erro ao processar as imagens", {
           id: EXPORT_TOAST_ID,
           duration: 5000,
