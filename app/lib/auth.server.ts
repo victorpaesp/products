@@ -6,6 +6,10 @@ import {
 import type { SessionData, SessionUser } from "~/types/server";
 import { backendCurrentUser } from "~/lib/backend.server";
 
+if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET não definido no ambiente de produção.");
+}
+
 const SESSION_SECRET =
   process.env.SESSION_SECRET || "development-session-secret";
 

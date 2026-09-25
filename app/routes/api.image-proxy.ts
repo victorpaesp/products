@@ -224,7 +224,7 @@ function imageResponse(image: ProxiedImage): Response {
     headers: {
       "Content-Type": image.contentType,
       "Cache-Control": BROWSER_CACHE_CONTROL,
-      "Vercel-CDN-Cache-Control": CDN_CACHE_CONTROL,
+      "CDN-Cache-Control": CDN_CACHE_CONTROL,
       "Cross-Origin-Resource-Policy": "same-origin",
       "X-Content-Type-Options": "nosniff",
     },
